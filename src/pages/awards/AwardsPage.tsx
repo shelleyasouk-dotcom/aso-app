@@ -1,33 +1,25 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Award, Search, ChevronRight } from 'lucide-react'
+import { Search, ChevronRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
-import { Badge } from '../../components/ui/Badge'
-import type { Child, AwardLevel } from '../../types'
-import { AWARD_LEVEL_LABELS } from '../../types'
+import type { Child } from '../../types'
+import { APPARATUS_LIST, APPARATUS_LABELS } from '../../lib/skills'
+import type { Apparatus } from '../../lib/skills'
 import { canViewAllSchools } from '../../lib/roles'
 
-interface ChildWithAward extends Child {
-  current_level?: AwardLevel
-}
-
-const LEVEL_COLORS: Record<AwardLevel, 'gray' | 'blue' | 'green' | 'yellow' | 'purple' | 'red'> = {
-  none: 'gray',
-  ukag_level_1: 'blue',
-  ukag_level_2: 'green',
-  ukag_level_3: 'yellow',
-  ukag_level_4: 'purple',
-  ukag_level_5: 'red',
+interface ChildWithProgress extends Child {
+  // current level per apparatus (0 = not started)
+  progress: Record<Apparatus, number>
 }
 
 export function AwardsPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
-  const [children, setChildren] = useState<ChildWithAward[]>([])
-  const [filtered, setFiltered] = useState<ChildWithAward[]>([])
+  const [children, setChildren] = useState<ChildWithProgress[]>([])
+  const [filtered, setFiltered] = useState<ChildWithProgress[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -41,7 +33,7 @@ export function AwardsPage() {
   }, [search, children])
 
   async function loadChildren() {
-    let childQuery = supabase
+    let query = supabase
       .from('children')
       .select('*')
       .eq('is_active', true)
@@ -53,26 +45,31 @@ export function AwardsPage() {
         .select('school_id')
         .eq('staff_id', profile!.id)
       const ids = assignments?.map((a: any) => a.school_id) ?? []
-      if (ids.length > 0) childQuery = childQuery.in('school_id', ids)
+      if (ids.length > 0) query = query.in('school_id', ids)
     }
 
-    const { data: childrenData } = await childQuery
-
+    const { data: childrenData } = await query
     if (!childrenData) { setLoading(false); return }
 
-    // Get latest award for each child
-    const { data: awards } = await supabase
-      .from('child_awards')
-      .select('child_id, level, awarded_at')
+    // Load certificates to determine current level per apparatus
+    const { data: certs } = await supabase
+      .from('child_certificates')
+      .select('child_id, apparatus, level')
       .in('child_id', childrenData.map(c => c.id))
-      .order('awarded_at', { ascending: false })
 
-    const latestAward: Record<string, AwardLevel> = {}
-    awards?.forEach((a: any) => {
-      if (!latestAward[a.child_id]) latestAward[a.child_id] = a.level
+    // Find highest completed level per child per apparatus
+    const progressMap: Record<string, Record<Apparatus, number>> = {}
+    childrenData.forEach(c => {
+      progressMap[c.id] = { floor: 0, bars: 0, beam: 0, rebound: 0 }
+    })
+    certs?.forEach((cert: any) => {
+      const current = progressMap[cert.child_id]?.[cert.apparatus as Apparatus] ?? 0
+      if (cert.level > current) {
+        progressMap[cert.child_id][cert.apparatus as Apparatus] = cert.level
+      }
     })
 
-    setChildren(childrenData.map(c => ({ ...c, current_level: latestAward[c.id] ?? 'none' })))
+    setChildren(childrenData.map(c => ({ ...c, progress: progressMap[c.id] })))
     setLoading(false)
   }
 
@@ -94,7 +91,6 @@ export function AwardsPage() {
           <p className="text-center text-gray-400 py-8">Loading…</p>
         ) : filtered.length === 0 ? (
           <Card className="text-center py-8">
-            <Award size={36} className="text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">No children found.</p>
           </Card>
         ) : (
@@ -102,20 +98,37 @@ export function AwardsPage() {
             <Card
               key={child.id}
               onClick={() => navigate(`/awards/${child.id}`)}
-              className="flex items-center gap-4"
             >
-              <div className="w-10 h-10 bg-[#1a3a6b] rounded-full flex items-center justify-center shrink-0">
-                <span className="text-white font-bold text-sm">
-                  {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </span>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-[#1a3a6b] rounded-full flex items-center justify-center shrink-0">
+                  <span className="text-white font-bold text-sm">
+                    {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-[#1a3a6b] truncate">{child.full_name}</p>
+                </div>
+                <ChevronRight size={18} className="text-gray-300 shrink-0" />
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-[#1a3a6b] truncate">{child.full_name}</p>
-                <Badge color={LEVEL_COLORS[child.current_level ?? 'none']}>
-                  {AWARD_LEVEL_LABELS[child.current_level ?? 'none']}
-                </Badge>
+
+              {/* Apparatus progress grid */}
+              <div className="grid grid-cols-4 gap-2">
+                {APPARATUS_LIST.map(app => {
+                  const level = child.progress[app]
+                  return (
+                    <div key={app} className="text-center">
+                      <div className={`rounded-lg py-1.5 text-xs font-bold mb-1 ${
+                        level === 0 ? 'bg-gray-100 text-gray-400'
+                        : level >= 5 ? 'bg-[#f5c518] text-[#1a3a6b]'
+                        : 'bg-blue-100 text-[#1a3a6b]'
+                      }`}>
+                        {level === 0 ? '–' : `L${level}`}
+                      </div>
+                      <p className="text-xs text-gray-400">{APPARATUS_LABELS[app]}</p>
+                    </div>
+                  )
+                })}
               </div>
-              <ChevronRight size={18} className="text-gray-300 shrink-0" />
             </Card>
           ))
         )}

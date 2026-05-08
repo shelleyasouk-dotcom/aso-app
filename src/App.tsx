@@ -10,7 +10,7 @@ import { RegistersPage } from './pages/registers/RegistersPage'
 import { NewRegisterPage } from './pages/registers/NewRegisterPage'
 import { ViewRegisterPage } from './pages/registers/ViewRegisterPage'
 import { AwardsPage } from './pages/awards/AwardsPage'
-import { ChildProfilePage } from './pages/awards/ChildProfilePage'
+import { ChildSkillsPage } from './pages/awards/ChildSkillsPage'
 import { AdminPage } from './pages/admin/AdminPage'
 import { SchoolsAdminPage } from './pages/admin/SchoolsAdminPage'
 import { StaffAdminPage } from './pages/admin/StaffAdminPage'
@@ -37,7 +37,7 @@ export default function App() {
             <ProtectedRoute><AwardsPage /></ProtectedRoute>
           } />
           <Route path="/awards/:id" element={
-            <ProtectedRoute><ChildProfilePage /></ProtectedRoute>
+            <ProtectedRoute><ChildSkillsPage /></ProtectedRoute>
           } />
 
           {/* Coaches and above */}

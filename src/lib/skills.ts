@@ -1,0 +1,210 @@
+export type Apparatus = 'floor' | 'bars' | 'beam' | 'rebound'
+
+export const APPARATUS_LABELS: Record<Apparatus, string> = {
+  floor: 'Floor',
+  bars: 'Bars',
+  beam: 'Beam',
+  rebound: 'Rebound',
+}
+
+export const APPARATUS_LIST: Apparatus[] = ['floor', 'bars', 'beam', 'rebound']
+
+// All 6 levels × 4 apparatus — UKAG Recreational Awards Framework
+export const SKILLS: Record<Apparatus, Record<number, string[]>> = {
+  beam: {
+    1: [
+      'Straddle mount (supported)',
+      'Tiptoes (supported)',
+      'Diddy Walk',
+      'Leg Lifts (supported)',
+      'Straight Jump Dismount',
+      'Block (hold 3 secs) and Present',
+    ],
+    2: [
+      'Straddle lever swing or V-sit mount (supported)',
+      'Dips',
+      'Half Pivot turn (supported)',
+      'Leg Lifts (supported)',
+      'Arabesque',
+      'Star Jump dismount, Block and Present',
+    ],
+    3: [
+      'V-Sit / kneeling leg lift / simple individual mount',
+      'Dipped Leg Lifts, Half Pivot turn on toe',
+      'Straight Jump (supported), Y Balance (supported)',
+      'Coupe Ankles',
+      'V-Sit to shoulderstand roll to stand',
+      'Tuck Jump dismount, Block and Present',
+    ],
+    4: [
+      'Individual mount (simple)',
+      'Dipped Leg Lifts on tiptoes, Squat Pivot Turn',
+      'Forward roll',
+      'Coupe Knees half pivot 1 foot',
+      'Y Balance (unsupported), Tuck Jump (supported), Cat leap',
+      'Handspring (supported) OR Cartwheel quarter Turn Dismount',
+      'Block and Present',
+    ],
+    5: [
+      'Springboard Tuck Jump Mount (supported)',
+      'Full Coupe',
+      'Half and Full Pivot Turn on Toes',
+      'Kneeling Leg Swings to Lift, Y Balance, Star Jump (supported)',
+      'Jump half Turn and Jump Full Turn',
+      'Handstand (supported), Cartwheel (supported)',
+      'Round Off Dismount, Block',
+    ],
+    6: [
+      'Individual Mount',
+      'Travelling at least 2 lengths of the beam',
+      '4 jumps, leaps and turns',
+      '3 balances',
+      '2 travelling moves',
+      '1 tumble dismount',
+    ],
+  },
+
+  rebound: {
+    1: [
+      'Run into Hurdle Step',
+      'Jump to Springboard',
+      'Safe Landing B&P',
+      'Standing Squat to feet (x2), Straight jump off B&P',
+      'Standing Straddle to feet (x2), Star jump off B&P',
+    ],
+    2: [
+      'Run into Hurdle Step on Springboard',
+      'Squat to feet on low vault (2/3), Tuck jump off, Block & Present',
+      'Straddle to feet on low vault (2/3), Star jump off, Block and Present',
+    ],
+    3: [
+      'Squat on or over (3/4), Tuck jump off, Block and Present',
+      'Straddle on or over (3/4), Straddle jump off, Block and Present',
+    ],
+    4: [
+      'Head/Handspring off box top (supported)',
+      'Squat on, tuck off (4) / Squat Through (3/4)',
+      'Straddle on, straddle off (4) / Straddle over (3/4)',
+      'Block and Present',
+    ],
+    5: [
+      'Squat Through B&P, Straddle Over B&P',
+      'Headspring (3/4 vault) B&P',
+      'Handspring (3/4 vault) B&P',
+      'Dive Forward Roll (Trampet)',
+      'Handstand flat back (Trampet)',
+    ],
+    6: [
+      'Squat Through B&P, Straddle Over B&P',
+      'Handspring half turn B&P',
+      'Front Tuck (Trampet)',
+      'Back Tuck (from platform)',
+    ],
+  },
+
+  bars: {
+    1: [
+      'Hold Tuck, Straddle & Pike (3 secs each, low or high bar)',
+      'Low Bar - Hang upside down, progress to up circle (supported)',
+      'Low Bar - Forward circle (supported)',
+      'High Bar - Dish/Arch 5 Swings',
+      'Dismount, Block and Present',
+    ],
+    2: [
+      'High Bar - Tuck, Straddle & Pike Hold (5 seconds)',
+      'Low Bar - Jump to Front Support (pushing bar to knee) x3',
+      'High Bar - Dish/Arch 10 Swings and static turns x2',
+      'Re-grasping (support optional)',
+      'Back release Dismount B&P',
+    ],
+    3: [
+      'Low Bar - Up hip circle (supported)',
+      'Low Bar - Cast x3 to dismount jump to front support',
+      'Low Bar - Forward dismount (straight legs and arms)',
+      'High Bar - 10 Swings with re-grasping (unsupported)',
+      '2x Half Turns, Rear Dismount, Block and Finish',
+    ],
+    4: [
+      'Low Bar - Up hip circle (single leg allowed)',
+      'Low Bar - Casts to Back Hip Circle (supported)',
+      'Low Bar - Stand on or straddle from cast, Jump to High Bar',
+      'High Bar - 10 Swings re-grasping, 2x Half Turns',
+      'German Back Hang in Pike (supported)',
+      'Dismount, Block and Finish',
+    ],
+    5: [
+      'Low Bar - Up hip circle (from 2 feet)',
+      'Low Bar - Casts to clear Hip Circle (unsupported)',
+      'Low Bar - Squat/straddle swing to undershoot',
+      'Jump to High Bar, 2x half turns',
+      'German Back Hang Dismount OR Forward half Turn Dismount',
+      'Block and Present',
+    ],
+    6: [
+      'Low Bar - Up hip circle (from 2 feet)',
+      'Low Bar - Casts to clear Hip Circle',
+      'Low Bar - Squat/straddle swing to upstart',
+      'Jump to High Bar upstart, 2x half turn jumps',
+      'Forward swing back tuck dismount',
+      'Block and Present',
+    ],
+  },
+
+  floor: {
+    1: [
+      'Dish & Arch hold 3 seconds',
+      'Front & Back Support (3 seconds)',
+      'Arabesque angle',
+      'Forward roll (supported)',
+      'Bunny Hop forward and side',
+      'V-Sit (supported)',
+      'Chasse, Side Splits, Front Splits',
+      'Straight Jump B&P',
+    ],
+    2: [
+      'Dish & Arch rocks and rolls',
+      'Side, Front & Back Support',
+      'Splits (side and front), T Balance, Frog Balance',
+      'Forward roll',
+      'Back Roll to straddle stand (supported)',
+      'Handstand (supported)',
+      'V-Sit (unsupported)',
+      'Bridge (supported)',
+      'Chasse, Catleaps, Tuck Jump B&P',
+    ],
+    3: [
+      'Dish & Arch rolls and press',
+      'Side, Front & Back Support with press',
+      'Splits, Y Balance',
+      'Dive Forward roll, Back Roll, Headstand, Handstand',
+      'Cartwheel (supported), Shoulderstand (supported)',
+      'Back Bend into Bridge',
+      'Chasse, Catleaps, high hops, Straddle Jump B&P',
+    ],
+    4: [
+      'Dish & Arch rolls and press',
+      'Side, Front & Back Support with Fall',
+      'Splits, Elbow Balance',
+      'Dive Forward roll to bunny hop handstand',
+      'Back Roll to Front support',
+      'Handstand Forward roll',
+      'Cartwheel (1 handed / side to side)',
+      'Shoulderstand, Backward Walkover',
+      'Chasse, Catleaps, high hops, stag leaps',
+      'Roundoff',
+    ],
+    5: [
+      'Back Roll to handstand',
+      'Handstand pirouette',
+      'Cartwheel (consecutive)',
+      'Back Handspring (supported)',
+      'Forward Walkover (supported)',
+    ],
+    6: [
+      'Roundoff Back Tuck',
+      'Roundoff BHS multiple',
+      'Flyspring',
+      'Aerial',
+    ],
+  },
+}
