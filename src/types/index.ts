@@ -30,6 +30,7 @@ export interface Child {
   id: string
   full_name: string
   date_of_birth: string | null
+  contact_email: string | null
   school_id: string
   is_active: boolean
   created_at: string

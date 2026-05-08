@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen } from 'lucide-react'
+import { School, Users, BookOpen, Upload } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 
@@ -27,6 +27,13 @@ export function AdminPage() {
       icon: BookOpen,
       path: '/admin/children',
       color: 'bg-green-50 text-green-800',
+    },
+    {
+      label: 'Bulk Import',
+      description: 'Upload schools, staff & children via CSV',
+      icon: Upload,
+      path: '/admin/bulk-import',
+      color: 'bg-yellow-50 text-[#1a3a6b]',
     },
   ]
 

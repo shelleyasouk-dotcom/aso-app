@@ -15,6 +15,7 @@ import { AdminPage } from './pages/admin/AdminPage'
 import { SchoolsAdminPage } from './pages/admin/SchoolsAdminPage'
 import { StaffAdminPage } from './pages/admin/StaffAdminPage'
 import { ChildrenAdminPage } from './pages/admin/ChildrenAdminPage'
+import { BulkImportPage } from './pages/admin/BulkImportPage'
 
 export default function App() {
   return (
@@ -82,6 +83,11 @@ export default function App() {
           <Route path="/admin/children" element={
             <ProtectedRoute allowedRoles={['director']}>
               <ChildrenAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/bulk-import" element={
+            <ProtectedRoute allowedRoles={['director']}>
+              <BulkImportPage />
             </ProtectedRoute>
           } />
 
