@@ -9,25 +9,52 @@ import type { School } from '../../types'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
+const SELECT_CLASS = "w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
 
 type SchoolForm = { name: string; address: string; area: string; session_day: string; session_time: string }
-
 const emptyForm: SchoolForm = { name: '', address: '', area: 'Hampshire', session_day: 'Monday', session_time: '' }
 
 function sortByDay(schools: School[]): School[] {
   return [...schools].sort((a, b) => DAYS.indexOf(a.session_day) - DAYS.indexOf(b.session_day))
 }
 
-function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+// Defined at module level so React never remounts it between renders
+function SchoolFormFields({ form, set }: { form: SchoolForm; set: (f: SchoolForm) => void }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-semibold text-gray-700">{label}</label>
-      {children}
-    </div>
+    <>
+      <Input
+        label="School Name"
+        placeholder="e.g. St Mary's Primary"
+        value={form.name}
+        onChange={e => set({ ...form, name: e.target.value })}
+      />
+      <Input
+        label="Location"
+        placeholder="e.g. Andover, Hampshire"
+        value={form.address}
+        onChange={e => set({ ...form, address: e.target.value })}
+      />
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-semibold text-gray-700">Area</label>
+        <select className={SELECT_CLASS} value={form.area} onChange={e => set({ ...form, area: e.target.value })}>
+          {AREAS.map(a => <option key={a}>{a}</option>)}
+        </select>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-semibold text-gray-700">Session Day</label>
+        <select className={SELECT_CLASS} value={form.session_day} onChange={e => set({ ...form, session_day: e.target.value })}>
+          {DAYS.map(d => <option key={d}>{d}</option>)}
+        </select>
+      </div>
+      <Input
+        label="Session Time"
+        placeholder="e.g. 15:30 – 16:30"
+        value={form.session_time}
+        onChange={e => set({ ...form, session_time: e.target.value })}
+      />
+    </>
   )
 }
-
-const selectClass = "w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
 
 export function SchoolsAdminPage() {
   const [schools, setSchools] = useState<School[]>([])
@@ -84,41 +111,6 @@ export function SchoolsAdminPage() {
     if (!confirm('Remove this school? This cannot be undone.')) return
     await supabase.from('schools').delete().eq('id', id)
     setSchools(prev => prev.filter(s => s.id !== id))
-  }
-
-  function SchoolFormFields({ form, set }: { form: SchoolForm; set: (f: SchoolForm) => void }) {
-    return (
-      <>
-        <Input
-          label="School Name"
-          placeholder="e.g. St Mary's Primary"
-          value={form.name}
-          onChange={e => set({ ...form, name: e.target.value })}
-        />
-        <Input
-          label="Location"
-          placeholder="e.g. Andover, Hampshire"
-          value={form.address}
-          onChange={e => set({ ...form, address: e.target.value })}
-        />
-        <FieldGroup label="Area">
-          <select className={selectClass} value={form.area} onChange={e => set({ ...form, area: e.target.value })}>
-            {AREAS.map(a => <option key={a}>{a}</option>)}
-          </select>
-        </FieldGroup>
-        <FieldGroup label="Session Day">
-          <select className={selectClass} value={form.session_day} onChange={e => set({ ...form, session_day: e.target.value })}>
-            {DAYS.map(d => <option key={d}>{d}</option>)}
-          </select>
-        </FieldGroup>
-        <Input
-          label="Session Time"
-          placeholder="e.g. 15:30 – 16:30"
-          value={form.session_time}
-          onChange={e => set({ ...form, session_time: e.target.value })}
-        />
-      </>
-    )
   }
 
   return (

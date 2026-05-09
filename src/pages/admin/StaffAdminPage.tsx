@@ -23,6 +23,108 @@ interface AssignPanel {
   selected: Set<string>
 }
 
+type EditForm = { full_name: string; email: string; role: Role; area: string }
+
+interface StaffCardProps {
+  member: StaffWithAssignments
+  editingId: string | null
+  editForm: EditForm
+  setEditForm: (f: EditForm) => void
+  setEditingId: (id: string | null) => void
+  saving: boolean
+  onEdit: (member: StaffWithAssignments) => void
+  onAssign: (member: StaffWithAssignments) => void
+  onSaveEdit: (id: string) => void
+}
+
+// Defined at module level — never remounted between renders
+function StaffCard({ member, editingId, editForm, setEditForm, setEditingId, saving, onEdit, onAssign, onSaveEdit }: StaffCardProps) {
+  if (editingId === member.id) {
+    return (
+      <Card>
+        <h3 className="font-semibold text-[#1a3a6b] mb-3">Edit Staff Member</h3>
+        <div className="flex flex-col gap-3">
+          <Input
+            label="Full Name"
+            value={editForm.full_name}
+            onChange={e => setEditForm({ ...editForm, full_name: e.target.value })}
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={editForm.email}
+            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+          />
+          <Select
+            label="Role"
+            value={editForm.role}
+            onChange={e => setEditForm({ ...editForm, role: e.target.value as Role })}
+          >
+            {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+          </Select>
+          {(editForm.role === 'area_lead' || editForm.role === 'director') && (
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-gray-700">Area</label>
+              <select
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
+                value={editForm.area}
+                onChange={e => setEditForm({ ...editForm, area: e.target.value })}
+              >
+                <option value="">No area assigned</option>
+                {AREAS.map(a => <option key={a}>{a}</option>)}
+              </select>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={() => setEditingId(null)} className="flex-1">Cancel</Button>
+            <Button onClick={() => onSaveEdit(member.id)} disabled={saving} className="flex-1">
+              {saving ? 'Saving…' : 'Save Changes'}
+            </Button>
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div>
+          <p className="font-bold text-[#1a3a6b]">{member.full_name}</p>
+          <p className="text-sm text-gray-500">{member.email}</p>
+          <div className="flex items-center gap-1.5 flex-wrap mt-1">
+            <Badge color="blue">{ROLE_LABELS[member.role]}</Badge>
+            {member.area && <Badge color="gray">{member.area}</Badge>}
+          </div>
+        </div>
+        <div className="flex gap-1 shrink-0">
+          <button
+            onClick={() => onEdit(member)}
+            className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg"
+          >
+            <Pencil size={13} /> Edit
+          </button>
+          <button
+            onClick={() => onAssign(member)}
+            className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-2.5 py-1.5 rounded-lg"
+          >
+            <School size={13} /> Schools
+          </button>
+        </div>
+      </div>
+      {member.assignments && member.assignments.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {member.assignments.map(a => (
+            <span key={a.id} className="text-xs bg-[#f4f6f9] text-gray-600 px-2 py-1 rounded-lg">
+              {a.school?.name}
+            </span>
+          ))}
+        </div>
+      )}
+    </Card>
+  )
+}
+
 export function StaffAdminPage() {
   const { profile } = useAuth()
   const isDirector = profile ? canManageStaff(profile.role) : false
@@ -32,7 +134,7 @@ export function StaffAdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [assignPanel, setAssignPanel] = useState<AssignPanel | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ full_name: '', email: '', role: 'lead_coach' as Role, area: '' })
+  const [editForm, setEditForm] = useState<EditForm>({ full_name: '', email: '', role: 'lead_coach', area: '' })
   const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'lead_coach' as Role })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -148,104 +250,15 @@ export function StaffAdminPage() {
     setSaving(false)
   }
 
-  // Build area groups: each area → staff who have assignments in that area
   const areaGroups = AREAS.map(area => {
     const areaSchoolIds = new Set(schools.filter(s => s.area === area).map(s => s.id))
-    const areaStaff = staff.filter(m =>
-      m.assignments?.some(a => areaSchoolIds.has(a.school_id))
-    )
+    const areaStaff = staff.filter(m => m.assignments?.some(a => areaSchoolIds.has(a.school_id)))
     return { area, staff: areaStaff }
   })
 
-  // Staff with no school assignments (show at bottom)
   const unassigned = staff.filter(m => !m.assignments || m.assignments.length === 0)
 
-  function StaffCard({ member }: { member: StaffWithAssignments }) {
-    if (editingId === member.id) {
-      return (
-        <Card>
-          <h3 className="font-semibold text-[#1a3a6b] mb-3">Edit Staff Member</h3>
-          <div className="flex flex-col gap-3">
-            <Input
-              label="Full Name"
-              value={editForm.full_name}
-              onChange={e => setEditForm({ ...editForm, full_name: e.target.value })}
-            />
-            <Input
-              label="Email"
-              type="email"
-              value={editForm.email}
-              onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-            />
-            <Select
-              label="Role"
-              value={editForm.role}
-              onChange={e => setEditForm({ ...editForm, role: e.target.value as Role })}
-            >
-              {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
-            </Select>
-            {(editForm.role === 'area_lead' || editForm.role === 'director') && (
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-semibold text-gray-700">Area</label>
-                <select
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
-                  value={editForm.area}
-                  onChange={e => setEditForm({ ...editForm, area: e.target.value })}
-                >
-                  <option value="">No area assigned</option>
-                  {AREAS.map(a => <option key={a}>{a}</option>)}
-                </select>
-              </div>
-            )}
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => setEditingId(null)} className="flex-1">Cancel</Button>
-              <Button onClick={() => saveEdit(member.id)} disabled={saving} className="flex-1">
-                {saving ? 'Saving…' : 'Save Changes'}
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )
-    }
-
-    return (
-      <Card key={member.id}>
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div>
-            <p className="font-bold text-[#1a3a6b]">{member.full_name}</p>
-            <p className="text-sm text-gray-500">{member.email}</p>
-            <div className="flex items-center gap-1.5 flex-wrap mt-1">
-              <Badge color="blue">{ROLE_LABELS[member.role]}</Badge>
-              {member.area && <Badge color="gray">{member.area}</Badge>}
-            </div>
-          </div>
-          <div className="flex gap-1 shrink-0">
-            <button
-              onClick={() => startEdit(member)}
-              className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg"
-            >
-              <Pencil size={13} /> Edit
-            </button>
-            <button
-              onClick={() => openAssignPanel(member)}
-              className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-2.5 py-1.5 rounded-lg"
-            >
-              <School size={13} /> Schools
-            </button>
-          </div>
-        </div>
-        {member.assignments && member.assignments.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-1">
-            {member.assignments.map(a => (
-              <span key={a.id} className="text-xs bg-[#f4f6f9] text-gray-600 px-2 py-1 rounded-lg">
-                {a.school?.name}
-              </span>
-            ))}
-          </div>
-        )}
-      </Card>
-    )
-  }
+  const cardProps = { editingId, editForm, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit }
 
   return (
     <Layout title="Staff" showBack>
@@ -297,7 +310,6 @@ export function StaffAdminPage() {
           </Card>
         )}
 
-        {/* Multi-school assignment panel */}
         {assignPanel && (
           <Card>
             <h3 className="font-semibold text-[#1a3a6b] mb-1">Assign Schools</h3>
@@ -331,7 +343,6 @@ export function StaffAdminPage() {
                   </div>
                 )
               })}
-              {/* Schools with no area set */}
               {schools.filter(s => !s.area || !AREAS.includes(s.area)).map(s => (
                 <button
                   key={s.id}
@@ -371,17 +382,16 @@ export function StaffAdminPage() {
                 <div key={area}>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{area}</p>
                   <div className="flex flex-col gap-3">
-                    {areaStaff.map(m => <StaffCard key={m.id} member={m} />)}
+                    {areaStaff.map(m => <StaffCard key={m.id} member={m} {...cardProps} />)}
                   </div>
                 </div>
               )
             })}
-
             {unassigned.length > 0 && (
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">No Schools Assigned</p>
                 <div className="flex flex-col gap-3">
-                  {unassigned.map(m => <StaffCard key={m.id} member={m} />)}
+                  {unassigned.map(m => <StaffCard key={m.id} member={m} {...cardProps} />)}
                 </div>
               </div>
             )}
