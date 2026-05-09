@@ -7,6 +7,10 @@ import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import type { Expense, ExpenseType } from '../../types'
 
+type EnrichedExpense = Omit<Expense, 'staff'> & {
+  staff?: { full_name: string; role: string }
+}
+
 const TYPE_LABELS: Record<ExpenseType, string> = {
   mileage: 'Mileage',
   travel: 'Travel',
@@ -17,10 +21,6 @@ const TYPE_ICONS: Record<ExpenseType, React.ElementType> = {
   mileage: Car,
   travel: Train,
   other: ReceiptText,
-}
-
-interface EnrichedExpense extends Expense {
-  staff?: { full_name: string; role: string }
 }
 
 interface GroupedStaff {

@@ -94,7 +94,7 @@ export function TimesheetsPage() {
     setEditForm({
       clock_in: toLocal(rec.clock_in),
       clock_out: rec.clock_out ? toLocal(rec.clock_out) : '',
-      school_id: rec.school_id,
+      school_id: rec.school_id ?? '',
     })
   }
 
