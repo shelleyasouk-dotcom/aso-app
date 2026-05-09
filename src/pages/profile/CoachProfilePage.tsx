@@ -155,6 +155,7 @@ export function CoachProfilePage() {
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadingCert, setUploadingCert] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const photoInputRef = useRef<HTMLInputElement>(null)
   const certFileInputRef = useRef<HTMLInputElement>(null)
@@ -208,9 +209,15 @@ export function CoachProfilePage() {
     const file = e.target.files?.[0]
     if (!file || !targetId) return
     setUploadingPhoto(true)
+    setUploadError(null)
     const ext = file.name.split('.').pop()
     const path = `photos/${targetId}/profile.${ext}`
-    await supabase.storage.from('coach-files').upload(path, file, { upsert: true })
+    const { error } = await supabase.storage.from('coach-files').upload(path, file, { upsert: true })
+    if (error) {
+      setUploadError(`Photo upload failed: ${error.message}`)
+      setUploadingPhoto(false)
+      return
+    }
     const { data: urlData } = supabase.storage.from('coach-files').getPublicUrl(path)
     const url = urlData.publicUrl + `?t=${Date.now()}`
     await supabase.from('profiles').update({ photo_url: url }).eq('id', targetId)
@@ -298,6 +305,12 @@ export function CoachProfilePage() {
           safeguardingExpiry={fields.safeguarding_expiry}
           firstAidExpiry={fields.first_aid_expiry}
         />
+
+        {uploadError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+            <p className="text-sm text-red-700">{uploadError}</p>
+          </div>
+        )}
 
         {/* Photo */}
         {canEdit && (

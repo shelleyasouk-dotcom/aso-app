@@ -47,6 +47,7 @@ export function DocumentsPage() {
   const [form, setForm] = useState({ title: '', description: '', category: 'Policy' })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const [filterCategory, setFilterCategory] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -69,6 +70,7 @@ export function DocumentsPage() {
   async function uploadDoc() {
     if (!form.title.trim() || !selectedFile || !profile) return
     setUploading(true)
+    setUploadError(null)
 
     const ext = selectedFile.name.split('.').pop()
     const filePath = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
@@ -77,22 +79,33 @@ export function DocumentsPage() {
       .from('documents')
       .upload(filePath, selectedFile)
 
-    if (!storageError) {
-      await supabase.from('org_documents').insert({
-        title: form.title.trim(),
-        description: form.description.trim() || null,
-        category: form.category,
-        file_path: filePath,
-        file_name: selectedFile.name,
-        file_size: selectedFile.size,
-        uploaded_by: profile.id,
-      })
-      await load()
-      setForm({ title: '', description: '', category: 'Policy' })
-      setSelectedFile(null)
-      setShowForm(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+    if (storageError) {
+      setUploadError(`Storage error: ${storageError.message}`)
+      setUploading(false)
+      return
     }
+
+    const { error: dbError } = await supabase.from('org_documents').insert({
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      category: form.category,
+      file_path: filePath,
+      file_name: selectedFile.name,
+      file_size: selectedFile.size,
+      uploaded_by: profile.id,
+    })
+
+    if (dbError) {
+      setUploadError(`Database error: ${dbError.message}`)
+      setUploading(false)
+      return
+    }
+
+    await load()
+    setForm({ title: '', description: '', category: 'Policy' })
+    setSelectedFile(null)
+    setShowForm(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
     setUploading(false)
   }
 
@@ -166,8 +179,11 @@ export function DocumentsPage() {
                   <span className="text-sm">{selectedFile ? selectedFile.name : 'Tap to select file…'}</span>
                 </button>
               </div>
+              {uploadError && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{uploadError}</p>
+              )}
               <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => { setShowForm(false); setSelectedFile(null) }} className="flex-1">Cancel</Button>
+                <Button variant="secondary" onClick={() => { setShowForm(false); setSelectedFile(null); setUploadError(null) }} className="flex-1">Cancel</Button>
                 <Button onClick={uploadDoc} disabled={uploading || !form.title.trim() || !selectedFile} className="flex-1">
                   {uploading ? 'Uploading…' : 'Upload'}
                 </Button>
