@@ -42,6 +42,8 @@ export function LoginPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
+            id="email"
+            name="email"
             label="Email"
             type="email"
             placeholder="your@email.com"
@@ -52,6 +54,8 @@ export function LoginPage() {
             inputMode="email"
           />
           <Input
+            id="password"
+            name="password"
             label="Password"
             type="password"
             placeholder="••••••••"
