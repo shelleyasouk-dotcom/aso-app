@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Plus, Users, School, Check, Pencil } from 'lucide-react'
+import { Plus, Users, School, Check, Pencil, UserCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
@@ -35,10 +36,11 @@ interface StaffCardProps {
   onEdit: (member: StaffWithAssignments) => void
   onAssign: (member: StaffWithAssignments) => void
   onSaveEdit: (id: string) => void
+  onProfile: (id: string) => void
 }
 
 // Defined at module level — never remounted between renders
-function StaffCard({ member, editingId, editForm, setEditForm, setEditingId, saving, onEdit, onAssign, onSaveEdit }: StaffCardProps) {
+function StaffCard({ member, editingId, editForm, setEditForm, setEditingId, saving, onEdit, onAssign, onSaveEdit, onProfile }: StaffCardProps) {
   if (editingId === member.id) {
     return (
       <Card>
@@ -99,6 +101,12 @@ function StaffCard({ member, editingId, editForm, setEditForm, setEditingId, sav
         </div>
         <div className="flex gap-1 shrink-0">
           <button
+            onClick={() => onProfile(member.id)}
+            className="flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 px-2.5 py-1.5 rounded-lg"
+          >
+            <UserCircle size={13} /> Profile
+          </button>
+          <button
             onClick={() => onEdit(member)}
             className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg"
           >
@@ -127,6 +135,7 @@ function StaffCard({ member, editingId, editForm, setEditForm, setEditingId, sav
 
 export function StaffAdminPage() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
   const isDirector = profile ? canManageStaff(profile.role) : false
 
   const [staff, setStaff] = useState<StaffWithAssignments[]>([])
@@ -258,7 +267,7 @@ export function StaffAdminPage() {
 
   const unassigned = staff.filter(m => !m.assignments || m.assignments.length === 0)
 
-  const cardProps = { editingId, editForm, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit }
+  const cardProps = { editingId, editForm, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit, onProfile: (id: string) => navigate(`/profile/${id}`) }
 
   return (
     <Layout title="Staff" showBack>

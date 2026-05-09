@@ -113,6 +113,9 @@ export default function App() {
           <Route path="/profile" element={
             <ProtectedRoute><CoachProfilePage /></ProtectedRoute>
           } />
+          <Route path="/profile/:id" element={
+            <ProtectedRoute><CoachProfilePage /></ProtectedRoute>
+          } />
           <Route path="/documents" element={
             <ProtectedRoute><DocumentsPage /></ProtectedRoute>
           } />
