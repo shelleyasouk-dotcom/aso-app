@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Users, School, Check } from 'lucide-react'
+import { Plus, Users, School, Check, Pencil } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -31,6 +31,8 @@ export function StaffAdminPage() {
   const [schools, setSchools] = useState<SchoolType[]>([])
   const [showForm, setShowForm] = useState(false)
   const [assignPanel, setAssignPanel] = useState<AssignPanel | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState({ full_name: '', email: '', role: 'lead_coach' as Role })
   const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'lead_coach' as Role })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -82,6 +84,25 @@ export function StaffAdminPage() {
       setForm({ email: '', full_name: '', password: '', role: 'lead_coach' })
       setShowForm(false)
     }
+    setSaving(false)
+  }
+
+  function startEdit(member: StaffWithAssignments) {
+    setEditingId(member.id)
+    setEditForm({ full_name: member.full_name, email: member.email, role: member.role })
+    setAssignPanel(null)
+  }
+
+  async function saveEdit(id: string) {
+    if (!editForm.full_name || !editForm.email) return
+    setSaving(true)
+    await supabase.from('profiles').update({
+      full_name: editForm.full_name,
+      email: editForm.email,
+      role: editForm.role,
+    }).eq('id', id)
+    await loadData()
+    setEditingId(null)
     setSaving(false)
   }
 
@@ -138,6 +159,40 @@ export function StaffAdminPage() {
   const unassigned = staff.filter(m => !m.assignments || m.assignments.length === 0)
 
   function StaffCard({ member }: { member: StaffWithAssignments }) {
+    if (editingId === member.id) {
+      return (
+        <Card>
+          <h3 className="font-semibold text-[#1a3a6b] mb-3">Edit Staff Member</h3>
+          <div className="flex flex-col gap-3">
+            <Input
+              label="Full Name"
+              value={editForm.full_name}
+              onChange={e => setEditForm({ ...editForm, full_name: e.target.value })}
+            />
+            <Input
+              label="Email"
+              type="email"
+              value={editForm.email}
+              onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+            />
+            <Select
+              label="Role"
+              value={editForm.role}
+              onChange={e => setEditForm({ ...editForm, role: e.target.value as Role })}
+            >
+              {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+            </Select>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={() => setEditingId(null)} className="flex-1">Cancel</Button>
+              <Button onClick={() => saveEdit(member.id)} disabled={saving} className="flex-1">
+                {saving ? 'Saving…' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )
+    }
+
     return (
       <Card key={member.id}>
         <div className="flex items-start justify-between gap-2 mb-2">
@@ -146,12 +201,20 @@ export function StaffAdminPage() {
             <p className="text-sm text-gray-500">{member.email}</p>
             <Badge color="blue">{ROLE_LABELS[member.role]}</Badge>
           </div>
-          <button
-            onClick={() => openAssignPanel(member)}
-            className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-3 py-1.5 rounded-lg shrink-0"
-          >
-            <School size={13} /> Schools
-          </button>
+          <div className="flex gap-1 shrink-0">
+            <button
+              onClick={() => startEdit(member)}
+              className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg"
+            >
+              <Pencil size={13} /> Edit
+            </button>
+            <button
+              onClick={() => openAssignPanel(member)}
+              className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-2.5 py-1.5 rounded-lg"
+            >
+              <School size={13} /> Schools
+            </button>
+          </div>
         </div>
         {member.assignments && member.assignments.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-1">
