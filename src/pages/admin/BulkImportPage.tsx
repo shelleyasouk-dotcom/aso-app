@@ -66,13 +66,6 @@ export function BulkImportPage() {
 
     if (activeTab === 'staff') {
       for (const row of rows) {
-        // Look up school ID by name
-        const { data: school } = await supabase
-          .from('schools')
-          .select('id')
-          .eq('name', row['School Name'])
-          .single()
-
         // Create auth user
         const { data, error: authError } = await supabase.auth.signUp({
           email: row['Email'],
@@ -92,13 +85,6 @@ export function BulkImportPage() {
             full_name: row['Full Name'],
             role: row['Role'] || 'junior_coach',
           })
-
-          if (school) {
-            await supabase.from('staff_school_assignments').upsert({
-              staff_id: data.user.id,
-              school_id: school.id,
-            })
-          }
           success++
         }
       }
@@ -136,7 +122,7 @@ export function BulkImportPage() {
   function downloadTemplate(type: ImportType) {
     const templates = {
       schools: `School Name,Address,Session Day,Session Time\nSt Mary's Primary,123 High Street London E1 1AA,Monday,15:30 - 16:30`,
-      staff: `Full Name,Email,Role,School Name\nJohn Smith,john@example.com,lead_coach,St Mary's Primary`,
+      staff: `Full Name,Email,Role\nJohn Smith,john@example.com,lead_coach`,
       children: `Child Name,School Name,Contact Email\nEmma Johnson,St Mary's Primary,parent@example.com`,
     }
     const blob = new Blob([templates[type]], { type: 'text/csv' })
@@ -150,7 +136,7 @@ export function BulkImportPage() {
 
   const instructions = {
     schools: 'Import all your school locations. Make sure Session Day matches exactly (e.g. Monday, Tuesday).',
-    staff: 'Import all coaches. Role must be one of: director, area_lead, lead_coach, assistant_coach, junior_coach. School Name must match exactly. Staff will be created with temporary password: TempPass123! — ask them to change it.',
+    staff: 'Import all coaches. Role must be one of: director, area_lead, lead_coach, assistant_coach, junior_coach. All staff are created with temporary password: TempPass123! — assign their schools afterwards in Admin → Staff.',
     children: 'Import all children. School Name must match exactly. Import schools first before children.',
   }
 
