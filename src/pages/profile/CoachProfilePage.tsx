@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Camera, Plus, Trash2, FileText, ShieldCheck, AlertTriangle, XCircle, Download } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -56,42 +56,39 @@ function ExpiryRow({ label, dateStr }: { label: string; dateStr?: string | null 
 function CoachIdCard({ fullName, role, area, profileId, photoUrl, dbsNumber, dbsExpiry, safeguardingExpiry, firstAidExpiry }: IdCardProps) {
   const initials = fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
   return (
-    <div className="bg-gradient-to-br from-[#1a3a6b] to-[#0d2247] rounded-3xl p-5 text-white shadow-xl">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-[#f5c518] rounded-xl flex items-center justify-center shrink-0">
-            <span className="text-[#1a3a6b] font-black text-xs">ASO</span>
+    <div className="bg-gradient-to-br from-[#1a3a6b] to-[#0d2247] rounded-3xl overflow-hidden shadow-xl text-white">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-black/20">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-[#f5c518] rounded-lg flex items-center justify-center shrink-0">
+            <span className="text-[#1a3a6b] font-black text-[9px] leading-none">ASO</span>
           </div>
-          <div>
-            <p className="text-white/60 text-[10px] uppercase tracking-wider">Active School Organisation</p>
-            <p className="text-white font-bold text-sm leading-tight">Digital Coach ID</p>
-          </div>
+          <span className="text-white/70 text-xs font-medium">Digital Coach ID</span>
         </div>
-        <div className="text-right">
-          <p className="text-white/40 text-[10px]">ID</p>
-          <p className="text-white/60 text-xs font-mono">{profileId.slice(0, 8).toUpperCase()}</p>
-        </div>
+        <span className="text-white/40 font-mono text-[10px]">{profileId.slice(0, 8).toUpperCase()}</span>
       </div>
-      <div className="flex items-center gap-4 mb-5">
-        <div className="w-20 h-20 rounded-2xl bg-white/20 overflow-hidden flex items-center justify-center shrink-0 border-2 border-white/20">
+      {/* Main */}
+      <div className="flex items-start gap-4 px-4 pt-4 pb-3">
+        <div className="w-24 h-24 rounded-2xl bg-white/10 overflow-hidden border-2 border-white/20 shrink-0 flex items-center justify-center">
           {photoUrl
             ? <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
-            : <span className="text-white font-bold text-2xl">{initials}</span>
+            : <span className="text-white font-bold text-3xl">{initials}</span>
           }
         </div>
-        <div>
-          <p className="text-xl font-bold leading-tight">{fullName}</p>
+        <div className="flex-1 min-w-0 pt-1">
+          <p className="text-white font-bold text-xl leading-tight">{fullName}</p>
           <p className="text-white/70 text-sm mt-0.5">{role}</p>
           {area && <p className="text-white/50 text-xs mt-0.5">{area}</p>}
+          {dbsNumber && (
+            <div className="mt-2.5">
+              <p className="text-white/40 text-[9px] uppercase tracking-wider">DBS Certificate No.</p>
+              <p className="text-white font-mono font-bold text-sm mt-0.5">{dbsNumber}</p>
+            </div>
+          )}
         </div>
       </div>
-      {dbsNumber && (
-        <div className="bg-white/10 rounded-xl px-3 py-2 mb-3">
-          <p className="text-white/50 text-[10px] uppercase tracking-wider">DBS Certificate Number</p>
-          <p className="text-white font-mono font-bold text-sm mt-0.5">{dbsNumber}</p>
-        </div>
-      )}
-      <div className="bg-white/10 rounded-xl px-3 py-1">
+      {/* Compliance */}
+      <div className="mx-4 mb-4 bg-white/10 rounded-xl px-3 py-1">
         <ExpiryRow label="DBS Expiry" dateStr={dbsExpiry} />
         <ExpiryRow label="Safeguarding" dateStr={safeguardingExpiry} />
         <ExpiryRow label="First Aid" dateStr={firstAidExpiry} />
@@ -156,9 +153,6 @@ export function CoachProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadingCert, setUploadingCert] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-
-  const photoInputRef = useRef<HTMLInputElement>(null)
-  const certFileInputRef = useRef<HTMLInputElement>(null)
 
   const viewerRole = viewer?.role
   const isAdminViewer = viewerRole === 'director' || viewerRole === 'area_lead'
@@ -263,7 +257,6 @@ export function CoachProfilePage() {
     setCertForm({ title: '', issued_date: '', expiry_date: '' })
     setCertFile(null)
     setAddingCert(false)
-    if (certFileInputRef.current) certFileInputRef.current.value = ''
     setUploadingCert(false)
   }
 
@@ -324,10 +317,19 @@ export function CoachProfilePage() {
                 }
               </div>
               <div>
-                <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-                <Button onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} variant="secondary">
-                  <Camera size={16} /> {uploadingPhoto ? 'Uploading…' : photoUrl ? 'Change Photo' : 'Upload Photo'}
-                </Button>
+                <label htmlFor={`photo-upload-${targetId}`} className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white cursor-pointer ${uploadingPhoto ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50'}`}>
+                  <Camera size={16} />
+                  {uploadingPhoto ? 'Uploading…' : photoUrl ? 'Change Photo' : 'Upload Photo'}
+                  <input
+                    id={`photo-upload-${targetId}`}
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    className="hidden"
+                    onChange={handlePhotoChange}
+                    disabled={uploadingPhoto}
+                  />
+                </label>
                 <p className="text-xs text-gray-400 mt-1">JPG or PNG from camera roll</p>
               </div>
             </div>
@@ -389,15 +391,12 @@ export function CoachProfilePage() {
                 value={certForm.expiry_date} onChange={e => setCertForm({ ...certForm, expiry_date: e.target.value })} />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">Upload Certificate (optional)</label>
-                <input ref={certFileInputRef} type="file" className="hidden"
-                  onChange={e => setCertFile(e.target.files?.[0] ?? null)} />
-                <button
-                  onClick={() => certFileInputRef.current?.click()}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] transition-colors"
-                >
+                <label className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] transition-colors cursor-pointer">
+                  <input type="file" className="hidden"
+                    onChange={e => setCertFile(e.target.files?.[0] ?? null)} />
                   <FileText size={16} />
                   <span className="text-sm">{certFile ? certFile.name : 'Tap to attach file…'}</span>
-                </button>
+                </label>
               </div>
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={() => { setAddingCert(false); setCertForm({ title: '', issued_date: '', expiry_date: '' }); setCertFile(null) }} className="flex-1">Cancel</Button>

@@ -12,6 +12,7 @@ export interface Profile {
   dbs_expiry?: string
   safeguarding_expiry?: string
   first_aid_expiry?: string
+  can_clock_anywhere?: boolean
   created_at: string
 }
 
@@ -86,12 +87,33 @@ export interface Announcement {
 export interface ClockRecord {
   id: string
   staff_id: string
-  school_id: string
+  school_id: string | null
+  location_override?: string | null
   clock_in: string
   clock_out: string | null
   created_at: string
   staff?: Profile
   school?: School
+}
+
+export type ExpenseType = 'mileage' | 'travel' | 'other'
+export type ExpenseStatus = 'pending' | 'approved' | 'rejected'
+
+export interface Expense {
+  id: string
+  staff_id: string
+  date: string
+  type: ExpenseType
+  description: string
+  miles: number | null
+  amount: number
+  status: ExpenseStatus
+  approved_by: string | null
+  approved_at: string | null
+  admin_note: string | null
+  created_at: string
+  staff?: Profile
+  approver?: Profile
 }
 
 export interface SessionRegister {

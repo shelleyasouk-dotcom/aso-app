@@ -21,6 +21,8 @@ import { AnnouncementsAdminPage } from './pages/admin/AnnouncementsAdminPage'
 import { ChangePasswordPage } from './pages/profile/ChangePasswordPage'
 import { CoachProfilePage } from './pages/profile/CoachProfilePage'
 import { DocumentsPage } from './pages/documents/DocumentsPage'
+import { ExpensesPage } from './pages/expenses/ExpensesPage'
+import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 
 export default function App() {
   return (
@@ -118,6 +120,14 @@ export default function App() {
           } />
           <Route path="/documents" element={
             <ProtectedRoute><DocumentsPage /></ProtectedRoute>
+          } />
+          <Route path="/expenses" element={
+            <ProtectedRoute><ExpensesPage /></ProtectedRoute>
+          } />
+          <Route path="/expenses/admin" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <ExpensesAdminPage />
+            </ProtectedRoute>
           } />
 
           {/* Catch-all */}

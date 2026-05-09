@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle } from 'lucide-react'
+import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -82,6 +82,13 @@ export function DashboardPage() {
       icon: UserCircle,
       path: '/profile',
       color: 'bg-indigo-50 text-indigo-700',
+    },
+    {
+      label: 'Expenses',
+      description: 'Submit travel & mileage',
+      icon: ReceiptText,
+      path: '/expenses',
+      color: 'bg-orange-50 text-orange-700',
     },
     ...(canManageSchools(profile.role) || profile.role === 'area_lead'
       ? [{

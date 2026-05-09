@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -62,6 +62,13 @@ export function AdminPage() {
       icon: Upload,
       path: '/admin/bulk-import',
       color: 'bg-yellow-50 text-[#1a3a6b]',
+    },
+    {
+      label: 'Expenses',
+      description: 'Review and authorise staff expenses',
+      icon: ReceiptText,
+      path: '/expenses/admin',
+      color: 'bg-orange-50 text-orange-700',
     },
   ]
 
