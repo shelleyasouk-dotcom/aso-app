@@ -9,6 +9,10 @@ import type { School } from '../../types'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+function sortByDay(schools: School[]): School[] {
+  return [...schools].sort((a, b) => DAYS.indexOf(a.session_day) - DAYS.indexOf(b.session_day))
+}
+
 export function SchoolsAdminPage() {
   const [schools, setSchools] = useState<School[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -20,7 +24,7 @@ export function SchoolsAdminPage() {
 
   async function loadSchools() {
     const { data } = await supabase.from('schools').select('*').order('name')
-    if (data) setSchools(data)
+    if (data) setSchools(sortByDay(data))
     setLoading(false)
   }
 
@@ -101,25 +105,34 @@ export function SchoolsAdminPage() {
             <p className="text-gray-500">No schools added yet.</p>
           </Card>
         ) : (
-          schools.map(school => (
-            <Card key={school.id}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-[#1a3a6b]">{school.name}</p>
-                  <p className="text-sm text-gray-500 mt-0.5">{school.address}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {school.session_day} · {school.session_time}
-                  </p>
+          DAYS.map(day => {
+            const daySchools = schools.filter(s => s.session_day === day)
+            if (daySchools.length === 0) return null
+            return (
+              <div key={day}>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{day}</p>
+                <div className="flex flex-col gap-3">
+                  {daySchools.map(school => (
+                    <Card key={school.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-[#1a3a6b]">{school.name}</p>
+                          <p className="text-sm text-gray-500 mt-0.5">{school.address}</p>
+                          <p className="text-xs text-gray-400 mt-1">{school.session_time}</p>
+                        </div>
+                        <button
+                          onClick={() => deleteSchool(school.id)}
+                          className="p-2 rounded-xl text-red-400 hover:bg-red-50 active:bg-red-100 transition-colors"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
-                <button
-                  onClick={() => deleteSchool(school.id)}
-                  className="p-2 rounded-xl text-red-400 hover:bg-red-50 active:bg-red-100 transition-colors"
-                >
-                  <Trash2 size={18} />
-                </button>
               </div>
-            </Card>
-          ))
+            )
+          })
         )}
       </div>
     </Layout>
