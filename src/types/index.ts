@@ -41,6 +41,19 @@ export interface Child {
   assigned_coach?: Profile
 }
 
+export interface Announcement {
+  id: string
+  title: string
+  body: string | null
+  link_url: string | null
+  link_label: string | null
+  area: string | null
+  is_pinned: boolean
+  created_by: string
+  created_at: string
+  author?: Profile
+}
+
 export interface ClockRecord {
   id: string
   staff_id: string

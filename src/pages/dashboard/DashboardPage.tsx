@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound } from 'lucide-react'
+import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { ROLE_LABELS, canClockIn, canManageSchools, canViewRegisters, canViewTimesheets } from '../../lib/roles'
+import type { Announcement } from '../../types'
 
 interface QuickAction {
   label: string
@@ -14,6 +15,15 @@ interface QuickAction {
   icon: React.ElementType
   path: string
   color: string
+}
+
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const days = Math.floor(diff / 86400000)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  if (days < 7) return `${days} days ago`
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
 export function DashboardPage() {
@@ -59,7 +69,7 @@ export function DashboardPage() {
           color: 'bg-purple-50 text-purple-800',
         }]
       : []),
-    ...(canManageSchools(profile.role)
+    ...(canManageSchools(profile.role) || profile.role === 'area_lead'
       ? [{
           label: 'Admin Panel',
           description: 'Manage schools & staff',
@@ -80,6 +90,9 @@ export function DashboardPage() {
             <Badge color="blue">{ROLE_LABELS[profile.role]}</Badge>
           </div>
         </div>
+
+        {/* Announcements */}
+        <AnnouncementsSection area={profile.area} isDirector={profile.role === 'director'} />
 
         {/* Quick actions */}
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
@@ -115,7 +128,7 @@ export function DashboardPage() {
         </button>
 
         {/* School info for coaches */}
-        {!canManageSchools(profile.role) && (
+        {!canManageSchools(profile.role) && profile.role !== 'area_lead' && (
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
               Your School(s)
@@ -125,6 +138,77 @@ export function DashboardPage() {
         )}
       </div>
     </Layout>
+  )
+}
+
+function AnnouncementsSection({ area, isDirector }: { area?: string; isDirector: boolean }) {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    let query = supabase
+      .from('announcements')
+      .select('*')
+      .order('is_pinned', { ascending: false })
+      .order('created_at', { ascending: false })
+
+    // Directors see all; others see global + their area
+    if (!isDirector) {
+      if (area) {
+        query = query.or(`area.is.null,area.eq.${area}`)
+      } else {
+        query = query.is('area', null)
+      }
+    }
+
+    query.then(({ data }) => {
+      if (data) setAnnouncements(data)
+      setLoaded(true)
+    })
+  }, [area, isDirector])
+
+  if (!loaded || announcements.length === 0) return null
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <Megaphone size={15} className="text-gray-500" />
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Announcements</h3>
+      </div>
+      <div className="flex flex-col gap-3">
+        {announcements.map(a => (
+          <div
+            key={a.id}
+            className={`rounded-2xl px-4 py-3.5 ${
+              a.is_pinned
+                ? 'bg-amber-50 border border-amber-200'
+                : 'bg-white border border-gray-100 shadow-sm'
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              {a.is_pinned && <Pin size={13} className="text-amber-500 mt-0.5 shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-[#1a3a6b] text-sm">{a.title}</p>
+                {a.body && (
+                  <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap leading-snug">{a.body}</p>
+                )}
+                {a.link_url && (
+                  <a
+                    href={a.link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-2 text-sm font-semibold text-[#1a3a6b] bg-[#1a3a6b]/10 px-3 py-1.5 rounded-lg"
+                  >
+                    {a.link_label || 'Open Link'}
+                  </a>
+                )}
+                <p className="text-xs text-gray-400 mt-2">{timeAgo(a.created_at)}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -138,9 +222,7 @@ function SchoolAssignments({ staffId }: { staffId: string }) {
       .select('school:schools(name, session_day, session_time)')
       .eq('staff_id', staffId)
       .then(({ data }) => {
-        if (data) {
-          setSchools(data.map((d: any) => d.school).filter(Boolean))
-        }
+        if (data) setSchools(data.map((d: any) => d.school).filter(Boolean))
       })
   }, [staffId])
 

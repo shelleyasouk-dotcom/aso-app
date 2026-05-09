@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -21,6 +21,13 @@ export function AdminPage() {
       path: '/admin/schools',
       color: 'bg-blue-50 text-[#1a3a6b]',
     }] : []),
+    {
+      label: 'Announcements',
+      description: 'Post messages and updates for staff',
+      icon: Megaphone,
+      path: '/admin/announcements',
+      color: 'bg-amber-50 text-amber-700',
+    },
     {
       label: 'Area Schools',
       description: isDirector ? 'View schools by area' : 'View your area schools & coaches',

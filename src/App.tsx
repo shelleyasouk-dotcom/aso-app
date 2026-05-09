@@ -17,6 +17,7 @@ import { StaffAdminPage } from './pages/admin/StaffAdminPage'
 import { ChildrenAdminPage } from './pages/admin/ChildrenAdminPage'
 import { BulkImportPage } from './pages/admin/BulkImportPage'
 import { AreaSchoolsPage } from './pages/admin/AreaSchoolsPage'
+import { AnnouncementsAdminPage } from './pages/admin/AnnouncementsAdminPage'
 import { ChangePasswordPage } from './pages/profile/ChangePasswordPage'
 
 export default function App() {
@@ -83,6 +84,11 @@ export default function App() {
           <Route path="/admin/area-schools" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <AreaSchoolsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/announcements" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <AnnouncementsAdminPage />
             </ProtectedRoute>
           } />
 
