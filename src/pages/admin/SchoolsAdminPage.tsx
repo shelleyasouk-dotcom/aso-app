@@ -60,10 +60,10 @@ export function SchoolsAdminPage() {
                 onChange={e => setForm({ ...form, name: e.target.value })}
               />
               <Input
-                label="Postcode"
-                placeholder="e.g. SW1A 1AA"
+                label="Location"
+                placeholder="e.g. Hackney, East London"
                 value={form.address}
-                onChange={e => setForm({ ...form, address: e.target.value.toUpperCase() })}
+                onChange={e => setForm({ ...form, address: e.target.value })}
               />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">Session Day</label>
