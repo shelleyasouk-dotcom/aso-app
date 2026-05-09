@@ -16,6 +16,7 @@ import { SchoolsAdminPage } from './pages/admin/SchoolsAdminPage'
 import { StaffAdminPage } from './pages/admin/StaffAdminPage'
 import { ChildrenAdminPage } from './pages/admin/ChildrenAdminPage'
 import { BulkImportPage } from './pages/admin/BulkImportPage'
+import { AreaSchoolsPage } from './pages/admin/AreaSchoolsPage'
 import { ChangePasswordPage } from './pages/profile/ChangePasswordPage'
 
 export default function App() {
@@ -77,6 +78,11 @@ export default function App() {
           <Route path="/admin/bulk-import" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <BulkImportPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/area-schools" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <AreaSchoolsPage />
             </ProtectedRoute>
           } />
 

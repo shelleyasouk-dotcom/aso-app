@@ -32,7 +32,7 @@ export function StaffAdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [assignPanel, setAssignPanel] = useState<AssignPanel | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ full_name: '', email: '', role: 'lead_coach' as Role })
+  const [editForm, setEditForm] = useState({ full_name: '', email: '', role: 'lead_coach' as Role, area: '' })
   const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'lead_coach' as Role })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -89,17 +89,19 @@ export function StaffAdminPage() {
 
   function startEdit(member: StaffWithAssignments) {
     setEditingId(member.id)
-    setEditForm({ full_name: member.full_name, email: member.email, role: member.role })
+    setEditForm({ full_name: member.full_name, email: member.email, role: member.role, area: member.area ?? '' })
     setAssignPanel(null)
   }
 
   async function saveEdit(id: string) {
     if (!editForm.full_name || !editForm.email) return
     setSaving(true)
+    const needsArea = editForm.role === 'area_lead' || editForm.role === 'director'
     await supabase.from('profiles').update({
       full_name: editForm.full_name,
       email: editForm.email,
       role: editForm.role,
+      area: needsArea ? (editForm.area || null) : null,
     }).eq('id', id)
     await loadData()
     setEditingId(null)
@@ -182,6 +184,19 @@ export function StaffAdminPage() {
             >
               {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
             </Select>
+            {(editForm.role === 'area_lead' || editForm.role === 'director') && (
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700">Area</label>
+                <select
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
+                  value={editForm.area}
+                  onChange={e => setEditForm({ ...editForm, area: e.target.value })}
+                >
+                  <option value="">No area assigned</option>
+                  {AREAS.map(a => <option key={a}>{a}</option>)}
+                </select>
+              </div>
+            )}
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setEditingId(null)} className="flex-1">Cancel</Button>
               <Button onClick={() => saveEdit(member.id)} disabled={saving} className="flex-1">
@@ -199,7 +214,10 @@ export function StaffAdminPage() {
           <div>
             <p className="font-bold text-[#1a3a6b]">{member.full_name}</p>
             <p className="text-sm text-gray-500">{member.email}</p>
-            <Badge color="blue">{ROLE_LABELS[member.role]}</Badge>
+            <div className="flex items-center gap-1.5 flex-wrap mt-1">
+              <Badge color="blue">{ROLE_LABELS[member.role]}</Badge>
+              {member.area && <Badge color="gray">{member.area}</Badge>}
+            </div>
           </div>
           <div className="flex gap-1 shrink-0">
             <button
