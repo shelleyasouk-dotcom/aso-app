@@ -69,7 +69,7 @@ export function BulkImportPage() {
         // Create auth user
         const { data, error: authError } = await supabase.auth.signUp({
           email: row['Email'],
-          password: 'TempPass123!',
+          password: row['Password'] || 'Password',
           options: { data: { full_name: row['Full Name'], role: row['Role'] } },
         })
 
@@ -122,7 +122,7 @@ export function BulkImportPage() {
   function downloadTemplate(type: ImportType) {
     const templates = {
       schools: `School Name,Address,Session Day,Session Time\nSt Mary's Primary,123 High Street London E1 1AA,Monday,15:30 - 16:30`,
-      staff: `Full Name,Email,Role\nJohn Smith,john@example.com,lead_coach`,
+      staff: `Full Name,Email,Role,Password\nJohn Smith,john@example.com,lead_coach,Password`,
       children: `Child Name,School Name,Contact Email\nEmma Johnson,St Mary's Primary,parent@example.com`,
     }
     const blob = new Blob([templates[type]], { type: 'text/csv' })
@@ -136,7 +136,7 @@ export function BulkImportPage() {
 
   const instructions = {
     schools: 'Import all your school locations. Make sure Session Day matches exactly (e.g. Monday, Tuesday).',
-    staff: 'Import all coaches. Role must be one of: director, area_lead, lead_coach, assistant_coach, junior_coach. All staff are created with temporary password: TempPass123! — assign their schools afterwards in Admin → Staff.',
+    staff: 'Import all coaches. Role must be one of: director, area_lead, lead_coach, assistant_coach, junior_coach. The Password column sets each person\'s login password — defaults to "Password" if left blank. Assign their schools afterwards in Admin → Staff.',
     children: 'Import all children. School Name must match exactly. Import schools first before children.',
   }
 
