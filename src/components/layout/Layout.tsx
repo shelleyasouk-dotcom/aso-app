@@ -32,7 +32,7 @@ export function Layout({ children, title, showBack }: LayoutProps) {
       ? [{ path: '/registers', icon: ClipboardList, label: 'Registers' }]
       : []),
     { path: '/awards', icon: Award, label: 'Awards' },
-    ...(profile && canManageSchools(profile.role)
+    ...(profile && (canManageSchools(profile.role) || profile.role === 'area_lead')
       ? [{ path: '/admin', icon: Settings, label: 'Admin' }]
       : []),
   ]

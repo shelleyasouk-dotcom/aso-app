@@ -1,29 +1,36 @@
 import { useNavigate } from 'react-router-dom'
 import { School, Users, BookOpen, Upload } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
+import { canManageSchools } from '../../lib/roles'
 
 export function AdminPage() {
   const navigate = useNavigate()
+  const { profile } = useAuth()
+
+  if (!profile) return null
+
+  const isDirector = canManageSchools(profile.role)
 
   const sections = [
-    {
+    ...(isDirector ? [{
       label: 'Schools',
       description: 'Add, edit, or remove schools',
       icon: School,
       path: '/admin/schools',
       color: 'bg-blue-50 text-[#1a3a6b]',
-    },
-    {
+    }] : []),
+    ...(isDirector ? [{
       label: 'Staff',
       description: 'Manage staff accounts and roles',
       icon: Users,
       path: '/admin/staff',
       color: 'bg-yellow-50 text-[#1a3a6b]',
-    },
+    }] : []),
     {
       label: 'Children',
-      description: 'Register children at schools',
+      description: 'Add, edit, or remove children',
       icon: BookOpen,
       path: '/admin/children',
       color: 'bg-green-50 text-green-800',
@@ -40,7 +47,9 @@ export function AdminPage() {
   return (
     <Layout title="Admin Panel">
       <div className="px-4 pt-6 flex flex-col gap-4">
-        <p className="text-gray-500 text-sm">Director tools — manage your organisation.</p>
+        <p className="text-gray-500 text-sm">
+          {isDirector ? 'Director tools — manage your organisation.' : 'Area Lead tools — manage your schools.'}
+        </p>
 
         {sections.map(s => {
           const Icon = s.icon

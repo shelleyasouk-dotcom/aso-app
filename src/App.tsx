@@ -64,13 +64,23 @@ export default function App() {
               <TimesheetsPage />
             </ProtectedRoute>
           } />
-
-          {/* Director only */}
           <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['director']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <AdminPage />
             </ProtectedRoute>
           } />
+          <Route path="/admin/children" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <ChildrenAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/bulk-import" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <BulkImportPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Director only */}
           <Route path="/admin/schools" element={
             <ProtectedRoute allowedRoles={['director']}>
               <SchoolsAdminPage />
@@ -79,16 +89,6 @@ export default function App() {
           <Route path="/admin/staff" element={
             <ProtectedRoute allowedRoles={['director']}>
               <StaffAdminPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/children" element={
-            <ProtectedRoute allowedRoles={['director']}>
-              <ChildrenAdminPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/bulk-import" element={
-            <ProtectedRoute allowedRoles={['director']}>
-              <BulkImportPage />
             </ProtectedRoute>
           } />
 
