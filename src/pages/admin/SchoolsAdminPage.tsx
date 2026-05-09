@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/Input'
 import type { School } from '../../types'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
 
 function sortByDay(schools: School[]): School[] {
   return [...schools].sort((a, b) => DAYS.indexOf(a.session_day) - DAYS.indexOf(b.session_day))
@@ -16,7 +17,7 @@ function sortByDay(schools: School[]): School[] {
 export function SchoolsAdminPage() {
   const [schools, setSchools] = useState<School[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ name: '', address: '', session_day: 'Monday', session_time: '' })
+  const [form, setForm] = useState({ name: '', address: '', area: 'Hampshire', session_day: 'Monday', session_time: '' })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -34,7 +35,7 @@ export function SchoolsAdminPage() {
     const { error } = await supabase.from('schools').insert(form)
     if (!error) {
       await loadSchools()
-      setForm({ name: '', address: '', session_day: 'Monday', session_time: '' })
+      setForm({ name: '', address: '', area: 'Hampshire', session_day: 'Monday', session_time: '' })
       setShowForm(false)
     }
     setSaving(false)
@@ -65,10 +66,20 @@ export function SchoolsAdminPage() {
               />
               <Input
                 label="Location"
-                placeholder="e.g. Hackney, East London"
+                placeholder="e.g. Andover, Hampshire"
                 value={form.address}
                 onChange={e => setForm({ ...form, address: e.target.value })}
               />
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700">Area</label>
+                <select
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
+                  value={form.area}
+                  onChange={e => setForm({ ...form, area: e.target.value })}
+                >
+                  {AREAS.map(a => <option key={a}>{a}</option>)}
+                </select>
+              </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">Session Day</label>
                 <select
@@ -118,6 +129,7 @@ export function SchoolsAdminPage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-[#1a3a6b]">{school.name}</p>
                           <p className="text-sm text-gray-500 mt-0.5">{school.address}</p>
+                          {school.area && <p className="text-xs text-[#1a3a6b]/60 font-medium mt-0.5">{school.area}</p>}
                           <p className="text-xs text-gray-400 mt-1">{school.session_time}</p>
                         </div>
                         <button

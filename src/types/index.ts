@@ -12,6 +12,7 @@ export interface School {
   id: string
   name: string
   address: string
+  area: string
   session_day: string
   session_time: string
   created_at: string

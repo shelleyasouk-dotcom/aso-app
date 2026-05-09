@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Users, School } from 'lucide-react'
+import { Plus, Users, School, Check } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -10,26 +10,32 @@ import { Input, Select } from '../../components/ui/Input'
 import type { Profile, School as SchoolType, Role, StaffSchoolAssignment } from '../../types'
 import { ROLE_LABELS, canManageStaff } from '../../lib/roles'
 
+const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
 const ROLES: Role[] = ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach']
 
 interface StaffWithAssignments extends Profile {
   assignments?: (StaffSchoolAssignment & { school?: SchoolType })[]
 }
 
+interface AssignPanel {
+  staffId: string
+  staffName: string
+  selected: Set<string>
+}
+
 export function StaffAdminPage() {
   const { profile } = useAuth()
   const isDirector = profile ? canManageStaff(profile.role) : false
+
   const [staff, setStaff] = useState<StaffWithAssignments[]>([])
   const [schools, setSchools] = useState<SchoolType[]>([])
   const [showForm, setShowForm] = useState(false)
-  const [assignForm, setAssignForm] = useState<{ staffId: string; schoolId: string } | null>(null)
+  const [assignPanel, setAssignPanel] = useState<AssignPanel | null>(null)
   const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'lead_coach' as Role })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadData()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
   async function loadData() {
     const [{ data: staffData }, { data: schoolData }] = await Promise.all([
@@ -51,6 +57,8 @@ export function StaffAdminPage() {
         ...s,
         assignments: assignments?.filter(a => a.staff_id === s.id) ?? [],
       })))
+    } else {
+      setStaff([])
     }
     setLoading(false)
   }
@@ -58,18 +66,12 @@ export function StaffAdminPage() {
   async function inviteStaff() {
     if (!form.email || !form.full_name || !form.password) return
     setSaving(true)
-
-    // Create auth user (in production use Supabase Admin API or invite flow)
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-      options: {
-        data: { full_name: form.full_name, role: form.role },
-      },
+      options: { data: { full_name: form.full_name, role: form.role } },
     })
-
     if (!error && data.user) {
-      // Upsert profile
       await supabase.from('profiles').upsert({
         id: data.user.id,
         email: form.email,
@@ -83,25 +85,85 @@ export function StaffAdminPage() {
     setSaving(false)
   }
 
-  async function assignToSchool() {
-    if (!assignForm) return
-    setSaving(true)
-    await supabase.from('staff_school_assignments').upsert({
-      staff_id: assignForm.staffId,
-      school_id: assignForm.schoolId,
+  function openAssignPanel(member: StaffWithAssignments) {
+    setAssignPanel({
+      staffId: member.id,
+      staffName: member.full_name,
+      selected: new Set(member.assignments?.map(a => a.school_id) ?? []),
     })
+  }
+
+  function toggleSchool(schoolId: string) {
+    if (!assignPanel) return
+    const next = new Set(assignPanel.selected)
+    if (next.has(schoolId)) next.delete(schoolId)
+    else next.add(schoolId)
+    setAssignPanel({ ...assignPanel, selected: next })
+  }
+
+  async function saveAssignments() {
+    if (!assignPanel) return
+    setSaving(true)
+    const member = staff.find(s => s.id === assignPanel.staffId)
+    const currentIds = new Set(member?.assignments?.map(a => a.school_id) ?? [])
+
+    const toAdd = [...assignPanel.selected].filter(id => !currentIds.has(id))
+    const toRemove = [...currentIds].filter(id => !assignPanel.selected.has(id))
+
+    if (toAdd.length > 0) {
+      await supabase.from('staff_school_assignments').insert(
+        toAdd.map(school_id => ({ staff_id: assignPanel.staffId, school_id }))
+      )
+    }
+    for (const school_id of toRemove) {
+      await supabase.from('staff_school_assignments').delete()
+        .eq('staff_id', assignPanel.staffId).eq('school_id', school_id)
+    }
+
     await loadData()
-    setAssignForm(null)
+    setAssignPanel(null)
     setSaving(false)
   }
 
-  async function removeAssignment(staffId: string, schoolId: string) {
-    await supabase
-      .from('staff_school_assignments')
-      .delete()
-      .eq('staff_id', staffId)
-      .eq('school_id', schoolId)
-    await loadData()
+  // Build area groups: each area → staff who have assignments in that area
+  const areaGroups = AREAS.map(area => {
+    const areaSchoolIds = new Set(schools.filter(s => s.area === area).map(s => s.id))
+    const areaStaff = staff.filter(m =>
+      m.assignments?.some(a => areaSchoolIds.has(a.school_id))
+    )
+    return { area, staff: areaStaff }
+  })
+
+  // Staff with no school assignments (show at bottom)
+  const unassigned = staff.filter(m => !m.assignments || m.assignments.length === 0)
+
+  function StaffCard({ member }: { member: StaffWithAssignments }) {
+    return (
+      <Card key={member.id}>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div>
+            <p className="font-bold text-[#1a3a6b]">{member.full_name}</p>
+            <p className="text-sm text-gray-500">{member.email}</p>
+            <Badge color="blue">{ROLE_LABELS[member.role]}</Badge>
+          </div>
+          <button
+            onClick={() => openAssignPanel(member)}
+            className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-3 py-1.5 rounded-lg shrink-0"
+          >
+            <School size={13} /> Schools
+          </button>
+        </div>
+        {member.assignments && member.assignments.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {member.assignments.map(a => (
+              <span key={a.id} className="text-xs bg-[#f4f6f9] text-gray-600 px-2 py-1 rounded-lg">
+                {a.school?.name}
+              </span>
+            ))}
+          </div>
+        )}
+      </Card>
+    )
   }
 
   return (
@@ -145,9 +207,7 @@ export function StaffAdminPage() {
                 {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
               </Select>
               <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => setShowForm(false)} className="flex-1">
-                  Cancel
-                </Button>
+                <Button variant="secondary" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
                 <Button onClick={inviteStaff} disabled={saving} className="flex-1">
                   {saving ? 'Creating…' : 'Create Account'}
                 </Button>
@@ -156,23 +216,60 @@ export function StaffAdminPage() {
           </Card>
         )}
 
-        {assignForm && (
+        {/* Multi-school assignment panel */}
+        {assignPanel && (
           <Card>
-            <h3 className="font-semibold text-[#1a3a6b] mb-3">Assign to School</h3>
-            <Select
-              label="School"
-              value={assignForm.schoolId}
-              onChange={e => setAssignForm({ ...assignForm, schoolId: e.target.value })}
-            >
-              <option value="">Select a school…</option>
-              {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </Select>
-            <div className="flex gap-2 mt-3">
-              <Button variant="secondary" onClick={() => setAssignForm(null)} className="flex-1">
-                Cancel
-              </Button>
-              <Button onClick={assignToSchool} disabled={saving || !assignForm.schoolId} className="flex-1">
-                {saving ? 'Assigning…' : 'Assign'}
+            <h3 className="font-semibold text-[#1a3a6b] mb-1">Assign Schools</h3>
+            <p className="text-sm text-gray-500 mb-3">{assignPanel.staffName}</p>
+            <div className="flex flex-col gap-1 mb-4 max-h-72 overflow-y-auto">
+              {AREAS.map(area => {
+                const areaSchools = schools.filter(s => s.area === area)
+                if (areaSchools.length === 0) return null
+                return (
+                  <div key={area}>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 py-2">{area}</p>
+                    {areaSchools.map(s => (
+                      <button
+                        key={s.id}
+                        onClick={() => toggleSchool(s.id)}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl mb-1 transition-colors ${
+                          assignPanel.selected.has(s.id)
+                            ? 'bg-[#1a3a6b] text-white'
+                            : 'bg-[#f4f6f9] text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <div className="text-left">
+                          <p className="text-sm font-medium">{s.name}</p>
+                          <p className={`text-xs ${assignPanel.selected.has(s.id) ? 'text-white/70' : 'text-gray-400'}`}>
+                            {s.session_day} · {s.session_time}
+                          </p>
+                        </div>
+                        {assignPanel.selected.has(s.id) && <Check size={16} className="shrink-0" />}
+                      </button>
+                    ))}
+                  </div>
+                )
+              })}
+              {/* Schools with no area set */}
+              {schools.filter(s => !s.area || !AREAS.includes(s.area)).map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => toggleSchool(s.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl mb-1 transition-colors ${
+                    assignPanel.selected.has(s.id)
+                      ? 'bg-[#1a3a6b] text-white'
+                      : 'bg-[#f4f6f9] text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <span className="text-sm font-medium">{s.name}</span>
+                  {assignPanel.selected.has(s.id) && <Check size={16} className="shrink-0" />}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={() => setAssignPanel(null)} className="flex-1">Cancel</Button>
+              <Button onClick={saveAssignments} disabled={saving} className="flex-1">
+                {saving ? 'Saving…' : `Save (${assignPanel.selected.size} school${assignPanel.selected.size !== 1 ? 's' : ''})`}
               </Button>
             </div>
           </Card>
@@ -186,39 +283,28 @@ export function StaffAdminPage() {
             <p className="text-gray-500">No staff members yet.</p>
           </Card>
         ) : (
-          staff.map(member => (
-            <Card key={member.id}>
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <div>
-                  <p className="font-bold text-[#1a3a6b]">{member.full_name}</p>
-                  <p className="text-sm text-gray-500">{member.email}</p>
-                  <Badge color="blue" >{ROLE_LABELS[member.role]}</Badge>
+          <>
+            {areaGroups.map(({ area, staff: areaStaff }) => {
+              if (areaStaff.length === 0) return null
+              return (
+                <div key={area}>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{area}</p>
+                  <div className="flex flex-col gap-3">
+                    {areaStaff.map(m => <StaffCard key={m.id} member={m} />)}
+                  </div>
                 </div>
-                <button
-                  onClick={() => setAssignForm({ staffId: member.id, schoolId: '' })}
-                  className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-3 py-1.5 rounded-lg"
-                >
-                  <School size={13} /> Assign
-                </button>
-              </div>
+              )
+            })}
 
-              {member.assignments && member.assignments.length > 0 && (
-                <div className="flex flex-col gap-1.5">
-                  {member.assignments.map(a => (
-                    <div key={a.id} className="flex items-center justify-between bg-[#f4f6f9] rounded-xl px-3 py-2">
-                      <span className="text-sm text-gray-700">{a.school?.name}</span>
-                      <button
-                        onClick={() => removeAssignment(member.id, a.school_id)}
-                        className="text-red-400 hover:text-red-600"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
+            {unassigned.length > 0 && (
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">No Schools Assigned</p>
+                <div className="flex flex-col gap-3">
+                  {unassigned.map(m => <StaffCard key={m.id} member={m} />)}
                 </div>
-              )}
-            </Card>
-          ))
+              </div>
+            )}
+          </>
         )}
       </div>
     </Layout>
