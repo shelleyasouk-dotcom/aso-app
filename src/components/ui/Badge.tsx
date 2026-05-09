@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 interface BadgeProps {
   children: ReactNode
-  color?: 'blue' | 'yellow' | 'green' | 'red' | 'gray' | 'purple'
+  color?: 'blue' | 'yellow' | 'green' | 'red' | 'gray' | 'purple' | 'orange'
 }
 
 const colors = {
@@ -12,6 +12,7 @@ const colors = {
   red: 'bg-red-100 text-red-800',
   gray: 'bg-gray-100 text-gray-700',
   purple: 'bg-purple-100 text-purple-800',
+  orange: 'bg-orange-100 text-orange-800',
 }
 
 export function Badge({ children, color = 'blue' }: BadgeProps) {

@@ -19,6 +19,8 @@ import { BulkImportPage } from './pages/admin/BulkImportPage'
 import { AreaSchoolsPage } from './pages/admin/AreaSchoolsPage'
 import { AnnouncementsAdminPage } from './pages/admin/AnnouncementsAdminPage'
 import { ChangePasswordPage } from './pages/profile/ChangePasswordPage'
+import { CoachProfilePage } from './pages/profile/CoachProfilePage'
+import { DocumentsPage } from './pages/documents/DocumentsPage'
 
 export default function App() {
   return (
@@ -107,6 +109,12 @@ export default function App() {
           {/* Change password — all staff */}
           <Route path="/change-password" element={
             <ProtectedRoute><ChangePasswordPage /></ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute><CoachProfilePage /></ProtectedRoute>
+          } />
+          <Route path="/documents" element={
+            <ProtectedRoute><DocumentsPage /></ProtectedRoute>
           } />
 
           {/* Catch-all */}

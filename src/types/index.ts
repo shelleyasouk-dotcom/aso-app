@@ -6,6 +6,35 @@ export interface Profile {
   full_name: string
   role: Role
   area?: string
+  photo_url?: string
+  phone?: string
+  dbs_number?: string
+  dbs_expiry?: string
+  safeguarding_expiry?: string
+  first_aid_expiry?: string
+  created_at: string
+}
+
+export interface OrgDocument {
+  id: string
+  title: string
+  description: string | null
+  category: string
+  file_path: string
+  file_name: string
+  file_size: number | null
+  uploaded_by: string
+  created_at: string
+  uploader?: Profile
+}
+
+export interface CoachCertificate {
+  id: string
+  coach_id: string
+  title: string
+  file_path: string | null
+  issued_date: string | null
+  expiry_date: string | null
   created_at: string
 }
 
