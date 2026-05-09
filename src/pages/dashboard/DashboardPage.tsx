@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School } from 'lucide-react'
+import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -105,6 +105,14 @@ export function DashboardPage() {
             )
           })}
         </div>
+
+        {/* Change password link */}
+        <button
+          onClick={() => navigate('/change-password')}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#1a3a6b] transition-colors mt-2"
+        >
+          <KeyRound size={14} /> Change my password
+        </button>
 
         {/* School info for coaches */}
         {!canManageSchools(profile.role) && (
