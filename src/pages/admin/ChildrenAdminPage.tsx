@@ -6,15 +6,17 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Input, Select } from '../../components/ui/Input'
-import type { Child, School } from '../../types'
+import type { Child, School, Profile } from '../../types'
 
-interface ChildWithSchool extends Child {
+interface ChildWithRefs extends Child {
   school?: School
+  assigned_coach?: Profile
 }
 
 export function ChildrenAdminPage() {
-  const [children, setChildren] = useState<ChildWithSchool[]>([])
+  const [children, setChildren] = useState<ChildWithRefs[]>([])
   const [schools, setSchools] = useState<School[]>([])
+  const [coaches, setCoaches] = useState<Profile[]>([])
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ full_name: '', date_of_birth: '', school_id: '' })
   const [saving, setSaving] = useState(false)
@@ -23,6 +25,7 @@ export function ChildrenAdminPage() {
 
   useEffect(() => {
     loadSchools()
+    loadCoaches()
   }, [])
 
   useEffect(() => {
@@ -37,10 +40,19 @@ export function ChildrenAdminPage() {
     }
   }
 
+  async function loadCoaches() {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('role', ['lead_coach', 'assistant_coach', 'junior_coach'])
+      .order('full_name')
+    if (data) setCoaches(data)
+  }
+
   async function loadChildren() {
     let query = supabase
       .from('children')
-      .select('*, school:schools(*)')
+      .select('*, school:schools(*), assigned_coach:profiles!assigned_coach_id(*)')
       .order('full_name')
 
     if (filterSchool) query = query.eq('school_id', filterSchool)
@@ -67,9 +79,17 @@ export function ChildrenAdminPage() {
     setSaving(false)
   }
 
-  async function toggleActive(child: ChildWithSchool) {
+  async function toggleActive(child: ChildWithRefs) {
     await supabase.from('children').update({ is_active: !child.is_active }).eq('id', child.id)
     setChildren(prev => prev.map(c => c.id === child.id ? { ...c, is_active: !c.is_active } : c))
+  }
+
+  async function assignCoach(childId: string, coachId: string) {
+    await supabase
+      .from('children')
+      .update({ assigned_coach_id: coachId || null })
+      .eq('id', childId)
+    await loadChildren()
   }
 
   return (
@@ -134,7 +154,7 @@ export function ChildrenAdminPage() {
         ) : (
           children.map(child => (
             <Card key={child.id}>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-[#1a3a6b] rounded-full flex items-center justify-center shrink-0">
                   <span className="text-white font-bold text-xs">
                     {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -163,6 +183,21 @@ export function ChildrenAdminPage() {
                     }
                   </button>
                 </div>
+              </div>
+
+              {/* Assign coach */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold text-gray-500">Assigned Coach</label>
+                <select
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b] bg-[#f4f6f9]"
+                  value={child.assigned_coach_id ?? ''}
+                  onChange={e => assignCoach(child.id, e.target.value)}
+                >
+                  <option value="">No coach assigned</option>
+                  {coaches.map(c => (
+                    <option key={c.id} value={c.id}>{c.full_name}</option>
+                  ))}
+                </select>
               </div>
             </Card>
           ))

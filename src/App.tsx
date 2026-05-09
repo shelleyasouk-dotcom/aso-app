@@ -87,7 +87,7 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/admin/staff" element={
-            <ProtectedRoute allowedRoles={['director']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <StaffAdminPage />
             </ProtectedRoute>
           } />

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, Users, School } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Input, Select } from '../../components/ui/Input'
 import type { Profile, School as SchoolType, Role, StaffSchoolAssignment } from '../../types'
-import { ROLE_LABELS } from '../../lib/roles'
+import { ROLE_LABELS, canManageStaff } from '../../lib/roles'
 
 const ROLES: Role[] = ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach']
 
@@ -16,6 +17,8 @@ interface StaffWithAssignments extends Profile {
 }
 
 export function StaffAdminPage() {
+  const { profile } = useAuth()
+  const isDirector = profile ? canManageStaff(profile.role) : false
   const [staff, setStaff] = useState<StaffWithAssignments[]>([])
   const [schools, setSchools] = useState<SchoolType[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -104,9 +107,11 @@ export function StaffAdminPage() {
   return (
     <Layout title="Staff" showBack>
       <div className="px-4 pt-6 flex flex-col gap-4">
-        <Button variant="primary" size="lg" fullWidth onClick={() => setShowForm(!showForm)}>
-          <Plus size={20} /> Add Staff Member
-        </Button>
+        {isDirector && (
+          <Button variant="primary" size="lg" fullWidth onClick={() => setShowForm(!showForm)}>
+            <Plus size={20} /> Add Staff Member
+          </Button>
+        )}
 
         {showForm && (
           <Card>

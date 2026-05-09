@@ -32,9 +32,11 @@ export interface Child {
   date_of_birth: string | null
   contact_email: string | null
   school_id: string
+  assigned_coach_id: string | null
   is_active: boolean
   created_at: string
   school?: School
+  assigned_coach?: Profile
 }
 
 export interface ClockRecord {

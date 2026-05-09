@@ -21,13 +21,13 @@ export function AdminPage() {
       path: '/admin/schools',
       color: 'bg-blue-50 text-[#1a3a6b]',
     }] : []),
-    ...(isDirector ? [{
+    {
       label: 'Staff',
-      description: 'Manage staff accounts and roles',
+      description: isDirector ? 'Manage staff accounts and roles' : 'View staff and assign to schools',
       icon: Users,
       path: '/admin/staff',
       color: 'bg-yellow-50 text-[#1a3a6b]',
-    }] : []),
+    },
     {
       label: 'Children',
       description: 'Add, edit, or remove children',
