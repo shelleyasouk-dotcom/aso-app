@@ -324,7 +324,6 @@ export function CoachProfilePage() {
                     id={`photo-upload-${targetId}`}
                     type="file"
                     accept="image/*"
-                    capture="user"
                     className="hidden"
                     onChange={handlePhotoChange}
                     disabled={uploadingPhoto}

@@ -41,7 +41,7 @@ export function canManageAwards(role: Role): boolean {
 }
 
 export function canClockIn(role: Role): boolean {
-  return ['lead_coach', 'assistant_coach', 'junior_coach', 'area_lead'].includes(role)
+  return ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach'].includes(role)
 }
 
 // Directors and Area Leads can edit/delete anything to fix errors

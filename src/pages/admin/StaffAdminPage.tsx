@@ -77,18 +77,24 @@ function StaffCard({ member, editingId, editForm, setEditForm, setEditingId, sav
               </select>
             </div>
           )}
-          <label className="flex items-center gap-3 py-2 cursor-pointer">
-            <div
+          <div className="flex items-center gap-3 py-2">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={editForm.can_clock_anywhere}
               onClick={() => setEditForm({ ...editForm, can_clock_anywhere: !editForm.can_clock_anywhere })}
-              className={`w-11 h-6 rounded-full transition-colors shrink-0 ${editForm.can_clock_anywhere ? 'bg-[#1a3a6b]' : 'bg-gray-200'}`}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 focus:outline-none ${editForm.can_clock_anywhere ? 'bg-[#1a3a6b]' : 'bg-gray-200'}`}
             >
-              <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${editForm.can_clock_anywhere ? 'translate-x-5.5' : 'translate-x-0.5'}`} />
-            </div>
+              <span
+                className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                style={{ transform: editForm.can_clock_anywhere ? 'translateX(20px)' : 'translateX(0)' }}
+              />
+            </button>
             <div>
               <p className="text-sm font-semibold text-gray-700">Can clock in anywhere</p>
               <p className="text-xs text-gray-400">Allows clock-in from any or custom location</p>
             </div>
-          </label>
+          </div>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setEditingId(null)} className="flex-1">Cancel</Button>
             <Button onClick={() => onSaveEdit(member.id)} disabled={saving} className="flex-1">
