@@ -6,13 +6,14 @@ import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Select } from '../../components/ui/Input'
+import { clocksInAnywhere } from '../../lib/roles'
 import type { School, ClockRecord } from '../../types'
 
 const CUSTOM_ID = '__custom__'
 
 export function ClockInPage() {
   const { profile } = useAuth()
-  const canClockAnywhere = profile?.can_clock_anywhere ?? false
+  const canClockAnywhere = profile ? (clocksInAnywhere(profile.role) || (profile.can_clock_anywhere ?? false)) : false
 
   const [schools, setSchools] = useState<School[]>([])
   const [selectedSchoolId, setSelectedSchoolId] = useState('')

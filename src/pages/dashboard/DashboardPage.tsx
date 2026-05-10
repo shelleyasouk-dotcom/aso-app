@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight } from 'lucide-react'
+import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight, Building2 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -90,6 +90,15 @@ export function DashboardPage() {
       path: '/expenses',
       color: 'bg-orange-50 text-orange-700',
     },
+    ...(profile.role === 'outreach_worker' || profile.role === 'director' || profile.role === 'area_lead'
+      ? [{
+          label: 'School Outreach',
+          description: 'Manage school contacts & CRM',
+          icon: Building2,
+          path: '/crm',
+          color: 'bg-teal-50 text-teal-700',
+        }]
+      : []),
     ...(canManageSchools(profile.role) || profile.role === 'area_lead'
       ? [{
           label: 'Admin Panel',

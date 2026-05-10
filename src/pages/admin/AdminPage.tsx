@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -69,6 +69,13 @@ export function AdminPage() {
       icon: ReceiptText,
       path: '/expenses/admin',
       color: 'bg-orange-50 text-orange-700',
+    },
+    {
+      label: 'School Outreach',
+      description: 'School contact database and outreach CRM',
+      icon: Building2,
+      path: '/crm',
+      color: 'bg-teal-50 text-teal-700',
     },
   ]
 

@@ -12,7 +12,7 @@ import type { Profile, School as SchoolType, Role, StaffSchoolAssignment } from 
 import { ROLE_LABELS, canManageStaff } from '../../lib/roles'
 
 const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
-const ROLES: Role[] = ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach']
+const ROLES: Role[] = ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach', 'outreach_worker', 'media_tech']
 
 interface StaffWithAssignments extends Profile {
   assignments?: (StaffSchoolAssignment & { school?: SchoolType })[]

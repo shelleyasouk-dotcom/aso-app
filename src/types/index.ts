@@ -1,4 +1,4 @@
-export type Role = 'director' | 'area_lead' | 'lead_coach' | 'assistant_coach' | 'junior_coach'
+export type Role = 'director' | 'area_lead' | 'lead_coach' | 'assistant_coach' | 'junior_coach' | 'outreach_worker' | 'media_tech'
 
 export interface Profile {
   id: string
@@ -163,4 +163,38 @@ export interface ChildAward {
   notes: string | null
   child?: Child
   awarded_by_profile?: Profile
+}
+
+export type CrmStatus = 'prospect' | 'contacted' | 'interested' | 'onboarded' | 'declined'
+export type CrmInteractionType = 'email' | 'call' | 'visit' | 'meeting' | 'other'
+export type CrmOutcome = 'positive' | 'neutral' | 'negative'
+
+export interface CrmContact {
+  id: string
+  school_name: string
+  contact_name: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
+  area: string | null
+  status: CrmStatus
+  notes: string | null
+  assigned_to: string | null
+  created_by: string
+  created_at: string
+  updated_at: string
+  assignee?: Profile
+}
+
+export interface CrmInteraction {
+  id: string
+  contact_id: string
+  staff_id: string
+  type: CrmInteractionType
+  date: string
+  notes: string
+  follow_up_date: string | null
+  outcome: CrmOutcome | null
+  created_at: string
+  staff?: Profile
 }

@@ -6,6 +6,8 @@ export const ROLE_LABELS: Record<Role, string> = {
   lead_coach: 'Lead Coach',
   assistant_coach: 'Assistant Coach',
   junior_coach: 'Junior Coach',
+  outreach_worker: 'Outreach Worker',
+  media_tech: 'Media & Tech',
 }
 
 export function canViewAllSchools(role: Role): boolean {
@@ -40,8 +42,16 @@ export function canManageAwards(role: Role): boolean {
   return role === 'director' || role === 'area_lead' || role === 'lead_coach'
 }
 
-export function canClockIn(role: Role): boolean {
-  return ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach'].includes(role)
+export function canClockIn(_role: Role): boolean {
+  return true // all roles can clock in
+}
+
+export function clocksInAnywhere(role: Role): boolean {
+  return role === 'director' || role === 'area_lead' || role === 'outreach_worker' || role === 'media_tech'
+}
+
+export function canUseCrm(role: Role): boolean {
+  return role === 'director' || role === 'area_lead' || role === 'outreach_worker'
 }
 
 // Directors and Area Leads can edit/delete anything to fix errors
