@@ -50,16 +50,43 @@ export const STATUS_CHIP: Record<CrmStatus, string> = {
 
 const STATUSES = Object.keys(STATUS_LABELS) as CrmStatus[]
 
+// RFC 4180-compliant CSV parser — handles quoted fields containing commas
+function parseCsvLine(line: string): string[] {
+  const result: string[] = []
+  let i = 0
+  while (i <= line.length) {
+    if (line[i] === '"') {
+      i++
+      let val = ''
+      while (i < line.length) {
+        if (line[i] === '"' && line[i + 1] === '"') { val += '"'; i += 2 }
+        else if (line[i] === '"') { i++; break }
+        else { val += line[i++] }
+      }
+      result.push(val.trim())
+      if (line[i] === ',') i++
+    } else {
+      const end = line.indexOf(',', i)
+      if (end === -1) { result.push(line.slice(i).trim()); break }
+      result.push(line.slice(i, end).trim())
+      i = end + 1
+    }
+  }
+  return result
+}
+
 function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.trim().split('\n')
+  const lines = text.trim().split(/\r?\n/)
   if (lines.length < 2) return []
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, '').toLowerCase())
-  return lines.slice(1).map(line => {
-    const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''))
-    const row: Record<string, string> = {}
-    headers.forEach((h, i) => { row[h] = values[i] ?? '' })
-    return row
-  }).filter(row => Object.values(row).some(v => v !== ''))
+  const headers = parseCsvLine(lines[0]).map(h => h.toLowerCase())
+  return lines.slice(1)
+    .map(line => {
+      const values = parseCsvLine(line)
+      const row: Record<string, string> = {}
+      headers.forEach((h, i) => { row[h] = values[i] ?? '' })
+      return row
+    })
+    .filter(row => Object.values(row).some(v => v !== ''))
 }
 
 // Flexible column matcher — handles varied header names from Excel exports
@@ -101,6 +128,11 @@ function ContactRow({ contact, onQuickLog, onDnc, onClick }: ContactRowProps) {
             </div>
             {contact.follow_up_number > 0 && !isDnc && (
               <p className="text-xs text-gray-400 mt-0.5">Follow-up #{contact.follow_up_number}</p>
+            )}
+            {(!contact.email || !contact.phone) && !isDnc && (
+              <p className="text-xs text-gray-300 mt-0.5">
+                {[!contact.email && 'no email', !contact.phone && 'no phone'].filter(Boolean).join(' · ')}
+              </p>
             )}
             {isOverdue && !isDnc && (
               <p className="text-xs text-amber-600 font-medium mt-0.5 flex items-center gap-1">
@@ -160,6 +192,7 @@ export function CrmPage() {
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<{ success: number; skipped: number; errors: string[] } | null>(null)
+  const [importPreview, setImportPreview] = useState<Array<{ name: string; area: string; email: string; phone: string; status: string }> | null>(null)
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -264,6 +297,28 @@ export function CrmPage() {
     }).eq('id', contact.id)
     loadContacts(true)
     loadCounts()
+  }
+
+  async function previewCSV(file: File) {
+    const text = await file.text()
+    const rows = parseCSV(text)
+    const preview = rows.slice(0, 5).map(row => {
+      const rawStatus = col(row, 'status', 'colour', 'color').toLowerCase()
+      let status = 'Prospect'
+      if (rawStatus.includes('red') || rawStatus.includes('dnc') || rawStatus.includes('do not')) status = 'Do Not Contact'
+      else if (rawStatus.includes('amber') || rawStatus.includes('interest')) status = 'Interested'
+      else if (rawStatus.includes('green') || rawStatus.includes('onboard')) status = 'Onboarded'
+      else if (rawStatus.includes('follow')) status = 'Following Up'
+      else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'Email Sent'
+      return {
+        name: col(row, 'school name', 'school', 'name') || '(no name)',
+        area: col(row, 'area', 'region', 'county', 'district'),
+        email: col(row, 'email', 'e-mail'),
+        phone: col(row, 'phone', 'tel', 'number'),
+        status,
+      }
+    })
+    setImportPreview(preview.length > 0 ? preview : null)
   }
 
   async function importCSV() {
@@ -409,9 +464,32 @@ export function CrmPage() {
               <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#1a3a6b] transition-colors bg-gray-50 mt-2">
                 <Upload size={22} className="text-gray-400 mb-1.5" />
                 <span className="text-sm text-gray-500">{importFile ? importFile.name : 'Tap to select CSV'}</span>
-                <input type="file" accept=".csv" className="hidden" onChange={e => { setImportFile(e.target.files?.[0] ?? null); setImportResult(null) }} />
+                <input type="file" accept=".csv" className="hidden" onChange={e => {
+                  const f = e.target.files?.[0] ?? null
+                  setImportFile(f)
+                  setImportResult(null)
+                  setImportPreview(null)
+                  if (f) previewCSV(f)
+                }} />
               </label>
             </div>
+            {importPreview && (
+              <div className="mt-3 flex flex-col gap-2">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Preview (first {importPreview.length} rows)</p>
+                {importPreview.map((row, i) => (
+                  <div key={i} className="bg-gray-50 rounded-xl px-3 py-2 flex flex-col gap-0.5">
+                    <p className="text-sm font-semibold text-[#1a3a6b] truncate">{row.name}</p>
+                    <div className="flex gap-3 flex-wrap">
+                      {row.area && <span className="text-xs text-gray-500">{row.area}</span>}
+                      {row.email ? <span className="text-xs text-green-600">{row.email}</span> : <span className="text-xs text-gray-300">no email</span>}
+                      {row.phone ? <span className="text-xs text-green-600">{row.phone}</span> : <span className="text-xs text-gray-300">no phone</span>}
+                      <span className="text-xs text-blue-500 font-medium">{row.status}</span>
+                    </div>
+                  </div>
+                ))}
+                <p className="text-xs text-gray-400 text-center">Missing fields can be filled in after import</p>
+              </div>
+            )}
             {importFile && (
               <Button className="mt-3 w-full" onClick={importCSV} disabled={importing}>
                 <Upload size={16} /> {importing ? `Importing…` : `Import ${importFile.name}`}
