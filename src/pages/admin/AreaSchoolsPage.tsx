@@ -9,6 +9,19 @@ import type { School, Profile } from '../../types'
 const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
+function parseStartMinutes(sessionTime: string): number {
+  if (!sessionTime) return 9999
+  const first = sessionTime.split(/[-–]/)[0].trim()
+  const match = first.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i)
+  if (!match) return 9999
+  let h = parseInt(match[1])
+  const m = parseInt(match[2])
+  const ampm = match[3]?.toLowerCase()
+  if (ampm === 'pm' && h !== 12) h += 12
+  if (ampm === 'am' && h === 12) h = 0
+  return h * 60 + m
+}
+
 interface SchoolWithCoaches extends School {
   coaches: Profile[]
 }
@@ -63,7 +76,9 @@ export function AreaSchoolsPage() {
 
   const byDay = DAYS.map(day => ({
     day,
-    schools: schools.filter(s => s.session_day === day),
+    schools: schools
+      .filter(s => s.session_day === day)
+      .sort((a, b) => parseStartMinutes(a.session_time) - parseStartMinutes(b.session_time)),
   })).filter(g => g.schools.length > 0)
 
   return (

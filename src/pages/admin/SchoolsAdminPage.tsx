@@ -18,6 +18,23 @@ function sortByDay(schools: School[]): School[] {
   return [...schools].sort((a, b) => DAYS.indexOf(a.session_day) - DAYS.indexOf(b.session_day))
 }
 
+function parseStartMinutes(sessionTime: string): number {
+  if (!sessionTime) return 9999
+  const first = sessionTime.split(/[-–]/)[0].trim()
+  const match = first.match(/(\d{1,2}):(\d{2})\s*(am|pm)?/i)
+  if (!match) return 9999
+  let h = parseInt(match[1])
+  const m = parseInt(match[2])
+  const ampm = match[3]?.toLowerCase()
+  if (ampm === 'pm' && h !== 12) h += 12
+  if (ampm === 'am' && h === 12) h = 0
+  return h * 60 + m
+}
+
+function sortByTime(schools: School[]): School[] {
+  return [...schools].sort((a, b) => parseStartMinutes(a.session_time) - parseStartMinutes(b.session_time))
+}
+
 // Defined at module level so React never remounts it between renders
 function SchoolFormFields({ form, set }: { form: SchoolForm; set: (f: SchoolForm) => void }) {
   return (
@@ -144,7 +161,7 @@ export function SchoolsAdminPage() {
           </Card>
         ) : (
           DAYS.map(day => {
-            const daySchools = schools.filter(s => s.session_day === day)
+            const daySchools = sortByTime(schools.filter(s => s.session_day === day))
             if (daySchools.length === 0) return null
             return (
               <div key={day}>
