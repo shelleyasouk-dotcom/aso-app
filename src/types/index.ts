@@ -165,7 +165,8 @@ export interface ChildAward {
   awarded_by_profile?: Profile
 }
 
-export type CrmStatus = 'prospect' | 'contacted' | 'interested' | 'onboarded' | 'declined'
+// prospect → initial_sent → following_up → interested (amber) / onboarded (green) / do_not_contact (red)
+export type CrmStatus = 'prospect' | 'initial_sent' | 'following_up' | 'interested' | 'onboarded' | 'do_not_contact'
 export type CrmInteractionType = 'email' | 'call' | 'visit' | 'meeting' | 'other'
 export type CrmOutcome = 'positive' | 'neutral' | 'negative'
 
@@ -177,8 +178,12 @@ export interface CrmContact {
   phone: string | null
   address: string | null
   area: string | null
+  school_type: string | null
   status: CrmStatus
   notes: string | null
+  follow_up_number: number
+  last_contacted_date: string | null
+  next_follow_up_date: string | null
   assigned_to: string | null
   created_by: string
   created_at: string
