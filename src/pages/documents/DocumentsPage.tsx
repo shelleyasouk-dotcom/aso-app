@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, FileText, Download, Trash2, Upload } from 'lucide-react'
+import { Plus, FileText, Download, Trash2, Upload, Eye, X, ExternalLink } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -37,6 +37,111 @@ function timeAgo(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+function getFileType(fileName: string): 'pdf' | 'image' | 'other' {
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? ''
+  if (ext === 'pdf') return 'pdf'
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) return 'image'
+  return 'other'
+}
+
+function FileIcon({ fileName }: { fileName: string }) {
+  const type = getFileType(fileName)
+  const ext = fileName.split('.').pop()?.toUpperCase() ?? 'FILE'
+  const color = type === 'pdf' ? 'text-red-500' : type === 'image' ? 'text-blue-500' : 'text-gray-500'
+  return (
+    <div className="w-10 h-10 bg-[#f4f6f9] rounded-xl flex flex-col items-center justify-center shrink-0">
+      <FileText size={14} className={color} />
+      <span className="text-[8px] font-bold text-gray-400 leading-none mt-0.5">{ext.slice(0, 4)}</span>
+    </div>
+  )
+}
+
+interface ViewerState {
+  doc: OrgDocument
+  url: string
+}
+
+function DocumentViewer({ viewer, onClose }: { viewer: ViewerState; onClose: () => void }) {
+  const type = getFileType(viewer.doc.file_name)
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-black">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-[#1a3a6b] text-white shrink-0">
+        <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
+          <X size={22} />
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold truncate text-sm">{viewer.doc.title}</p>
+          <p className="text-xs text-blue-200 truncate">{viewer.doc.file_name}</p>
+        </div>
+        <a
+          href={viewer.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium transition-colors"
+        >
+          <ExternalLink size={13} />
+          Open
+        </a>
+        <a
+          href={viewer.url}
+          download={viewer.doc.file_name}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium transition-colors"
+        >
+          <Download size={13} />
+          Save
+        </a>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-hidden bg-gray-900 flex items-center justify-center">
+        {type === 'image' && (
+          <img
+            src={viewer.url}
+            alt={viewer.doc.title}
+            className="max-w-full max-h-full object-contain"
+          />
+        )}
+
+        {type === 'pdf' && (
+          <div className="w-full h-full flex flex-col">
+            <iframe
+              src={viewer.url}
+              title={viewer.doc.title}
+              className="flex-1 w-full border-none"
+            />
+            {/* iOS Safari fallback notice */}
+            <div className="bg-gray-800 text-gray-400 text-xs text-center py-2 px-4 shrink-0">
+              PDF not loading?{' '}
+              <a href={viewer.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
+                Open in browser
+              </a>
+            </div>
+          </div>
+        )}
+
+        {type === 'other' && (
+          <div className="text-center px-8">
+            <FileText size={48} className="text-gray-600 mx-auto mb-4" />
+            <p className="text-white font-semibold mb-1">{viewer.doc.file_name}</p>
+            <p className="text-gray-400 text-sm mb-6">This file type can't be previewed in the app.</p>
+            <a
+              href={viewer.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-[#1a3a6b] text-white rounded-xl text-sm font-semibold"
+            >
+              <Download size={16} />
+              Download file
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export function DocumentsPage() {
   const { profile } = useAuth()
   const canUpload = profile?.role === 'director' || profile?.role === 'area_lead'
@@ -49,6 +154,8 @@ export function DocumentsPage() {
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [filterCategory, setFilterCategory] = useState('')
+  const [viewer, setViewer] = useState<ViewerState | null>(null)
+  const [loadingViewer, setLoadingViewer] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { load() }, [])
@@ -109,10 +216,19 @@ export function DocumentsPage() {
     setUploading(false)
   }
 
+  async function openViewer(doc: OrgDocument) {
+    setLoadingViewer(doc.id)
+    const { data } = await supabase.storage
+      .from('documents')
+      .createSignedUrl(doc.file_path, 3600)
+    setLoadingViewer(null)
+    if (data?.signedUrl) setViewer({ doc, url: data.signedUrl })
+  }
+
   async function download(doc: OrgDocument) {
     const { data } = await supabase.storage
       .from('documents')
-      .createSignedUrl(doc.file_path, 300)
+      .createSignedUrl(doc.file_path, 300, { download: doc.file_name })
     if (data?.signedUrl) window.open(data.signedUrl, '_blank')
   }
 
@@ -133,6 +249,8 @@ export function DocumentsPage() {
 
   return (
     <Layout title="Documents" showBack>
+      {viewer && <DocumentViewer viewer={viewer} onClose={() => setViewer(null)} />}
+
       <div className="px-4 pt-6 flex flex-col gap-4">
 
         {canUpload && (
@@ -169,15 +287,16 @@ export function DocumentsPage() {
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
+                  id="doc-file-upload"
                   onChange={handleFileSelect}
                 />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] transition-colors"
+                <label
+                  htmlFor="doc-file-upload"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] transition-colors cursor-pointer"
                 >
                   <Upload size={18} />
                   <span className="text-sm">{selectedFile ? selectedFile.name : 'Tap to select file…'}</span>
-                </button>
+                </label>
               </div>
               {uploadError && (
                 <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{uploadError}</p>
@@ -224,11 +343,9 @@ export function DocumentsPage() {
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{cat}</p>
               <div className="flex flex-col gap-2">
                 {items.map(doc => (
-                  <Card key={doc.id}>
+                  <Card key={doc.id} className="cursor-pointer active:bg-gray-50" onClick={() => openViewer(doc)}>
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-[#f4f6f9] rounded-xl flex items-center justify-center shrink-0">
-                        <FileText size={18} className="text-[#1a3a6b]" />
-                      </div>
+                      <FileIcon fileName={doc.file_name} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-[#1a3a6b] truncate">{doc.title}</p>
                         {doc.description && <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>}
@@ -238,10 +355,22 @@ export function DocumentsPage() {
                           <span className="text-xs text-gray-400">{timeAgo(doc.created_at)}</span>
                         </div>
                       </div>
-                      <div className="flex gap-1 shrink-0">
+                      <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => openViewer(doc)}
+                          disabled={loadingViewer === doc.id}
+                          className="p-2 rounded-xl text-[#1a3a6b] hover:bg-blue-50 transition-colors disabled:opacity-50"
+                          title="View"
+                        >
+                          {loadingViewer === doc.id
+                            ? <span className="text-xs">…</span>
+                            : <Eye size={17} />
+                          }
+                        </button>
                         <button
                           onClick={() => download(doc)}
-                          className="p-2 rounded-xl text-[#1a3a6b] hover:bg-blue-50 transition-colors"
+                          className="p-2 rounded-xl text-gray-400 hover:bg-gray-50 transition-colors"
+                          title="Download"
                         >
                           <Download size={17} />
                         </button>
@@ -249,6 +378,7 @@ export function DocumentsPage() {
                           <button
                             onClick={() => remove(doc)}
                             className="p-2 rounded-xl text-red-400 hover:bg-red-50 transition-colors"
+                            title="Delete"
                           >
                             <Trash2 size={17} />
                           </button>
