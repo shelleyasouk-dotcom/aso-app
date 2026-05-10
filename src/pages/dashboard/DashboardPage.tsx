@@ -148,6 +148,22 @@ export function DashboardPage() {
           <KeyRound size={14} /> Change my password
         </button>
 
+        {/* Footer */}
+        <div className="mt-6 pt-6 border-t border-gray-200 flex flex-col items-center gap-2">
+          <button
+            onClick={() => navigate('/guide')}
+            className="text-sm font-semibold text-[#1a3a6b] bg-[#1a3a6b]/8 px-4 py-2 rounded-xl hover:bg-[#1a3a6b]/15 transition-colors"
+          >
+            How to use this app
+          </button>
+          <a
+            href="mailto:info@activeschool.org.uk"
+            className="text-sm text-gray-400 hover:text-[#1a3a6b] transition-colors"
+          >
+            info@activeschool.org.uk
+          </a>
+        </div>
+
         {/* School info for coaches */}
         {!canManageSchools(profile.role) && profile.role !== 'area_lead' && (
           <div className="mt-6">
