@@ -6,6 +6,7 @@ export interface Profile {
   full_name: string
   role: Role
   area?: string
+  areas?: string[]
   photo_url?: string
   phone?: string
   dbs_number?: string

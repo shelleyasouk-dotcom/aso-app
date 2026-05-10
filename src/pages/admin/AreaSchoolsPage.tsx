@@ -30,10 +30,14 @@ export function AreaSchoolsPage() {
   const { profile } = useAuth()
   const isDirector = profile?.role === 'director'
 
-  // Directors start with no area selected; Area Leads default to their own area
-  const [selectedArea, setSelectedArea] = useState<string>(
-    isDirector ? (AREAS[0]) : (profile?.area ?? '')
-  )
+  // All areas this person can see
+  const allowedAreas = isDirector
+    ? AREAS
+    : (profile?.areas && profile.areas.length > 0 ? profile.areas : profile?.area ? [profile.area] : [])
+
+  const hasMultipleAreas = allowedAreas.length > 1
+
+  const [selectedArea, setSelectedArea] = useState<string>(allowedAreas[0] ?? '')
   const [schools, setSchools] = useState<SchoolWithCoaches[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -85,12 +89,12 @@ export function AreaSchoolsPage() {
     <Layout title="Area Schools" showBack>
       <div className="px-4 pt-6 flex flex-col gap-4">
 
-        {/* Area selector — Directors can switch; Area Leads see their area */}
-        {isDirector ? (
+        {/* Area selector — Directors and multi-area leads get buttons; single-area leads see their area */}
+        {hasMultipleAreas ? (
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Select Area</label>
             <div className="flex flex-wrap gap-2">
-              {AREAS.map(area => (
+              {allowedAreas.map(area => (
                 <button
                   key={area}
                   onClick={() => setSelectedArea(area)}
