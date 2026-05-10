@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText } from 'lucide-react'
+import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -163,17 +163,17 @@ export function DashboardPage() {
 }
 
 function AnnouncementsSection({ area, isDirector }: { area?: string; isDirector: boolean }) {
-  const [announcements, setAnnouncements] = useState<Announcement[]>([])
+  const [pinned, setPinned] = useState<Announcement[]>([])
+  const [hasUnpinned, setHasUnpinned] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     let query = supabase
       .from('announcements')
       .select('*')
-      .order('is_pinned', { ascending: false })
       .order('created_at', { ascending: false })
 
-    // Directors see all; others see global + their area
     if (!isDirector) {
       if (area) {
         query = query.or(`area.is.null,area.eq.${area}`)
@@ -183,31 +183,35 @@ function AnnouncementsSection({ area, isDirector }: { area?: string; isDirector:
     }
 
     query.then(({ data }) => {
-      if (data) setAnnouncements(data)
+      if (data) {
+        setPinned(data.filter(a => a.is_pinned))
+        setHasUnpinned(data.some(a => !a.is_pinned))
+      }
       setLoaded(true)
     })
   }, [area, isDirector])
 
-  if (!loaded || announcements.length === 0) return null
+  if (!loaded || (pinned.length === 0 && !hasUnpinned)) return null
 
   return (
     <div className="mb-6">
-      <div className="flex items-center gap-2 mb-3">
-        <Megaphone size={15} className="text-gray-500" />
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Announcements</h3>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Megaphone size={15} className="text-gray-500" />
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Announcements</h3>
+        </div>
+        <button
+          onClick={() => navigate('/announcements')}
+          className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b]"
+        >
+          View all <ChevronRight size={14} />
+        </button>
       </div>
       <div className="flex flex-col gap-3">
-        {announcements.map(a => (
-          <div
-            key={a.id}
-            className={`rounded-2xl px-4 py-3.5 ${
-              a.is_pinned
-                ? 'bg-amber-50 border border-amber-200'
-                : 'bg-white border border-gray-100 shadow-sm'
-            }`}
-          >
+        {pinned.map(a => (
+          <div key={a.id} className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5">
             <div className="flex items-start gap-2">
-              {a.is_pinned && <Pin size={13} className="text-amber-500 mt-0.5 shrink-0" />}
+              <Pin size={13} className="text-amber-500 mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-[#1a3a6b] text-sm">{a.title}</p>
                 {a.body && (
@@ -228,6 +232,15 @@ function AnnouncementsSection({ area, isDirector }: { area?: string; isDirector:
             </div>
           </div>
         ))}
+        {pinned.length === 0 && hasUnpinned && (
+          <button
+            onClick={() => navigate('/announcements')}
+            className="w-full text-left bg-white border border-gray-100 shadow-sm rounded-2xl px-4 py-3.5 flex items-center justify-between"
+          >
+            <p className="text-sm font-medium text-[#1a3a6b]">New announcements available</p>
+            <ChevronRight size={16} className="text-gray-400" />
+          </button>
+        )}
       </div>
     </div>
   )

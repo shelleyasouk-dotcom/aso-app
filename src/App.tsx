@@ -21,6 +21,7 @@ import { AnnouncementsAdminPage } from './pages/admin/AnnouncementsAdminPage'
 import { ChangePasswordPage } from './pages/profile/ChangePasswordPage'
 import { CoachProfilePage } from './pages/profile/CoachProfilePage'
 import { DocumentsPage } from './pages/documents/DocumentsPage'
+import { AnnouncementsPage } from './pages/announcements/AnnouncementsPage'
 import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 
@@ -117,6 +118,9 @@ export default function App() {
           } />
           <Route path="/profile/:id" element={
             <ProtectedRoute><CoachProfilePage /></ProtectedRoute>
+          } />
+          <Route path="/announcements" element={
+            <ProtectedRoute><AnnouncementsPage /></ProtectedRoute>
           } />
           <Route path="/documents" element={
             <ProtectedRoute><DocumentsPage /></ProtectedRoute>
