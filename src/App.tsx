@@ -28,6 +28,7 @@ import { CrmPage } from './pages/crm/CrmPage'
 import { CrmContactPage } from './pages/crm/CrmContactPage'
 import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
+import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
 
 export default function App() {
   return (
@@ -151,6 +152,12 @@ export default function App() {
           <Route path="/expenses/admin" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <ExpensesAdminPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/coach-pool" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+              <CoachPoolPage />
             </ProtectedRoute>
           } />
 

@@ -73,3 +73,7 @@ export function canManageAreaStaff(role: Role): boolean {
 export function canEditClockRecords(role: Role): boolean {
   return role === 'director' || role === 'area_lead'
 }
+
+export function canViewCoachPool(role: Role): boolean {
+  return role === 'director' || role === 'area_lead' || role === 'outreach_worker'
+}
