@@ -1,24 +1,41 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, FileText, Download, Trash2, Upload, Eye, X, ExternalLink } from 'lucide-react'
+import { Plus, FileText, Download, Trash2, Upload, Eye, X, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
-import { Badge } from '../../components/ui/Badge'
 import type { OrgDocument } from '../../types'
 
 const CATEGORIES = ['Policy', 'Handbook', 'Form', 'Training', 'Safeguarding', 'Other']
 const SELECT_CLASS = "w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
 
-const CATEGORY_COLORS: Record<string, 'blue' | 'green' | 'yellow' | 'purple' | 'red' | 'gray'> = {
-  Policy: 'blue',
-  Handbook: 'green',
-  Form: 'yellow',
-  Training: 'purple',
-  Safeguarding: 'red',
-  Other: 'gray',
+const CATEGORY_ICONS: Record<string, string> = {
+  Policy: '📋',
+  Handbook: '📖',
+  Form: '📝',
+  Training: '🎓',
+  Safeguarding: '🛡️',
+  Other: '📁',
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Policy: 'bg-blue-50 border-blue-100',
+  Handbook: 'bg-green-50 border-green-100',
+  Form: 'bg-yellow-50 border-yellow-100',
+  Training: 'bg-purple-50 border-purple-100',
+  Safeguarding: 'bg-red-50 border-red-100',
+  Other: 'bg-gray-50 border-gray-100',
+}
+
+const CATEGORY_HEADER: Record<string, string> = {
+  Policy: 'text-blue-800',
+  Handbook: 'text-green-800',
+  Form: 'text-yellow-800',
+  Training: 'text-purple-800',
+  Safeguarding: 'text-red-800',
+  Other: 'text-gray-700',
 }
 
 function formatBytes(bytes: number | null) {
@@ -44,29 +61,21 @@ function getFileType(fileName: string): 'pdf' | 'image' | 'other' {
   return 'other'
 }
 
-function FileIcon({ fileName }: { fileName: string }) {
+function FileTypeTag({ fileName }: { fileName: string }) {
   const type = getFileType(fileName)
   const ext = fileName.split('.').pop()?.toUpperCase() ?? 'FILE'
-  const color = type === 'pdf' ? 'text-red-500' : type === 'image' ? 'text-blue-500' : 'text-gray-500'
-  return (
-    <div className="w-10 h-10 bg-[#f4f6f9] rounded-xl flex flex-col items-center justify-center shrink-0">
-      <FileText size={14} className={color} />
-      <span className="text-[8px] font-bold text-gray-400 leading-none mt-0.5">{ext.slice(0, 4)}</span>
-    </div>
-  )
+  const style = type === 'pdf' ? 'bg-red-100 text-red-600' : type === 'image' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'
+  return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${style}`}>{ext}</span>
 }
 
-interface ViewerState {
-  doc: OrgDocument
-  url: string
-}
+// ─── Document viewer ─────────────────────────────────────────────────────────
+
+interface ViewerState { doc: OrgDocument; url: string }
 
 function DocumentViewer({ viewer, onClose }: { viewer: ViewerState; onClose: () => void }) {
   const type = getFileType(viewer.doc.file_name)
-
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-[#1a3a6b] text-white shrink-0">
         <button onClick={onClose} className="p-1 rounded-lg hover:bg-white/10 transition-colors">
           <X size={22} />
@@ -75,65 +84,34 @@ function DocumentViewer({ viewer, onClose }: { viewer: ViewerState; onClose: () 
           <p className="font-semibold truncate text-sm">{viewer.doc.title}</p>
           <p className="text-xs text-blue-200 truncate">{viewer.doc.file_name}</p>
         </div>
-        <a
-          href={viewer.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium transition-colors"
-        >
-          <ExternalLink size={13} />
-          Open
+        <a href={viewer.url} target="_blank" rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium transition-colors">
+          <ExternalLink size={13} /> Open
         </a>
-        <a
-          href={viewer.url}
-          download={viewer.doc.file_name}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium transition-colors"
-        >
-          <Download size={13} />
-          Save
+        <a href={viewer.url} download={viewer.doc.file_name}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-medium transition-colors">
+          <Download size={13} /> Save
         </a>
       </div>
-
-      {/* Content */}
       <div className="flex-1 overflow-hidden bg-gray-900 flex items-center justify-center">
-        {type === 'image' && (
-          <img
-            src={viewer.url}
-            alt={viewer.doc.title}
-            className="max-w-full max-h-full object-contain"
-          />
-        )}
-
+        {type === 'image' && <img src={viewer.url} alt={viewer.doc.title} className="max-w-full max-h-full object-contain" />}
         {type === 'pdf' && (
           <div className="w-full h-full flex flex-col">
-            <iframe
-              src={viewer.url}
-              title={viewer.doc.title}
-              className="flex-1 w-full border-none"
-            />
-            {/* iOS Safari fallback notice */}
+            <iframe src={viewer.url} title={viewer.doc.title} className="flex-1 w-full border-none" />
             <div className="bg-gray-800 text-gray-400 text-xs text-center py-2 px-4 shrink-0">
               PDF not loading?{' '}
-              <a href={viewer.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">
-                Open in browser
-              </a>
+              <a href={viewer.url} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Open in browser</a>
             </div>
           </div>
         )}
-
         {type === 'other' && (
           <div className="text-center px-8">
             <FileText size={48} className="text-gray-600 mx-auto mb-4" />
             <p className="text-white font-semibold mb-1">{viewer.doc.file_name}</p>
             <p className="text-gray-400 text-sm mb-6">This file type can't be previewed in the app.</p>
-            <a
-              href={viewer.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-[#1a3a6b] text-white rounded-xl text-sm font-semibold"
-            >
-              <Download size={16} />
-              Download file
+            <a href={viewer.url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-3 bg-[#1a3a6b] text-white rounded-xl text-sm font-semibold">
+              <Download size={16} /> Download file
             </a>
           </div>
         )}
@@ -141,6 +119,92 @@ function DocumentViewer({ viewer, onClose }: { viewer: ViewerState; onClose: () 
     </div>
   )
 }
+
+// ─── Category accordion section ───────────────────────────────────────────────
+
+interface CategorySectionProps {
+  category: string
+  docs: OrgDocument[]
+  canUpload: boolean
+  onView: (doc: OrgDocument) => void
+  onDownload: (doc: OrgDocument) => void
+  onDelete: (doc: OrgDocument) => void
+  loadingViewer: string | null
+  defaultOpen?: boolean
+}
+
+function CategorySection({ category, docs, canUpload, onView, onDownload, onDelete, loadingViewer, defaultOpen = false }: CategorySectionProps) {
+  const [open, setOpen] = useState(defaultOpen)
+  const colorClass = CATEGORY_COLORS[category] ?? 'bg-gray-50 border-gray-100'
+  const headerClass = CATEGORY_HEADER[category] ?? 'text-gray-700'
+  const icon = CATEGORY_ICONS[category] ?? '📁'
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-4 text-left"
+      >
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${colorClass}`}>
+            <span className="text-lg">{icon}</span>
+          </div>
+          <div>
+            <p className={`font-semibold text-sm ${headerClass}`}>{category}</p>
+            <p className="text-xs text-gray-400">{docs.length} document{docs.length !== 1 ? 's' : ''}</p>
+          </div>
+        </div>
+        {open
+          ? <ChevronUp size={16} className="text-gray-400 shrink-0" />
+          : <ChevronDown size={16} className="text-gray-400 shrink-0" />
+        }
+      </button>
+
+      {open && (
+        <div className="border-t border-gray-100">
+          {docs.map((doc, i) => (
+            <div
+              key={doc.id}
+              className={`px-4 py-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors ${i > 0 ? 'border-t border-gray-50' : ''}`}
+              onClick={() => onView(doc)}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-[#1a3a6b] text-sm truncate">{doc.title}</p>
+                  <FileTypeTag fileName={doc.file_name} />
+                </div>
+                {doc.description && <p className="text-xs text-gray-500 mt-0.5 truncate">{doc.description}</p>}
+                <p className="text-xs text-gray-300 mt-0.5">
+                  {[formatBytes(doc.file_size), timeAgo(doc.created_at)].filter(Boolean).join(' · ')}
+                </p>
+              </div>
+              <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => onView(doc)}
+                  disabled={loadingViewer === doc.id}
+                  className="p-2 rounded-xl text-[#1a3a6b] hover:bg-blue-50 transition-colors disabled:opacity-50"
+                  title="View"
+                >
+                  {loadingViewer === doc.id ? <span className="text-xs px-1">…</span> : <Eye size={16} />}
+                </button>
+                <button onClick={() => onDownload(doc)} className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 transition-colors" title="Download">
+                  <Download size={16} />
+                </button>
+                {canUpload && (
+                  <button onClick={() => onDelete(doc)} className="p-2 rounded-xl text-red-400 hover:bg-red-50 transition-colors" title="Delete">
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export function DocumentsPage() {
   const { profile } = useAuth()
@@ -153,7 +217,6 @@ export function DocumentsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [filterCategory, setFilterCategory] = useState('')
   const [viewer, setViewer] = useState<ViewerState | null>(null)
   const [loadingViewer, setLoadingViewer] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -169,45 +232,20 @@ export function DocumentsPage() {
     setLoading(false)
   }
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) setSelectedFile(file)
-  }
-
   async function uploadDoc() {
     if (!form.title.trim() || !selectedFile || !profile) return
     setUploading(true)
     setUploadError(null)
-
     const ext = selectedFile.name.split('.').pop()
     const filePath = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-
-    const { error: storageError } = await supabase.storage
-      .from('documents')
-      .upload(filePath, selectedFile)
-
-    if (storageError) {
-      setUploadError(`Storage error: ${storageError.message}`)
-      setUploading(false)
-      return
-    }
-
+    const { error: storageError } = await supabase.storage.from('documents').upload(filePath, selectedFile)
+    if (storageError) { setUploadError(`Storage error: ${storageError.message}`); setUploading(false); return }
     const { error: dbError } = await supabase.from('org_documents').insert({
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      category: form.category,
-      file_path: filePath,
-      file_name: selectedFile.name,
-      file_size: selectedFile.size,
-      uploaded_by: profile.id,
+      title: form.title.trim(), description: form.description.trim() || null,
+      category: form.category, file_path: filePath,
+      file_name: selectedFile.name, file_size: selectedFile.size, uploaded_by: profile.id,
     })
-
-    if (dbError) {
-      setUploadError(`Database error: ${dbError.message}`)
-      setUploading(false)
-      return
-    }
-
+    if (dbError) { setUploadError(`Database error: ${dbError.message}`); setUploading(false); return }
     await load()
     setForm({ title: '', description: '', category: 'Policy' })
     setSelectedFile(null)
@@ -218,17 +256,13 @@ export function DocumentsPage() {
 
   async function openViewer(doc: OrgDocument) {
     setLoadingViewer(doc.id)
-    const { data } = await supabase.storage
-      .from('documents')
-      .createSignedUrl(doc.file_path, 3600)
+    const { data } = await supabase.storage.from('documents').createSignedUrl(doc.file_path, 3600)
     setLoadingViewer(null)
     if (data?.signedUrl) setViewer({ doc, url: data.signedUrl })
   }
 
   async function download(doc: OrgDocument) {
-    const { data } = await supabase.storage
-      .from('documents')
-      .createSignedUrl(doc.file_path, 300, { download: doc.file_name })
+    const { data } = await supabase.storage.from('documents').createSignedUrl(doc.file_path, 300, { download: doc.file_name })
     if (data?.signedUrl) window.open(data.signedUrl, '_blank')
   }
 
@@ -239,19 +273,24 @@ export function DocumentsPage() {
     setDocs(prev => prev.filter(d => d.id !== doc.id))
   }
 
-  const filtered = filterCategory ? docs.filter(d => d.category === filterCategory) : docs
-
   const grouped = CATEGORIES.reduce<Record<string, OrgDocument[]>>((acc, cat) => {
-    const items = filtered.filter(d => d.category === cat)
+    const items = docs.filter(d => d.category === cat)
     if (items.length) acc[cat] = items
     return acc
   }, {})
+
+  const totalDocs = docs.length
 
   return (
     <Layout title="Documents" showBack>
       {viewer && <DocumentViewer viewer={viewer} onClose={() => setViewer(null)} />}
 
-      <div className="px-4 pt-6 flex flex-col gap-4">
+      {/* Header strip */}
+      <div className="bg-[#1a3a6b] px-4 pt-2 pb-5">
+        <p className="text-white/60 text-sm">{totalDocs} document{totalDocs !== 1 ? 's' : ''} across {Object.keys(grouped).length} categories</p>
+      </div>
+
+      <div className="px-4 pt-4 flex flex-col gap-3 pb-8">
 
         {canUpload && (
           <Button variant="primary" size="lg" fullWidth onClick={() => setShowForm(!showForm)}>
@@ -263,18 +302,8 @@ export function DocumentsPage() {
           <Card>
             <h3 className="font-semibold text-[#1a3a6b] mb-4">Upload Document</h3>
             <div className="flex flex-col gap-3">
-              <Input
-                label="Title"
-                placeholder="e.g. Staff Handbook 2025"
-                value={form.title}
-                onChange={e => setForm({ ...form, title: e.target.value })}
-              />
-              <Input
-                label="Description (optional)"
-                placeholder="Brief description…"
-                value={form.description}
-                onChange={e => setForm({ ...form, description: e.target.value })}
-              />
+              <Input label="Title" placeholder="e.g. Staff Handbook 2025" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+              <Input label="Description (optional)" placeholder="Brief description…" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">Category</label>
                 <select className={SELECT_CLASS} value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
@@ -283,24 +312,14 @@ export function DocumentsPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">File</label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  id="doc-file-upload"
-                  onChange={handleFileSelect}
-                />
-                <label
-                  htmlFor="doc-file-upload"
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] transition-colors cursor-pointer"
-                >
+                <input ref={fileInputRef} type="file" id="doc-file-upload" className="hidden" onChange={e => setSelectedFile(e.target.files?.[0] ?? null)} />
+                <label htmlFor="doc-file-upload"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] transition-colors cursor-pointer">
                   <Upload size={18} />
                   <span className="text-sm">{selectedFile ? selectedFile.name : 'Tap to select file…'}</span>
                 </label>
               </div>
-              {uploadError && (
-                <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{uploadError}</p>
-              )}
+              {uploadError && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{uploadError}</p>}
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={() => { setShowForm(false); setSelectedFile(null); setUploadError(null) }} className="flex-1">Cancel</Button>
                 <Button onClick={uploadDoc} disabled={uploading || !form.title.trim() || !selectedFile} className="flex-1">
@@ -311,25 +330,6 @@ export function DocumentsPage() {
           </Card>
         )}
 
-        {/* Category filter */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <button
-            onClick={() => setFilterCategory('')}
-            className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${!filterCategory ? 'bg-[#1a3a6b] text-white' : 'bg-white border border-gray-200 text-gray-600'}`}
-          >
-            All
-          </button>
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilterCategory(filterCategory === cat ? '' : cat)}
-              className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${filterCategory === cat ? 'bg-[#1a3a6b] text-white' : 'bg-white border border-gray-200 text-gray-600'}`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
         {loading ? (
           <p className="text-center text-gray-400 py-8">Loading…</p>
         ) : Object.keys(grouped).length === 0 ? (
@@ -338,57 +338,18 @@ export function DocumentsPage() {
             <p className="text-gray-500">No documents yet.</p>
           </Card>
         ) : (
-          Object.entries(grouped).map(([cat, items]) => (
-            <div key={cat}>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{cat}</p>
-              <div className="flex flex-col gap-2">
-                {items.map(doc => (
-                  <Card key={doc.id} className="cursor-pointer active:bg-gray-50" onClick={() => openViewer(doc)}>
-                    <div className="flex items-start gap-3">
-                      <FileIcon fileName={doc.file_name} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[#1a3a6b] truncate">{doc.title}</p>
-                        {doc.description && <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>}
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge color={CATEGORY_COLORS[doc.category] ?? 'gray'}>{doc.category}</Badge>
-                          <span className="text-xs text-gray-400">{formatBytes(doc.file_size)}</span>
-                          <span className="text-xs text-gray-400">{timeAgo(doc.created_at)}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                        <button
-                          onClick={() => openViewer(doc)}
-                          disabled={loadingViewer === doc.id}
-                          className="p-2 rounded-xl text-[#1a3a6b] hover:bg-blue-50 transition-colors disabled:opacity-50"
-                          title="View"
-                        >
-                          {loadingViewer === doc.id
-                            ? <span className="text-xs">…</span>
-                            : <Eye size={17} />
-                          }
-                        </button>
-                        <button
-                          onClick={() => download(doc)}
-                          className="p-2 rounded-xl text-gray-400 hover:bg-gray-50 transition-colors"
-                          title="Download"
-                        >
-                          <Download size={17} />
-                        </button>
-                        {canUpload && (
-                          <button
-                            onClick={() => remove(doc)}
-                            className="p-2 rounded-xl text-red-400 hover:bg-red-50 transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 size={17} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
+          CATEGORIES.filter(cat => grouped[cat]).map((cat, i) => (
+            <CategorySection
+              key={cat}
+              category={cat}
+              docs={grouped[cat]}
+              canUpload={canUpload}
+              onView={openViewer}
+              onDownload={download}
+              onDelete={remove}
+              loadingViewer={loadingViewer}
+              defaultOpen={i === 0}
+            />
           ))
         )}
       </div>
