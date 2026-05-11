@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2 } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -76,6 +76,13 @@ export function AdminPage() {
       icon: Building2,
       path: '/crm',
       color: 'bg-teal-50 text-teal-700',
+    },
+    {
+      label: 'Coach Pool',
+      description: 'Coaches available and waiting for locations',
+      icon: UsersRound,
+      path: '/coach-pool',
+      color: 'bg-violet-50 text-violet-700',
     },
   ]
 
