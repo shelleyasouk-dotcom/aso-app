@@ -79,6 +79,7 @@ export function SessionsPage() {
   const [addForm, setAddForm] = useState({ staff_id: '', school_id: '', clock_in: '', clock_out: '' })
   const [staffList, setStaffList] = useState<Profile[]>([])
   const [saving, setSaving] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   // ── Load scope ────────────────────────────────────────────────────────────────
   const initScope = useCallback(async () => {
@@ -187,16 +188,20 @@ export function SessionsPage() {
   // ── Live actions ──────────────────────────────────────────────────────────────
   async function clockIn(staffId: string, schoolId: string) {
     setBusy(staffId)
-    await supabase.from('clock_records').insert({ staff_id: staffId, school_id: schoolId })
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').insert({ staff_id: staffId, school_id: schoolId })
+    if (error) { setActionError(error.message); setBusy(null); return }
     await loadLive(true)
     setBusy(null)
   }
 
   async function clockOut(recordId: string, staffId: string) {
     setBusy(staffId)
-    await supabase.from('clock_records')
+    setActionError(null)
+    const { error } = await supabase.from('clock_records')
       .update({ clock_out: new Date().toISOString() })
       .eq('id', recordId)
+    if (error) { setActionError(error.message); setBusy(null); return }
     await loadLive(true)
     setBusy(null)
   }
@@ -205,6 +210,7 @@ export function SessionsPage() {
   function startEdit(rec: HistoryRecord) {
     setEditingId(rec.id)
     setConfirmDeleteId(null)
+    setActionError(null)
     setEditForm({
       clock_in: toLocal(rec.clock_in),
       clock_out: rec.clock_out ? toLocal(rec.clock_out) : '',
@@ -214,18 +220,22 @@ export function SessionsPage() {
 
   async function saveEdit(id: string) {
     setSaving(true)
-    await supabase.from('clock_records').update({
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').update({
       clock_in: new Date(editForm.clock_in).toISOString(),
       clock_out: editForm.clock_out ? new Date(editForm.clock_out).toISOString() : null,
       school_id: editForm.school_id || null,
     }).eq('id', id)
+    if (error) { setActionError(error.message); setSaving(false); return }
     await loadHistory()
     setEditingId(null)
     setSaving(false)
   }
 
   async function deleteRecord(id: string) {
-    await supabase.from('clock_records').delete().eq('id', id)
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').delete().eq('id', id)
+    if (error) { setActionError(error.message); setConfirmDeleteId(null); return }
     setRecords(prev => prev.filter(r => r.id !== id))
     setConfirmDeleteId(null)
   }
@@ -233,12 +243,14 @@ export function SessionsPage() {
   async function addRecord() {
     if (!addForm.staff_id || !addForm.school_id || !addForm.clock_in) return
     setSaving(true)
-    await supabase.from('clock_records').insert({
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').insert({
       staff_id: addForm.staff_id,
       school_id: addForm.school_id,
       clock_in: new Date(addForm.clock_in).toISOString(),
       clock_out: addForm.clock_out ? new Date(addForm.clock_out).toISOString() : null,
     })
+    if (error) { setActionError(error.message); setSaving(false); return }
     await loadHistory()
     setAddForm({ staff_id: '', school_id: '', clock_in: '', clock_out: '' })
     setShowAdd(false)
@@ -250,6 +262,13 @@ export function SessionsPage() {
   return (
     <Layout title="My Sessions">
       <div className="px-4 pt-6 flex flex-col gap-4">
+
+        {actionError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+            <p className="text-sm font-semibold text-red-700 mb-0.5">Action failed</p>
+            <p className="text-xs text-red-600">{actionError}</p>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-gray-100">

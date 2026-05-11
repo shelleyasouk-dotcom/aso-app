@@ -51,6 +51,7 @@ export function TimesheetsPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [addForm, setAddForm] = useState({ staff_id: '', school_id: '', clock_in: '', clock_out: '' })
   const [saving, setSaving] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.from('profiles').select('*').order('full_name').then(({ data }) => setStaff(data ?? []))
@@ -84,18 +85,22 @@ export function TimesheetsPage() {
 
   async function saveEdit(id: string) {
     setSaving(true)
-    await supabase.from('clock_records').update({
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').update({
       clock_in: new Date(editForm.clock_in).toISOString(),
       clock_out: editForm.clock_out ? new Date(editForm.clock_out).toISOString() : null,
       school_id: editForm.school_id || null,
     }).eq('id', id)
+    if (error) { setActionError(error.message); setSaving(false); return }
     await loadRecords()
     setEditingId(null)
     setSaving(false)
   }
 
   async function deleteRecord(id: string) {
-    await supabase.from('clock_records').delete().eq('id', id)
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').delete().eq('id', id)
+    if (error) { setActionError(error.message); setConfirmDeleteId(null); return }
     setRecords(prev => prev.filter(r => r.id !== id))
     setConfirmDeleteId(null)
   }
@@ -103,12 +108,14 @@ export function TimesheetsPage() {
   async function addRecord() {
     if (!addForm.staff_id || !addForm.school_id || !addForm.clock_in) return
     setSaving(true)
-    await supabase.from('clock_records').insert({
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').insert({
       staff_id: addForm.staff_id,
       school_id: addForm.school_id,
       clock_in: new Date(addForm.clock_in).toISOString(),
       clock_out: addForm.clock_out ? new Date(addForm.clock_out).toISOString() : null,
     })
+    if (error) { setActionError(error.message); setSaving(false); return }
     await loadRecords()
     setAddForm({ staff_id: '', school_id: '', clock_in: '', clock_out: '' })
     setShowAdd(false)
@@ -132,6 +139,14 @@ export function TimesheetsPage() {
             Payroll reference — {totalStaff} staff · {records.filter(r => r.clock_out).length} completed sessions
           </p>
         </div>
+
+        {actionError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+            <p className="text-sm font-semibold text-red-700 mb-0.5">Action failed</p>
+            <p className="text-xs text-red-600">{actionError}</p>
+            <p className="text-xs text-red-400 mt-1">This is usually an RLS policy — see the SQL fix below.</p>
+          </div>
+        )}
 
         <Button variant="primary" size="lg" fullWidth onClick={() => setShowAdd(v => !v)}>
           <Plus size={20} /> Add Missing Clock Record
