@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight, Building2 } from 'lucide-react'
+import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight, Building2, UsersRound } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
-import { ROLE_LABELS, canClockIn, canManageSchools, canViewRegisters, canViewTimesheets } from '../../lib/roles'
+import { ROLE_LABELS, canClockIn, canManageSchools, canViewRegisters, canViewTimesheets, canViewCoachPool } from '../../lib/roles'
 import type { Announcement } from '../../types'
 
 interface QuickAction {
@@ -97,6 +97,15 @@ export function DashboardPage() {
           icon: Building2,
           path: '/crm',
           color: 'bg-teal-50 text-teal-700',
+        }]
+      : []),
+    ...(canViewCoachPool(profile.role)
+      ? [{
+          label: 'Coach Pool',
+          description: 'Coaches waiting for locations',
+          icon: UsersRound,
+          path: '/coach-pool',
+          color: 'bg-violet-50 text-violet-700',
         }]
       : []),
     ...(canManageSchools(profile.role) || profile.role === 'area_lead'
