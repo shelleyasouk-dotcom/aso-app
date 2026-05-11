@@ -29,6 +29,7 @@ import { CrmContactPage } from './pages/crm/CrmContactPage'
 import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
+import { SessionsPage } from './pages/sessions/SessionsPage'
 
 export default function App() {
   return (
@@ -72,8 +73,13 @@ export default function App() {
 
           {/* Director & Area Lead */}
           <Route path="/timesheets" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <TimesheetsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/sessions" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+              <SessionsPage />
             </ProtectedRoute>
           } />
           <Route path="/admin" element={

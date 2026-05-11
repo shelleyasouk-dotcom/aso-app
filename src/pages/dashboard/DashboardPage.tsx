@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight, Building2, UsersRound } from 'lucide-react'
+import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight, Building2, UsersRound, CalendarCheck } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
-import { ROLE_LABELS, canClockIn, canManageSchools, canViewRegisters, canViewTimesheets, canViewCoachPool } from '../../lib/roles'
+import { ROLE_LABELS, canClockIn, canManageSchools, canViewRegisters, canViewCoachPool } from '../../lib/roles'
 import type { Announcement } from '../../types'
 
 interface QuickAction {
@@ -60,13 +60,22 @@ export function DashboardPage() {
       path: '/awards',
       color: 'bg-green-50 text-green-800',
     },
-    ...(canViewTimesheets(profile.role)
+    ...(profile.role === 'director' || profile.role === 'area_lead'
       ? [{
           label: 'Timesheets',
-          description: 'View staff hours',
+          description: 'Payroll & staff hours',
           icon: Users,
           path: '/timesheets',
           color: 'bg-purple-50 text-purple-800',
+        }]
+      : []),
+    ...(profile.role === 'area_lead' || profile.role === 'lead_coach'
+      ? [{
+          label: 'My Sessions',
+          description: 'Who\'s in at my locations',
+          icon: CalendarCheck,
+          path: '/sessions',
+          color: 'bg-green-50 text-green-700',
         }]
       : []),
     {
