@@ -34,6 +34,7 @@ interface StaffCardProps {
   canAssignSchools: boolean
   editingId: string | null
   editForm: EditForm
+  editError: string | null
   setEditForm: (f: EditForm) => void
   setEditingId: (id: string | null) => void
   saving: boolean
@@ -44,12 +45,15 @@ interface StaffCardProps {
 }
 
 // Defined at module level — never remounted between renders
-function StaffCard({ member, canManage, canAssignSchools, editingId, editForm, setEditForm, setEditingId, saving, onEdit, onAssign, onSaveEdit, onProfile }: StaffCardProps) {
+function StaffCard({ member, canManage, canAssignSchools, editingId, editForm, editError, setEditForm, setEditingId, saving, onEdit, onAssign, onSaveEdit, onProfile }: StaffCardProps) {
   if (editingId === member.id) {
     return (
       <Card>
         <h3 className="font-semibold text-[#1a3a6b] mb-3">Edit Staff Member</h3>
         <div className="flex flex-col gap-3">
+          {editError && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{editError}</p>
+          )}
           <Input
             label="Full Name"
             value={editForm.full_name}
@@ -274,11 +278,14 @@ export function StaffAdminPage() {
 
   function startEdit(member: StaffWithAssignments) {
     setEditingId(member.id)
+    setEditError(null)
     setEditForm({
       full_name: member.full_name,
       email: member.email,
       role: member.role,
-      areas: member.areas ?? (member.area ? [member.area] : []),
+      areas: Array.isArray(member.areas) && member.areas.length > 0
+        ? member.areas
+        : member.area ? [member.area] : [],
       can_clock_anywhere: member.can_clock_anywhere ?? false,
     })
     setAssignPanel(null)
@@ -287,9 +294,10 @@ export function StaffAdminPage() {
   async function saveEdit(id: string) {
     if (!editForm.full_name || !editForm.email) return
     setSaving(true)
+    setEditError(null)
     const needsArea = editForm.role === 'area_lead' || editForm.role === 'director'
     const areas = needsArea ? editForm.areas : []
-    await supabase.from('profiles').update({
+    const { error } = await supabase.from('profiles').update({
       full_name: editForm.full_name,
       email: editForm.email,
       role: editForm.role,
@@ -297,12 +305,18 @@ export function StaffAdminPage() {
       areas: areas.length > 0 ? areas : null,
       can_clock_anywhere: editForm.can_clock_anywhere,
     }).eq('id', id)
+    if (error) {
+      setEditError(error.message)
+      setSaving(false)
+      return
+    }
     await loadData()
     setEditingId(null)
     setSaving(false)
   }
 
   const [assignError, setAssignError] = useState<string | null>(null)
+  const [editError, setEditError] = useState<string | null>(null)
 
   function openAssignPanel(member: StaffWithAssignments) {
     setAssignError(null)
@@ -360,7 +374,7 @@ export function StaffAdminPage() {
   const unassigned = staff.filter(m => !m.assignments || m.assignments.length === 0)
 
   const canAssignSchools = profile?.role === 'director' || profile?.role === 'area_lead' || profile?.role === 'lead_coach'
-  const cardProps = { canManage: isDirector, canAssignSchools, editingId, editForm, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit, onProfile: (id: string) => navigate(`/profile/${id}`) }
+  const cardProps = { canManage: isDirector, canAssignSchools, editingId, editForm, editError, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit, onProfile: (id: string) => navigate(`/profile/${id}`) }
 
   return (
     <Layout title="Staff" showBack>
