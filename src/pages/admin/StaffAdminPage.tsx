@@ -235,18 +235,35 @@ export function StaffAdminPage() {
   async function inviteStaff() {
     if (!form.email || !form.full_name || !form.password) return
     setSaving(true)
+
+    // Save director's session — signUp() auto-logs-in as the new user
+    const { data: { session: directorSession } } = await supabase.auth.getSession()
+
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: { data: { full_name: form.full_name, role: form.role } },
     })
+
     if (!error && data.user) {
+      // Upsert profile while new user's session is active (passes RLS)
       await supabase.from('profiles').upsert({
         id: data.user.id,
         email: form.email,
         full_name: form.full_name,
         role: form.role,
       })
+    }
+
+    // Always restore director's session
+    if (directorSession) {
+      await supabase.auth.setSession({
+        access_token: directorSession.access_token,
+        refresh_token: directorSession.refresh_token,
+      })
+    }
+
+    if (!error && data.user) {
       await loadData()
       setForm({ email: '', full_name: '', password: '', role: 'lead_coach' })
       setShowForm(false)

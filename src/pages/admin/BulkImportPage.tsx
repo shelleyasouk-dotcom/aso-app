@@ -65,20 +65,18 @@ export function BulkImportPage() {
     }
 
     if (activeTab === 'staff') {
+      // Save session once — signUp() auto-logs-in as each new user
+      const { data: { session: adminSession } } = await supabase.auth.getSession()
+
       for (const row of rows) {
-        // Create auth user
         const { data, error: authError } = await supabase.auth.signUp({
           email: row['Email'],
           password: row['Password'] || 'Password',
           options: { data: { full_name: row['Full Name'], role: row['Role'] } },
         })
 
-        if (authError) {
-          errors.push(`${row['Full Name']}: ${authError.message}`)
-          continue
-        }
-
-        if (data.user) {
+        if (!authError && data.user) {
+          // Upsert while new user's session is active
           await supabase.from('profiles').upsert({
             id: data.user.id,
             email: row['Email'],
@@ -86,6 +84,16 @@ export function BulkImportPage() {
             role: row['Role'] || 'junior_coach',
           })
           success++
+        } else if (authError) {
+          errors.push(`${row['Full Name']}: ${authError.message}`)
+        }
+
+        // Restore admin session before next iteration
+        if (adminSession) {
+          await supabase.auth.setSession({
+            access_token: adminSession.access_token,
+            refresh_token: adminSession.refresh_token,
+          })
         }
       }
     }
