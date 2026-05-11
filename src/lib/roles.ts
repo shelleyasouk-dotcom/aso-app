@@ -27,7 +27,7 @@ export function canManageSchools(role: Role): boolean {
 }
 
 export function canViewTimesheets(role: Role): boolean {
-  return role === 'director' || role === 'area_lead'
+  return role === 'director' || role === 'area_lead' || role === 'lead_coach'
 }
 
 export function canViewRegisters(role: Role): boolean {

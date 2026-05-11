@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Pencil, Trash2, Plus, Check, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -15,7 +15,6 @@ interface EnrichedRecord extends ClockRecord {
   school?: School
 }
 
-// Convert UTC ISO string → datetime-local input value (local time)
 function toLocal(iso: string) {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -43,51 +42,114 @@ const DT_CLASS = "w-full px-3 py-2 rounded-xl border border-gray-200 text-sm foc
 
 export function TimesheetsPage() {
   const { profile } = useAuth()
+  const isDirector = profile?.role === 'director'
   const canEdit = profile?.role === 'director' || profile?.role === 'area_lead'
 
   const [records, setRecords] = useState<EnrichedRecord[]>([])
   const [staff, setStaff] = useState<Profile[]>([])
   const [schools, setSchools] = useState<School[]>([])
+  // School IDs this viewer manages (null = all, for directors)
+  const [mySchoolIds, setMySchoolIds] = useState<string[] | null>(null)
   const [filterStaff, setFilterStaff] = useState('')
   const [loading, setLoading] = useState(true)
 
-  // Edit existing record
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ clock_in: '', clock_out: '', school_id: '' })
 
-  // Add new record
   const [showAdd, setShowAdd] = useState(false)
   const [addForm, setAddForm] = useState({ staff_id: '', school_id: '', clock_in: '', clock_out: '' })
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    loadStaff()
-    loadSchools()
-  }, [])
+  // Step 1: resolve which schools this viewer can see
+  const initScope = useCallback(async () => {
+    if (!profile) return
+    if (isDirector) {
+      setMySchoolIds(null) // null = no filter = see all
+      return
+    }
+    // area_lead and lead_coach: their assigned schools
+    const { data } = await supabase
+      .from('staff_school_assignments')
+      .select('school_id')
+      .eq('staff_id', profile.id)
+    setMySchoolIds((data ?? []).map((r: { school_id: string }) => r.school_id))
+  }, [profile, isDirector])
 
-  useEffect(() => { loadRecords() }, [filterStaff])
+  const loadSchools = useCallback(async () => {
+    if (isDirector) {
+      const { data } = await supabase.from('schools').select('*').order('name')
+      setSchools(data ?? [])
+    } else if (mySchoolIds !== null) {
+      if (mySchoolIds.length === 0) { setSchools([]); return }
+      const { data } = await supabase.from('schools').select('*').in('id', mySchoolIds).order('name')
+      setSchools(data ?? [])
+    }
+  }, [isDirector, mySchoolIds])
 
-  async function loadStaff() {
-    const { data } = await supabase.from('profiles').select('*').order('full_name')
-    if (data) setStaff(data)
-  }
+  const loadStaff = useCallback(async () => {
+    if (isDirector) {
+      const { data } = await supabase.from('profiles').select('*').order('full_name')
+      setStaff(data ?? [])
+    } else if (mySchoolIds !== null) {
+      if (mySchoolIds.length === 0) { setStaff([]); return }
+      // Staff assigned to the same schools
+      const { data } = await supabase
+        .from('staff_school_assignments')
+        .select('staff:profiles(*)')
+        .in('school_id', mySchoolIds)
+      const seen = new Set<string>()
+      const members: Profile[] = []
+      for (const row of (data ?? []) as unknown as { staff: Profile }[]) {
+        if (row.staff && !seen.has(row.staff.id)) {
+          seen.add(row.staff.id)
+          members.push(row.staff)
+        }
+      }
+      members.sort((a, b) => a.full_name.localeCompare(b.full_name))
+      setStaff(members)
+    }
+  }, [isDirector, mySchoolIds])
 
-  async function loadSchools() {
-    const { data } = await supabase.from('schools').select('*').order('name')
-    if (data) setSchools(data)
-  }
+  const loadRecords = useCallback(async () => {
+    if (!profile) return
+    if (!isDirector && mySchoolIds === null) return // still initialising
 
-  async function loadRecords() {
     let query = supabase
       .from('clock_records')
       .select('*, staff:profiles(*), school:schools(*)')
       .order('clock_in', { ascending: false })
-      .limit(200)
+      .limit(500)
+
+    if (!isDirector && mySchoolIds !== null) {
+      if (mySchoolIds.length === 0) {
+        setRecords([])
+        setLoading(false)
+        return
+      }
+      query = query.in('school_id', mySchoolIds)
+    }
+
     if (filterStaff) query = query.eq('staff_id', filterStaff)
-    const { data } = await query
-    if (data) setRecords(data)
+
+    const { data, error } = await query
+    if (error) console.error('clock_records fetch error:', error.message)
+    setRecords((data as EnrichedRecord[]) ?? [])
     setLoading(false)
-  }
+  }, [profile, isDirector, mySchoolIds, filterStaff])
+
+  // Initialise scope once on mount
+  useEffect(() => { initScope() }, [initScope])
+
+  // Once scope is known, load schools + staff
+  useEffect(() => {
+    if (mySchoolIds !== undefined) {
+      loadSchools()
+      loadStaff()
+    }
+  }, [mySchoolIds, loadSchools, loadStaff])
+
+  // Reload records when scope, filter or schools change
+  useEffect(() => { loadRecords() }, [loadRecords])
 
   function startEdit(rec: EnrichedRecord) {
     setEditingId(rec.id)
@@ -138,11 +200,12 @@ export function TimesheetsPage() {
     return acc
   }, {})
 
+  const title = isDirector ? 'Timesheets' : 'Team Timesheets'
+
   return (
-    <Layout title="Timesheets" showBack>
+    <Layout title={title} showBack>
       <div className="px-4 pt-6 flex flex-col gap-4">
 
-        {/* Add missing record */}
         {canEdit && (
           <Button variant="primary" size="lg" fullWidth onClick={() => setShowAdd(!showAdd)}>
             <Plus size={20} /> Add Missing Clock Record
@@ -183,7 +246,7 @@ export function TimesheetsPage() {
           </Card>
         )}
 
-        {/* Filter */}
+        {/* Staff filter */}
         <Select value={filterStaff} onChange={e => setFilterStaff(e.target.value)}>
           <option value="">All staff</option>
           {staff.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
@@ -218,7 +281,6 @@ export function TimesheetsPage() {
                   {recs.map(rec => (
                     <div key={rec.id}>
                       {editingId === rec.id ? (
-                        // ── Inline edit form ──────────────────────────────
                         <div className="bg-[#f4f6f9] rounded-2xl p-3 flex flex-col gap-2 my-1">
                           <p className="text-xs font-bold text-[#1a3a6b] mb-1">Edit Record</p>
                           <div className="flex flex-col gap-1">
@@ -252,10 +314,9 @@ export function TimesheetsPage() {
                           </div>
                         </div>
                       ) : (
-                        // ── Record row ────────────────────────────────────
                         <div className="flex items-center justify-between py-2 border-t border-gray-100 gap-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-800 truncate">{rec.school?.name}</p>
+                            <p className="text-sm font-medium text-gray-800 truncate">{rec.school?.name ?? rec.location_override ?? '—'}</p>
                             <p className="text-xs text-gray-400">
                               {formatDate(rec.clock_in)}
                               {' · '}
