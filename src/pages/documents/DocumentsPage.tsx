@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Plus, FileText, Download, Trash2, Upload, Eye, X, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, FileText, Download, Trash2, Upload, Eye, X, ExternalLink, ChevronDown, ChevronUp, BookOpen, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -208,6 +209,7 @@ function CategorySection({ category, docs, canUpload, onView, onDownload, onDele
 
 export function DocumentsPage() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
   const canUpload = profile?.role === 'director' || profile?.role === 'area_lead'
 
   const [docs, setDocs] = useState<OrgDocument[]>([])
@@ -291,6 +293,21 @@ export function DocumentsPage() {
       </div>
 
       <div className="px-4 pt-4 flex flex-col gap-3 pb-8">
+
+        {/* Coach Handbook — in-app */}
+        <button
+          onClick={() => navigate('/handbook')}
+          className="w-full flex items-center gap-4 bg-[#1a3a6b] rounded-2xl px-4 py-4 text-left shadow-sm"
+        >
+          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+            <BookOpen size={20} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-white text-sm">Coach Work Handbook</p>
+            <p className="text-white/60 text-xs mt-0.5">All 18 sections · Read in-app</p>
+          </div>
+          <ChevronRight size={16} className="text-white/40 shrink-0" />
+        </button>
 
         {canUpload && (
           <Button variant="primary" size="lg" fullWidth onClick={() => setShowForm(!showForm)}>

@@ -23,6 +23,7 @@ import { CoachProfilePage } from './pages/profile/CoachProfilePage'
 import { DocumentsPage } from './pages/documents/DocumentsPage'
 import { AnnouncementsPage } from './pages/announcements/AnnouncementsPage'
 import { GuidePage } from './pages/help/GuidePage'
+import { HandbookPage } from './pages/handbook/HandbookPage'
 import { CrmPage } from './pages/crm/CrmPage'
 import { CrmContactPage } from './pages/crm/CrmContactPage'
 import { ExpensesPage } from './pages/expenses/ExpensesPage'
@@ -127,6 +128,9 @@ export default function App() {
           } />
           <Route path="/guide" element={
             <ProtectedRoute><GuidePage /></ProtectedRoute>
+          } />
+          <Route path="/handbook" element={
+            <ProtectedRoute><HandbookPage /></ProtectedRoute>
           } />
           <Route path="/crm" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
