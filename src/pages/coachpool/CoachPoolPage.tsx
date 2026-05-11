@@ -471,35 +471,6 @@ export function CoachPoolPage() {
           </div>
         )}
 
-        {/* SQL hint for first use */}
-        {entries.length === 0 && !loading && (
-          <Card>
-            <p className="text-xs text-gray-400 font-mono leading-relaxed">
-              Run this migration in Supabase SQL editor:<br /><br />
-              CREATE TABLE coach_pool (<br />
-              &nbsp;&nbsp;id uuid DEFAULT gen_random_uuid() PRIMARY KEY,<br />
-              &nbsp;&nbsp;full_name text NOT NULL,<br />
-              &nbsp;&nbsp;email text,<br />
-              &nbsp;&nbsp;phone text,<br />
-              &nbsp;&nbsp;preferred_locations text,<br />
-              &nbsp;&nbsp;travel_distance_miles int,<br />
-              &nbsp;&nbsp;availability text,<br />
-              &nbsp;&nbsp;notes text,<br />
-              &nbsp;&nbsp;status text NOT NULL DEFAULT 'available',<br />
-              &nbsp;&nbsp;created_at timestamptz DEFAULT now()<br />
-              );<br /><br />
-              ALTER TABLE coach_pool ENABLE ROW LEVEL SECURITY;<br /><br />
-              CREATE POLICY "Authenticated users can read coach_pool"<br />
-              &nbsp;&nbsp;ON coach_pool FOR SELECT TO authenticated USING (true);<br /><br />
-              CREATE POLICY "Directors and area leads can manage coach_pool"<br />
-              &nbsp;&nbsp;ON coach_pool FOR ALL TO authenticated<br />
-              &nbsp;&nbsp;USING (EXISTS (<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;SELECT 1 FROM profiles WHERE id = auth.uid()<br />
-              &nbsp;&nbsp;&nbsp;&nbsp;AND role IN ('director', 'area_lead')<br />
-              &nbsp;&nbsp;));
-            </p>
-          </Card>
-        )}
 
       </div>
 
