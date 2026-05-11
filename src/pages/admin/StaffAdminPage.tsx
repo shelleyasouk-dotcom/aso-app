@@ -31,6 +31,7 @@ type EditForm = { full_name: string; email: string; role: Role; areas: string[];
 interface StaffCardProps {
   member: StaffWithAssignments
   canManage: boolean
+  canAssignSchools: boolean
   editingId: string | null
   editForm: EditForm
   setEditForm: (f: EditForm) => void
@@ -43,7 +44,7 @@ interface StaffCardProps {
 }
 
 // Defined at module level — never remounted between renders
-function StaffCard({ member, canManage, editingId, editForm, setEditForm, setEditingId, saving, onEdit, onAssign, onSaveEdit, onProfile }: StaffCardProps) {
+function StaffCard({ member, canManage, canAssignSchools, editingId, editForm, setEditForm, setEditingId, saving, onEdit, onAssign, onSaveEdit, onProfile }: StaffCardProps) {
   if (editingId === member.id) {
     return (
       <Card>
@@ -149,20 +150,20 @@ function StaffCard({ member, canManage, editingId, editForm, setEditForm, setEdi
             <UserCircle size={13} /> Profile
           </button>
           {canManage && (
-            <>
-              <button
-                onClick={() => onEdit(member)}
-                className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg"
-              >
-                <Pencil size={13} /> Edit
-              </button>
-              <button
-                onClick={() => onAssign(member)}
-                className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-2.5 py-1.5 rounded-lg"
-              >
-                <School size={13} /> Schools
-              </button>
-            </>
+            <button
+              onClick={() => onEdit(member)}
+              className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg"
+            >
+              <Pencil size={13} /> Edit
+            </button>
+          )}
+          {canAssignSchools && (
+            <button
+              onClick={() => onAssign(member)}
+              className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-2.5 py-1.5 rounded-lg"
+            >
+              <School size={13} /> Schools
+            </button>
           )}
         </div>
       </div>
@@ -301,7 +302,10 @@ export function StaffAdminPage() {
     setSaving(false)
   }
 
+  const [assignError, setAssignError] = useState<string | null>(null)
+
   function openAssignPanel(member: StaffWithAssignments) {
+    setAssignError(null)
     setAssignPanel({
       staffId: member.id,
       staffName: member.full_name,
@@ -327,9 +331,14 @@ export function StaffAdminPage() {
     const toRemove = [...currentIds].filter(id => !assignPanel.selected.has(id))
 
     if (toAdd.length > 0) {
-      await supabase.from('staff_school_assignments').insert(
-        toAdd.map(school_id => ({ staff_id: assignPanel.staffId, school_id }))
+      const { error } = await supabase.from('staff_school_assignments').insert(
+        toAdd.map(school_id => ({ staff_id: assignPanel.staffId, school_id, is_lead: false }))
       )
+      if (error) {
+        setAssignError(error.message)
+        setSaving(false)
+        return
+      }
     }
     for (const school_id of toRemove) {
       await supabase.from('staff_school_assignments').delete()
@@ -338,6 +347,7 @@ export function StaffAdminPage() {
 
     await loadData()
     setAssignPanel(null)
+    setAssignError(null)
     setSaving(false)
   }
 
@@ -349,7 +359,8 @@ export function StaffAdminPage() {
 
   const unassigned = staff.filter(m => !m.assignments || m.assignments.length === 0)
 
-  const cardProps = { canManage: isDirector, editingId, editForm, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit, onProfile: (id: string) => navigate(`/profile/${id}`) }
+  const canAssignSchools = profile?.role === 'director' || profile?.role === 'area_lead' || profile?.role === 'lead_coach'
+  const cardProps = { canManage: isDirector, canAssignSchools, editingId, editForm, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit, onProfile: (id: string) => navigate(`/profile/${id}`) }
 
   return (
     <Layout title="Staff" showBack>
@@ -449,6 +460,9 @@ export function StaffAdminPage() {
                 </button>
               ))}
             </div>
+            {assignError && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-2">{assignError}</p>
+            )}
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => setAssignPanel(null)} className="flex-1">Cancel</Button>
               <Button onClick={saveAssignments} disabled={saving} className="flex-1">
