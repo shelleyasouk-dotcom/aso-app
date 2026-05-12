@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
-import { Camera, Plus, Trash2, FileText, ShieldCheck, AlertTriangle, XCircle, Download } from 'lucide-react'
+import { Camera, Plus, Trash2, FileText, ShieldCheck, AlertTriangle, XCircle, Download, FolderOpen, Eye } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { Input } from '../../components/ui/Input'
+import { Input, Select } from '../../components/ui/Input'
 import { ROLE_LABELS } from '../../lib/roles'
-import type { Profile, CoachCertificate } from '../../types'
+import type { Profile, CoachCertificate, StaffDocument, OnboardingDocCategory } from '../../types'
 
 // ─── Expiry helpers ────────────────────────────────────────────────────────
 
@@ -133,6 +133,60 @@ function CertRow({ cert, canEdit, onDelete, onDownload }: CertRowProps) {
   )
 }
 
+// ─── Onboarding documents ─────────────────────────────────────────────────
+
+const DOC_CATEGORIES: { value: OnboardingDocCategory; label: string; color: string }[] = [
+  { value: 'contract',       label: 'Contract',        color: 'bg-blue-100 text-blue-700' },
+  { value: 'right_to_work',  label: 'Right to Work',   color: 'bg-purple-100 text-purple-700' },
+  { value: 'dbs',            label: 'DBS',             color: 'bg-red-100 text-red-700' },
+  { value: 'reference',      label: 'Reference',       color: 'bg-amber-100 text-amber-700' },
+  { value: 'certificate',    label: 'Certificate',     color: 'bg-green-100 text-green-700' },
+  { value: 'other',          label: 'Other',           color: 'bg-gray-100 text-gray-600' },
+]
+
+function categoryChip(cat: OnboardingDocCategory) {
+  const c = DOC_CATEGORIES.find(d => d.value === cat)
+  return c ? (
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${c.color}`}>{c.label}</span>
+  ) : null
+}
+
+interface DocRowProps {
+  doc: StaffDocument
+  canDelete: boolean
+  onView: (doc: StaffDocument) => void
+  onDelete: (doc: StaffDocument) => void
+}
+
+function DocRow({ doc, canDelete, onView, onDelete }: DocRowProps) {
+  const date = new Date(doc.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  return (
+    <div className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
+      <div className="w-9 h-9 bg-[#f4f6f9] rounded-xl flex items-center justify-center shrink-0">
+        <FileText size={16} className="text-[#1a3a6b]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium text-[#1a3a6b] text-sm truncate">{doc.title}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          {categoryChip(doc.category)}
+          <span className="text-xs text-gray-400">{date}</span>
+        </div>
+        {doc.notes && <p className="text-xs text-gray-400 mt-0.5 truncate">{doc.notes}</p>}
+      </div>
+      <div className="flex gap-1 shrink-0">
+        <button onClick={() => onView(doc)} className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50" title="View / Download">
+          <Eye size={15} />
+        </button>
+        {canDelete && (
+          <button onClick={() => onDelete(doc)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50" title="Delete">
+            <Trash2 size={15} />
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────
 
 export function CoachProfilePage() {
@@ -154,6 +208,14 @@ export function CoachProfilePage() {
   const [uploadingCert, setUploadingCert] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
 
+  // Onboarding documents
+  const [docs, setDocs] = useState<StaffDocument[]>([])
+  const [addingDoc, setAddingDoc] = useState(false)
+  const [docForm, setDocForm] = useState({ title: '', category: 'contract' as OnboardingDocCategory, notes: '' })
+  const [docFile, setDocFile] = useState<File | null>(null)
+  const [uploadingDoc, setUploadingDoc] = useState(false)
+  const [confirmDeleteDocId, setConfirmDeleteDocId] = useState<string | null>(null)
+
   const viewerRole = viewer?.role
   const isAdminViewer = viewerRole === 'director' || viewerRole === 'area_lead'
   const isOwnProfile = !staffId || staffId === viewer?.id
@@ -166,6 +228,7 @@ export function CoachProfilePage() {
     if (!targetId) return
     loadSubject(targetId)
     loadCerts(targetId)
+    loadDocs(targetId)
   }, [targetId])
 
   async function loadSubject(id: string) {
@@ -272,6 +335,60 @@ export function CoachProfilePage() {
     if (!cert.file_path) return
     const { data } = await supabase.storage.from('coach-files').createSignedUrl(cert.file_path, 300)
     if (data?.signedUrl) window.open(data.signedUrl, '_blank')
+  }
+
+  async function loadDocs(id: string) {
+    const { data } = await supabase
+      .from('staff_documents')
+      .select('*')
+      .eq('staff_id', id)
+      .order('created_at', { ascending: false })
+    if (data) setDocs(data as StaffDocument[])
+  }
+
+  async function uploadDoc() {
+    if (!targetId || !docForm.title.trim() || !docFile) return
+    setUploadingDoc(true)
+    setUploadError(null)
+    const ext = docFile.name.split('.').pop()
+    const filePath = `onboarding/${targetId}/${Date.now()}.${ext}`
+    const { error: storageErr } = await supabase.storage.from('coach-files').upload(filePath, docFile)
+    if (storageErr) {
+      setUploadError(`Upload failed: ${storageErr.message}`)
+      setUploadingDoc(false)
+      return
+    }
+    const { data, error: dbErr } = await supabase.from('staff_documents').insert({
+      staff_id: targetId,
+      title: docForm.title.trim(),
+      category: docForm.category,
+      file_path: filePath,
+      file_name: docFile.name,
+      uploaded_by: viewer!.id,
+      notes: docForm.notes.trim() || null,
+    }).select().single()
+    if (dbErr) {
+      setUploadError(`Save failed: ${dbErr.message}`)
+      setUploadingDoc(false)
+      return
+    }
+    if (data) setDocs(prev => [data as StaffDocument, ...prev])
+    setDocForm({ title: '', category: 'contract', notes: '' })
+    setDocFile(null)
+    setAddingDoc(false)
+    setUploadingDoc(false)
+  }
+
+  async function viewDoc(doc: StaffDocument) {
+    const { data } = await supabase.storage.from('coach-files').createSignedUrl(doc.file_path, 3600)
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank')
+  }
+
+  async function deleteDoc(doc: StaffDocument) {
+    await supabase.storage.from('coach-files').remove([doc.file_path])
+    await supabase.from('staff_documents').delete().eq('id', doc.id)
+    setDocs(prev => prev.filter(d => d.id !== doc.id))
+    setConfirmDeleteDocId(null)
   }
 
   if (!subject) return (
@@ -413,6 +530,99 @@ export function CoachProfilePage() {
               ))
           }
         </Card>
+
+        {/* ── Onboarding Documents ──────────────────────────────────────── */}
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <FolderOpen size={16} className="text-[#1a3a6b]" />
+              <p className="text-sm font-bold text-[#1a3a6b]">Onboarding Documents</p>
+            </div>
+            {canEdit && (
+              <button
+                onClick={() => setAddingDoc(v => !v)}
+                className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-3 py-1.5 rounded-lg"
+              >
+                <Plus size={13} /> Upload
+              </button>
+            )}
+          </div>
+
+          {addingDoc && (
+            <div className="flex flex-col gap-3 mb-4 pb-4 border-b border-gray-100">
+              <Input
+                label="Document Title *"
+                placeholder="e.g. Employment Contract May 2026"
+                value={docForm.title}
+                onChange={e => setDocForm({ ...docForm, title: e.target.value })}
+              />
+              <Select
+                label="Category"
+                value={docForm.category}
+                onChange={e => setDocForm({ ...docForm, category: e.target.value as OnboardingDocCategory })}
+              >
+                {DOC_CATEGORIES.map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </Select>
+              <Input
+                label="Notes (optional)"
+                placeholder="e.g. Signed and returned"
+                value={docForm.notes}
+                onChange={e => setDocForm({ ...docForm, notes: e.target.value })}
+              />
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700">File *</label>
+                <label className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] transition-colors cursor-pointer">
+                  <input type="file" className="hidden"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={e => setDocFile(e.target.files?.[0] ?? null)} />
+                  <FileText size={16} />
+                  <span className="text-sm truncate">{docFile ? docFile.name : 'Tap to select file (PDF, Word, image)…'}</span>
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="secondary" className="flex-1"
+                  onClick={() => { setAddingDoc(false); setDocForm({ title: '', category: 'contract', notes: '' }); setDocFile(null) }}>
+                  Cancel
+                </Button>
+                <Button className="flex-1"
+                  onClick={uploadDoc}
+                  disabled={uploadingDoc || !docForm.title.trim() || !docFile}>
+                  {uploadingDoc ? 'Uploading…' : 'Upload'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {docs.length === 0 && !addingDoc ? (
+            <p className="text-sm text-gray-400 text-center py-2">No onboarding documents yet.</p>
+          ) : (
+            docs.map(doc => (
+              <div key={doc.id}>
+                {confirmDeleteDocId === doc.id ? (
+                  <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                    <p className="text-sm text-red-600 font-medium">Delete "{doc.title}"?</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => setConfirmDeleteDocId(null)}
+                        className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg">Cancel</button>
+                      <button onClick={() => deleteDoc(doc)}
+                        className="text-xs text-white bg-red-500 px-3 py-1.5 rounded-lg font-semibold">Delete</button>
+                    </div>
+                  </div>
+                ) : (
+                  <DocRow
+                    doc={doc}
+                    canDelete={canEdit}
+                    onView={viewDoc}
+                    onDelete={d => setConfirmDeleteDocId(d.id)}
+                  />
+                )}
+              </div>
+            ))
+          )}
+        </Card>
+
       </div>
     </Layout>
   )

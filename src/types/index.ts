@@ -165,6 +165,21 @@ export interface ChildAward {
   awarded_by_profile?: Profile
 }
 
+export type OnboardingDocCategory = 'contract' | 'right_to_work' | 'reference' | 'certificate' | 'dbs' | 'other'
+
+export interface StaffDocument {
+  id: string
+  staff_id: string
+  title: string
+  category: OnboardingDocCategory
+  file_path: string
+  file_name: string
+  uploaded_by: string
+  notes: string | null
+  created_at: string
+  uploader?: Profile
+}
+
 // prospect → initial_sent → following_up → interested (amber) / onboarded (green) / do_not_contact (red)
 export type CrmStatus = 'prospect' | 'initial_sent' | 'following_up' | 'interested' | 'onboarded' | 'do_not_contact'
 export type CrmInteractionType = 'email' | 'call' | 'visit' | 'meeting' | 'other'
