@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -8,9 +8,13 @@ import {
   Settings,
   LogOut,
   ChevronLeft,
+  Bell,
+  X,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../lib/supabase'
 import { canClockIn, canManageSchools, canViewRegisters } from '../../lib/roles'
+import type { AppNotification } from '../../types'
 
 interface LayoutProps {
   children: ReactNode
@@ -22,6 +26,32 @@ export function Layout({ children, title, showBack }: LayoutProps) {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [notifications, setNotifications] = useState<AppNotification[]>([])
+  const [showNotifs, setShowNotifs] = useState(false)
+
+  useEffect(() => {
+    if (!profile) return
+    supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', profile.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => setNotifications((data as AppNotification[]) ?? []))
+  }, [profile])
+
+  async function markRead(id: string) {
+    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+  }
+
+  async function markAllRead() {
+    if (!profile) return
+    await supabase.from('notifications').update({ read: true }).eq('user_id', profile.id).eq('read', false)
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+  }
+
+  const unreadCount = notifications.filter(n => !n.read).length
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
@@ -55,6 +85,18 @@ export function Layout({ children, title, showBack }: LayoutProps) {
         )}
         <h1 className="flex-1 font-bold text-lg">{title || 'ASO Coaching'}</h1>
         <button
+          onClick={() => setShowNotifs(v => !v)}
+          className="relative p-2 rounded-lg hover:bg-white/10 active:bg-white/20 transition-colors"
+          title="Notifications"
+        >
+          <Bell size={20} />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center leading-none">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+        <button
           onClick={signOut}
           className="p-2 rounded-lg hover:bg-white/10 active:bg-white/20 transition-colors"
           title="Sign out"
@@ -62,6 +104,52 @@ export function Layout({ children, title, showBack }: LayoutProps) {
           <LogOut size={20} />
         </button>
       </header>
+
+      {/* Notifications panel */}
+      {showNotifs && (
+        <div className="fixed inset-0 z-20 flex flex-col" onClick={() => setShowNotifs(false)}>
+          <div
+            className="mx-4 mt-[64px] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden max-h-[70vh] flex flex-col"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <p className="font-bold text-[#1a3a6b] text-sm">Notifications</p>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button onClick={markAllRead} className="text-xs text-[#1a3a6b] font-semibold">
+                    Mark all read
+                  </button>
+                )}
+                <button onClick={() => setShowNotifs(false)} className="p-1 rounded-lg hover:bg-gray-100">
+                  <X size={16} className="text-gray-500" />
+                </button>
+              </div>
+            </div>
+            <div className="overflow-y-auto flex-1">
+              {notifications.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">No notifications yet.</p>
+              ) : (
+                notifications.map(n => (
+                  <button
+                    key={n.id}
+                    onClick={() => { markRead(n.id); setShowNotifs(false); if (n.type === 'absence_request' || n.type === 'absence_update') navigate('/absences') }}
+                    className={`w-full text-left px-4 py-3 border-b border-gray-50 transition-colors hover:bg-gray-50 ${n.read ? 'opacity-60' : ''}`}
+                  >
+                    <div className="flex items-start gap-2">
+                      {!n.read && <div className="w-2 h-2 rounded-full bg-[#1a3a6b] mt-1.5 shrink-0" />}
+                      <div className={!n.read ? '' : 'ml-4'}>
+                        <p className="text-sm font-semibold text-gray-800 leading-tight">{n.title}</p>
+                        {n.body && <p className="text-xs text-gray-500 mt-0.5 leading-snug">{n.body}</p>}
+                        <p className="text-[10px] text-gray-300 mt-1">{new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <main className="flex-1 pb-24">{children}</main>

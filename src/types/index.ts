@@ -165,6 +165,36 @@ export interface ChildAward {
   awarded_by_profile?: Profile
 }
 
+export type AbsenceType = 'sick' | 'annual_leave' | 'personal' | 'emergency' | 'training' | 'other'
+export type AbsenceStatus = 'pending' | 'approved' | 'rejected'
+
+export interface Absence {
+  id: string
+  staff_id: string
+  date_from: string
+  date_to: string
+  type: AbsenceType
+  reason: string | null
+  status: AbsenceStatus
+  reviewed_by: string | null
+  reviewed_at: string | null
+  reviewer_note: string | null
+  created_at: string
+  staff?: Profile
+  reviewer?: Profile
+}
+
+export interface AppNotification {
+  id: string
+  user_id: string
+  title: string
+  body: string | null
+  type: string
+  related_id: string | null
+  read: boolean
+  created_at: string
+}
+
 export type OnboardingDocCategory = 'contract' | 'right_to_work' | 'reference' | 'certificate' | 'dbs' | 'other'
 
 export interface StaffDocument {

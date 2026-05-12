@@ -30,6 +30,7 @@ import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
 import { SessionsPage } from './pages/sessions/SessionsPage'
+import { AbsencesPage } from './pages/absences/AbsencesPage'
 
 export default function App() {
   return (
@@ -165,6 +166,9 @@ export default function App() {
             <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
               <CoachPoolPage />
             </ProtectedRoute>
+          } />
+          <Route path="/absences" element={
+            <ProtectedRoute><AbsencesPage /></ProtectedRoute>
           } />
 
           {/* Catch-all */}

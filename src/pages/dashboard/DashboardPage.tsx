@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight, Building2, UsersRound, CalendarCheck } from 'lucide-react'
+import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight, Building2, UsersRound, CalendarCheck, CalendarOff } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -108,6 +108,13 @@ export function DashboardPage() {
           color: 'bg-teal-50 text-teal-700',
         }]
       : []),
+    {
+      label: 'Absences',
+      description: 'Log & manage absence requests',
+      icon: CalendarOff,
+      path: '/absences',
+      color: 'bg-rose-50 text-rose-700',
+    },
     ...(canViewCoachPool(profile.role)
       ? [{
           label: 'Coach Pool',
