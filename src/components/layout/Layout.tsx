@@ -2,10 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
-  Clock,
-  ClipboardList,
-  Award,
-  Settings,
+  LayoutGrid,
   LogOut,
   ChevronLeft,
   Bell,
@@ -13,7 +10,6 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
-import { canClockIn, canManageSchools, canViewRegisters } from '../../lib/roles'
 import type { AppNotification } from '../../types'
 
 interface LayoutProps {
@@ -55,16 +51,7 @@ export function Layout({ children, title, showBack }: LayoutProps) {
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-    ...(profile && canClockIn(profile.role)
-      ? [{ path: '/clock-in', icon: Clock, label: 'Clock In' }]
-      : []),
-    ...(profile && canViewRegisters(profile.role)
-      ? [{ path: '/registers', icon: ClipboardList, label: 'Registers' }]
-      : []),
-    { path: '/awards', icon: Award, label: 'Awards' },
-    ...(profile && (canManageSchools(profile.role) || profile.role === 'area_lead')
-      ? [{ path: '/admin', icon: Settings, label: 'Admin' }]
-      : []),
+    { path: '/my-area', icon: LayoutGrid, label: 'My Area' },
   ]
 
   return (

@@ -1,21 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, ClipboardList, Award, Settings, Users, School, KeyRound, Pin, Megaphone, FileText, UserCircle, ReceiptText, ChevronRight, Building2, UsersRound, CalendarCheck, CalendarOff } from 'lucide-react'
+import { School, Pin, Megaphone, ChevronRight, ChevronRight as ArrowRight, UserCircle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
-import { ROLE_LABELS, canClockIn, canManageSchools, canViewRegisters, canViewCoachPool } from '../../lib/roles'
+import { ROLE_LABELS, canManageSchools, clocksInAnywhere } from '../../lib/roles'
 import type { Announcement } from '../../types'
-
-interface QuickAction {
-  label: string
-  description: string
-  icon: React.ElementType
-  path: string
-  color: string
-}
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -33,180 +25,79 @@ export function DashboardPage() {
   if (!profile) return null
 
   const firstName = profile.full_name.split(' ')[0]
-
-  const actions: QuickAction[] = [
-    ...(canClockIn(profile.role)
-      ? [{
-          label: 'Clock In / Out',
-          description: 'Record your session time',
-          icon: Clock,
-          path: '/clock-in',
-          color: 'bg-blue-50 text-[#1a3a6b]',
-        }]
-      : []),
-    ...(canViewRegisters(profile.role)
-      ? [{
-          label: 'Session Register',
-          description: 'Take or view attendance',
-          icon: ClipboardList,
-          path: '/registers',
-          color: 'bg-yellow-50 text-[#1a3a6b]',
-        }]
-      : []),
-    {
-      label: 'Awards',
-      description: 'Track UKAG progress',
-      icon: Award,
-      path: '/awards',
-      color: 'bg-green-50 text-green-800',
-    },
-    ...(profile.role === 'director' || profile.role === 'area_lead'
-      ? [{
-          label: 'Timesheets',
-          description: 'Payroll & staff hours',
-          icon: Users,
-          path: '/timesheets',
-          color: 'bg-purple-50 text-purple-800',
-        }]
-      : []),
-    ...(profile.role === 'area_lead' || profile.role === 'lead_coach'
-      ? [{
-          label: 'My Sessions',
-          description: 'Who\'s in at my locations',
-          icon: CalendarCheck,
-          path: '/sessions',
-          color: 'bg-green-50 text-green-700',
-        }]
-      : []),
-    {
-      label: 'Documents',
-      description: 'Policies & handbooks',
-      icon: FileText,
-      path: '/documents',
-      color: 'bg-blue-50 text-blue-700',
-    },
-    {
-      label: 'My Profile',
-      description: 'Digital ID & certificates',
-      icon: UserCircle,
-      path: '/profile',
-      color: 'bg-indigo-50 text-indigo-700',
-    },
-    {
-      label: 'Expenses',
-      description: 'Submit travel & mileage',
-      icon: ReceiptText,
-      path: '/expenses',
-      color: 'bg-orange-50 text-orange-700',
-    },
-    ...(profile.role === 'outreach_worker' || profile.role === 'director' || profile.role === 'area_lead'
-      ? [{
-          label: 'School Outreach',
-          description: 'Manage school contacts & CRM',
-          icon: Building2,
-          path: '/crm',
-          color: 'bg-teal-50 text-teal-700',
-        }]
-      : []),
-    {
-      label: 'Absences',
-      description: 'Log & manage absence requests',
-      icon: CalendarOff,
-      path: '/absences',
-      color: 'bg-rose-50 text-rose-700',
-    },
-    ...(canViewCoachPool(profile.role)
-      ? [{
-          label: 'Coach Pool',
-          description: 'Coaches waiting for locations',
-          icon: UsersRound,
-          path: '/coach-pool',
-          color: 'bg-violet-50 text-violet-700',
-        }]
-      : []),
-    ...(canManageSchools(profile.role) || profile.role === 'area_lead'
-      ? [{
-          label: 'Admin Panel',
-          description: 'Manage schools & staff',
-          icon: Settings,
-          path: '/admin',
-          color: 'bg-gray-50 text-gray-700',
-        }]
-      : []),
-  ]
+  const showSchools = !canManageSchools(profile.role) && profile.role !== 'area_lead' && !clocksInAnywhere(profile.role)
 
   return (
     <Layout title="ASO Coaching">
-      <div className="px-4 pt-6 pb-4">
-        {/* Greeting */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-[#1a3a6b]">Hi, {firstName}</h2>
-          <div className="flex items-center gap-2 mt-1">
-            <Badge color="blue">{ROLE_LABELS[profile.role]}</Badge>
+      <div className="px-4 pt-6 pb-4 flex flex-col gap-6">
+
+        {/* Profile tile */}
+        <Card onClick={() => navigate('/profile')} className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-[#1a3a6b] flex items-center justify-center shrink-0 overflow-hidden">
+            {profile.photo_url ? (
+              <img src={profile.photo_url} alt={profile.full_name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white font-bold text-xl">
+                {profile.full_name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+              </span>
+            )}
           </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-[#1a3a6b] text-base leading-tight truncate">Hi, {firstName}</p>
+            <div className="mt-1">
+              <Badge color="blue">{ROLE_LABELS[profile.role]}</Badge>
+            </div>
+          </div>
+          <ChevronRight size={18} className="text-gray-300 shrink-0" />
+        </Card>
+
+        {/* Clock In section */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+              {showSchools ? 'Your Schools This Week' : 'Clock In'}
+            </h3>
+            <button
+              onClick={() => navigate('/clock-in')}
+              className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b]"
+            >
+              Open <ChevronRight size={14} />
+            </button>
+          </div>
+          {showSchools ? (
+            <SchoolAssignments staffId={profile.id} />
+          ) : (
+            <Card onClick={() => navigate('/clock-in')} className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-[#1a3a6b] rounded-xl flex items-center justify-center shrink-0">
+                <School size={18} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-[#1a3a6b] text-sm">Clock In / Out</p>
+                <p className="text-xs text-gray-400 mt-0.5">Record your session time</p>
+              </div>
+              <ChevronRight size={16} className="text-gray-300" />
+            </Card>
+          )}
         </div>
 
         {/* Announcements */}
         <AnnouncementsSection area={profile.area} isDirector={profile.role === 'director'} />
 
-        {/* Quick actions */}
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
-          {actions.map((action) => {
-            const Icon = action.icon
-            return (
-              <Card
-                key={action.path}
-                onClick={() => navigate(action.path)}
-                className="flex flex-col gap-3"
-              >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${action.color}`}>
-                  <Icon size={20} />
-                </div>
-                <div>
-                  <p className="font-semibold text-[#1a3a6b] text-sm leading-tight">{action.label}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{action.description}</p>
-                </div>
-              </Card>
-            )
-          })}
-        </div>
-
-        {/* Change password link */}
+        {/* My Area CTA */}
         <button
-          onClick={() => navigate('/change-password')}
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-[#1a3a6b] transition-colors mt-2"
+          onClick={() => navigate('/my-area')}
+          className="w-full flex items-center justify-between bg-[#1a3a6b] text-white px-5 py-4 rounded-2xl shadow-md active:opacity-90 transition-opacity"
         >
-          <KeyRound size={14} /> Change my password
+          <div className="flex items-center gap-3">
+            <UserCircle size={22} />
+            <div className="text-left">
+              <p className="font-bold text-base leading-tight">My Area</p>
+              <p className="text-xs text-white/70 mt-0.5">Timesheet, expenses, documents & more</p>
+            </div>
+          </div>
+          <ArrowRight size={20} className="text-white/60" />
         </button>
 
-        {/* Footer */}
-        <div className="mt-6 pt-6 border-t border-gray-200 flex flex-col items-center gap-2">
-          <button
-            onClick={() => navigate('/guide')}
-            className="text-sm font-semibold text-[#1a3a6b] bg-[#1a3a6b]/8 px-4 py-2 rounded-xl hover:bg-[#1a3a6b]/15 transition-colors"
-          >
-            How to use this app
-          </button>
-          <a
-            href="mailto:info@activeschool.org.uk"
-            className="text-sm text-gray-400 hover:text-[#1a3a6b] transition-colors"
-          >
-            info@activeschool.org.uk
-          </a>
-        </div>
-
-        {/* School info for coaches */}
-        {!canManageSchools(profile.role) && profile.role !== 'area_lead' && (
-          <div className="mt-6">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-              Your School(s)
-            </h3>
-            <SchoolAssignments staffId={profile.id} />
-          </div>
-        )}
       </div>
     </Layout>
   )
@@ -244,7 +135,7 @@ function AnnouncementsSection({ area, isDirector }: { area?: string; isDirector:
   if (!loaded || (pinned.length === 0 && !hasUnpinned)) return null
 
   return (
-    <div className="mb-6">
+    <div>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Megaphone size={15} className="text-gray-500" />
@@ -323,13 +214,14 @@ function SchoolAssignments({ staffId }: { staffId: string }) {
       {schools.map((school) => (
         <Card key={school.name} onClick={() => navigate('/clock-in')}>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#1a3a6b] rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-[#1a3a6b] rounded-xl flex items-center justify-center shrink-0">
               <School size={18} className="text-white" />
             </div>
-            <div>
-              <p className="font-semibold text-[#1a3a6b]">{school.name}</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-[#1a3a6b] truncate">{school.name}</p>
               <p className="text-xs text-gray-500">{school.session_day} · {school.session_time}</p>
             </div>
+            <ChevronRight size={16} className="text-gray-300 shrink-0" />
           </div>
         </Card>
       ))}

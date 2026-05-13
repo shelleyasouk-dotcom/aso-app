@@ -31,6 +31,7 @@ import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
 import { SessionsPage } from './pages/sessions/SessionsPage'
 import { AbsencesPage } from './pages/absences/AbsencesPage'
+import { MyAreaPage } from './pages/myarea/MyAreaPage'
 
 export default function App() {
   return (
@@ -44,6 +45,9 @@ export default function App() {
           {/* All authenticated staff */}
           <Route path="/dashboard" element={
             <ProtectedRoute><DashboardPage /></ProtectedRoute>
+          } />
+          <Route path="/my-area" element={
+            <ProtectedRoute><MyAreaPage /></ProtectedRoute>
           } />
           <Route path="/clock-in" element={
             <ProtectedRoute><ClockInPage /></ProtectedRoute>
