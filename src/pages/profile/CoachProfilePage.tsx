@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Camera, Plus, Trash2, FileText, FolderOpen, Eye, Download } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Camera, Plus, Trash2, FileText, FolderOpen, Eye, Download, X } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -207,6 +207,8 @@ export function CoachProfilePage() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadStep, setUploadStep] = useState<string | null>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   // Whether the current viewer can edit this profile
   const [canEdit, setCanEdit] = useState(false)
@@ -290,29 +292,52 @@ export function CoachProfilePage() {
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !targetId) return
+    if (!file || !targetId) {
+      setUploadError('No file selected or profile not loaded.')
+      return
+    }
     setUploadingPhoto(true)
     setUploadError(null)
-    // Always store as .jpg so the path is stable regardless of source format
+    setUploadStep(`Got file: ${file.name} (${file.type || 'unknown type'}, ${(file.size / 1024).toFixed(0)} KB)`)
+
     const path = `photos/${targetId}/profile.jpg`
     const contentType = file.type || 'image/jpeg'
-    const { error: storageErr } = await supabase.storage.from('coach-files').upload(path, file, { upsert: true, contentType })
+
+    setUploadStep('Uploading to storage…')
+    const { error: storageErr } = await supabase.storage
+      .from('coach-files')
+      .upload(path, file, { upsert: true, contentType })
+
     if (storageErr) {
-      setUploadError(`Upload failed: ${storageErr.message}`)
+      setUploadError(`Storage error: ${storageErr.message}`)
+      setUploadStep(null)
       setUploadingPhoto(false)
       return
     }
+
+    setUploadStep('Saving photo URL…')
     const { data: urlData } = supabase.storage.from('coach-files').getPublicUrl(path)
-    const url = urlData.publicUrl + `?t=${Date.now()}`
+    const url = `${urlData.publicUrl}?t=${Date.now()}`
+
     const { error: dbErr } = await supabase.from('profiles').update({ photo_url: url }).eq('id', targetId)
     if (dbErr) {
-      setUploadError(`Profile update failed: ${dbErr.message}`)
+      setUploadError(`Database error: ${dbErr.message}`)
+      setUploadStep(null)
       setUploadingPhoto(false)
       return
     }
+
     setPhotoUrl(url)
     if (isOwnProfile && refreshProfile) await refreshProfile()
+    setUploadStep(null)
     setUploadingPhoto(false)
+  }
+
+  async function clearPhoto() {
+    if (!targetId) return
+    await supabase.from('profiles').update({ photo_url: null }).eq('id', targetId)
+    setPhotoUrl(undefined)
+    if (isOwnProfile && refreshProfile) await refreshProfile()
   }
 
   async function saveProfile() {
@@ -452,27 +477,57 @@ export function CoachProfilePage() {
           <Card>
             <p className="text-sm font-bold text-[#1a3a6b] mb-3">Profile Photo</p>
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center shrink-0">
-                {photoUrl
-                  ? <img src={photoUrl} alt="" className="w-full h-full object-cover" />
-                  : <span className="text-white font-bold text-lg">{initials}</span>
-                }
+              <div className="w-16 h-16 rounded-2xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center shrink-0 relative">
+                {photoUrl ? (
+                  <>
+                    <img
+                      src={photoUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                      onError={() => {/* keep broken state visible */}}
+                    />
+                    <button
+                      onClick={clearPhoto}
+                      className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center"
+                      title="Remove broken photo"
+                    >
+                      <X size={10} className="text-white" />
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-white font-bold text-lg">{initials}</span>
+                )}
               </div>
-              <div>
-                <label className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white cursor-pointer ${uploadingPhoto ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50'}`}>
+              <div className="flex flex-col gap-2">
+                {/* Hidden input triggered via ref — more reliable on mobile Safari */}
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ position: 'absolute', opacity: 0, width: 0, height: 0, overflow: 'hidden' }}
+                  onChange={handlePhotoChange}
+                />
+                <button
+                  type="button"
+                  disabled={uploadingPhoto}
+                  onClick={() => {
+                    setUploadError(null)
+                    setUploadStep(null)
+                    photoInputRef.current?.click()
+                  }}
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white ${uploadingPhoto ? 'opacity-50' : 'active:bg-gray-100'}`}
+                >
                   <Camera size={16} />
                   {uploadingPhoto ? 'Uploading…' : photoUrl ? 'Change Photo' : 'Upload Photo'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePhotoChange}
-                    disabled={uploadingPhoto}
-                  />
-                </label>
-                <p className="text-xs text-gray-400 mt-1">JPG or PNG from camera roll</p>
+                </button>
+                <p className="text-xs text-gray-400">Any image from camera roll</p>
               </div>
             </div>
+            {uploadStep && (
+              <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5">
+                <p className="text-sm text-blue-700">{uploadStep}</p>
+              </div>
+            )}
             {uploadError && (
               <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
                 <p className="text-sm text-red-700 font-medium">{uploadError}</p>
