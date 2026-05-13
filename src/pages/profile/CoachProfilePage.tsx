@@ -293,9 +293,10 @@ export function CoachProfilePage() {
     if (!file || !targetId) return
     setUploadingPhoto(true)
     setUploadError(null)
-    const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase()
-    const path = `photos/${targetId}/profile.${ext}`
-    const { error: storageErr } = await supabase.storage.from('coach-files').upload(path, file, { upsert: true, contentType: file.type })
+    // Always store as .jpg so the path is stable regardless of source format
+    const path = `photos/${targetId}/profile.jpg`
+    const contentType = file.type || 'image/jpeg'
+    const { error: storageErr } = await supabase.storage.from('coach-files').upload(path, file, { upsert: true, contentType })
     if (storageErr) {
       setUploadError(`Upload failed: ${storageErr.message}`)
       setUploadingPhoto(false)
@@ -463,7 +464,7 @@ export function CoachProfilePage() {
                   {uploadingPhoto ? 'Uploading…' : photoUrl ? 'Change Photo' : 'Upload Photo'}
                   <input
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    accept="image/*"
                     className="hidden"
                     onChange={handlePhotoChange}
                     disabled={uploadingPhoto}
