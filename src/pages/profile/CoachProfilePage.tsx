@@ -499,27 +499,23 @@ export function CoachProfilePage() {
                 )}
               </div>
               <div className="flex flex-col gap-2">
-                {/* Hidden input triggered via ref — more reliable on mobile Safari */}
+                {/* sr-only keeps the input in the DOM so the label can trigger it on iOS */}
                 <input
                   ref={photoInputRef}
+                  id="photo-file-input"
                   type="file"
                   accept="image/*"
-                  style={{ position: 'absolute', opacity: 0, width: 0, height: 0, overflow: 'hidden' }}
+                  className="sr-only"
                   onChange={handlePhotoChange}
-                />
-                <button
-                  type="button"
                   disabled={uploadingPhoto}
-                  onClick={() => {
-                    setUploadError(null)
-                    setUploadStep(null)
-                    photoInputRef.current?.click()
-                  }}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white ${uploadingPhoto ? 'opacity-50' : 'active:bg-gray-100'}`}
+                />
+                <label
+                  htmlFor="photo-file-input"
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white ${uploadingPhoto ? 'opacity-50 pointer-events-none' : 'active:bg-gray-100 cursor-pointer'}`}
                 >
                   <Camera size={16} />
                   {uploadingPhoto ? 'Uploading…' : photoUrl ? 'Change Photo' : 'Upload Photo'}
-                </button>
+                </label>
                 <p className="text-xs text-gray-400">Any image from camera roll</p>
               </div>
             </div>
