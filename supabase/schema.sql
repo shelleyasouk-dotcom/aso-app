@@ -180,9 +180,17 @@ create policy "clock_select_own" on public.clock_records
     or public.my_role() in ('director', 'area_lead')
   );
 create policy "clock_insert_own" on public.clock_records
-  for insert to authenticated with check (staff_id = auth.uid());
+  for insert to authenticated with check (
+    staff_id = auth.uid()
+    or public.my_role() in ('director', 'area_lead')
+  );
 create policy "clock_update_own" on public.clock_records
   for update to authenticated using (
+    staff_id = auth.uid()
+    or public.my_role() in ('director', 'area_lead')
+  );
+create policy "clock_delete" on public.clock_records
+  for delete to authenticated using (
     staff_id = auth.uid()
     or public.my_role() in ('director', 'area_lead')
   );
