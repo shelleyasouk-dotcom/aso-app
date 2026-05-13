@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { Camera, Plus, Trash2, FileText, FolderOpen, Eye, Download, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -208,7 +208,6 @@ export function CoachProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadStep, setUploadStep] = useState<string | null>(null)
-  const photoInputRef = useRef<HTMLInputElement>(null)
 
   // Whether the current viewer can edit this profile
   const [canEdit, setCanEdit] = useState(false)
@@ -499,23 +498,12 @@ export function CoachProfilePage() {
                 )}
               </div>
               <div className="flex flex-col gap-2">
-                {/* sr-only keeps the input in the DOM so the label can trigger it on iOS */}
                 <input
-                  ref={photoInputRef}
-                  id="photo-file-input"
                   type="file"
                   accept="image/*"
-                  className="sr-only"
                   onChange={handlePhotoChange}
                   disabled={uploadingPhoto}
                 />
-                <label
-                  htmlFor="photo-file-input"
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white ${uploadingPhoto ? 'opacity-50 pointer-events-none' : 'active:bg-gray-100 cursor-pointer'}`}
-                >
-                  <Camera size={16} />
-                  {uploadingPhoto ? 'Uploading…' : photoUrl ? 'Change Photo' : 'Upload Photo'}
-                </label>
                 <p className="text-xs text-gray-400">Any image from camera roll</p>
               </div>
             </div>
