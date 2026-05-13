@@ -293,11 +293,11 @@ export function CoachProfilePage() {
     if (!file || !targetId) return
     setUploadingPhoto(true)
     setUploadError(null)
-    const ext = file.name.split('.').pop()
+    const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase()
     const path = `photos/${targetId}/profile.${ext}`
-    const { error: storageErr } = await supabase.storage.from('coach-files').upload(path, file, { upsert: true })
+    const { error: storageErr } = await supabase.storage.from('coach-files').upload(path, file, { upsert: true, contentType: file.type })
     if (storageErr) {
-      setUploadError(`Photo upload failed: ${storageErr.message}`)
+      setUploadError(`Upload failed: ${storageErr.message}`)
       setUploadingPhoto(false)
       return
     }
@@ -450,27 +450,20 @@ export function CoachProfilePage() {
         {canEdit && (
           <Card>
             <p className="text-sm font-bold text-[#1a3a6b] mb-3">Profile Photo</p>
-            {uploadError && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-3">{uploadError}</p>
-            )}
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-2xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center shrink-0">
                 {photoUrl
-                  ? <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ? <img src={photoUrl} alt="" className="w-full h-full object-cover" />
                   : <span className="text-white font-bold text-lg">{initials}</span>
                 }
               </div>
               <div>
-                <label
-                  htmlFor={`photo-upload-${targetId}`}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white cursor-pointer ${uploadingPhoto ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50'}`}
-                >
+                <label className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 bg-white cursor-pointer ${uploadingPhoto ? 'opacity-50 pointer-events-none' : 'hover:bg-gray-50'}`}>
                   <Camera size={16} />
                   {uploadingPhoto ? 'Uploading…' : photoUrl ? 'Change Photo' : 'Upload Photo'}
                   <input
-                    id={`photo-upload-${targetId}`}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
                     className="hidden"
                     onChange={handlePhotoChange}
                     disabled={uploadingPhoto}
@@ -479,6 +472,11 @@ export function CoachProfilePage() {
                 <p className="text-xs text-gray-400 mt-1">JPG or PNG from camera roll</p>
               </div>
             </div>
+            {uploadError && (
+              <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
+                <p className="text-sm text-red-700 font-medium">{uploadError}</p>
+              </div>
+            )}
           </Card>
         )}
 
