@@ -214,25 +214,35 @@ export interface StaffDocument {
 export type ContractType = 'employee' | 'self_employed' | 'zero_hours' | 'casual'
 export type PayFrequency = 'hourly' | 'per_session' | 'monthly' | 'weekly'
 
-export interface StaffConfidential {
-  id: string
+export interface StaffPersonal {
   staff_id: string
+  date_of_birth: string | null
+  address_line1: string | null
+  address_line2: string | null
+  address_city: string | null
+  address_postcode: string | null
+  ni_number: string | null
+  bank_account_name: string | null
+  bank_name: string | null
+  bank_sort_code: string | null
+  bank_account_number: string | null
   ec1_name: string | null
   ec1_relationship: string | null
   ec1_phone: string | null
   ec2_name: string | null
   ec2_relationship: string | null
   ec2_phone: string | null
-  bank_account_name: string | null
-  bank_sort_code: string | null
-  bank_account_number: string | null
-  bank_name: string | null
+  additional_needs: string | null
+  updated_at: string
+}
+
+export interface StaffEmployment {
+  staff_id: string
   contract_type: ContractType | null
   contract_start_date: string | null
   contract_end_date: string | null
   pay_rate: number | null
   pay_frequency: PayFrequency | null
-  ni_number: string | null
   utr_number: string | null
   tax_code: string | null
   admin_notes: string | null

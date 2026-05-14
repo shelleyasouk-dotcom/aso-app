@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X, Lock } from 'lucide-react'
+import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X, Lock, User } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -8,7 +8,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input, Select } from '../../components/ui/Input'
 import { ROLE_LABELS } from '../../lib/roles'
-import type { Profile, CoachCertificate, StaffDocument, OnboardingDocCategory, StaffConfidential, ContractType, PayFrequency } from '../../types'
+import type { Profile, CoachCertificate, StaffDocument, OnboardingDocCategory, StaffPersonal, StaffEmployment, ContractType, PayFrequency } from '../../types'
 
 // ─── Date helpers ──────────────────────────────────────────────────────────
 
@@ -520,10 +520,10 @@ export function CoachProfilePage() {
           </Card>
         )}
 
-        {/* Contact & Compliance */}
-        {canEdit ? (
+        {/* DBS / Compliance — editable by self + directors */}
+        {canEdit && (
           <Card>
-            <p className="text-sm font-bold text-[#1a3a6b] mb-4">Contact &amp; Compliance</p>
+            <p className="text-sm font-bold text-[#1a3a6b] mb-4">DBS &amp; Compliance</p>
             {saveError && (
               <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-3">{saveError}</p>
             )}
@@ -539,18 +539,27 @@ export function CoachProfilePage() {
               <Input label="First Aid Certificate Date of Issue" type="date"
                 value={fields.first_aid_expiry} onChange={e => setFields({ ...fields, first_aid_expiry: e.target.value })} />
               <Button onClick={saveProfile} disabled={saving}>
-                {saving ? 'Saving…' : 'Save Details'}
+                {saving ? 'Saving…' : 'Save'}
               </Button>
             </div>
           </Card>
-        ) : (
-          <Card>
-            <p className="text-sm font-bold text-[#1a3a6b] mb-3">Contact</p>
-            {subject.phone
-              ? <p className="text-sm text-gray-700">{subject.phone}</p>
-              : <p className="text-sm text-gray-400">No phone number on file</p>
-            }
-          </Card>
+        )}
+
+        {/* Personal Details — staff fills in own; directors see all */}
+        {(isOwnProfile || viewer?.role === 'director') && targetId && (
+          <PersonalDetailsSection
+            staffId={targetId}
+            canEdit={isOwnProfile || viewer?.role === 'director'}
+          />
+        )}
+
+        {/* Employment Details — directors fill in; staff can view own */}
+        {(isOwnProfile || viewer?.role === 'director') && targetId && (
+          <EmploymentSection
+            staffId={targetId}
+            isDirector={viewer?.role === 'director'}
+            viewerId={viewer?.id ?? ''}
+          />
         )}
 
         {/* Certificates */}
@@ -685,61 +694,205 @@ export function CoachProfilePage() {
           )}
         </Card>
 
-        {/* Confidential section — directors only */}
-        {viewer?.role === 'director' && targetId && (
-          <ConfidentialSection staffId={targetId} viewerId={viewer.id} />
-        )}
-
       </div>
     </Layout>
   )
 }
 
-// ─── Confidential Section (Director only) ────────────────────────────────────
+// ─── Personal Details Section ─────────────────────────────────────────────────
 
-const EMPTY_CONFIDENTIAL = {
+const EMPTY_PERSONAL = {
+  date_of_birth: '',
+  address_line1: '', address_line2: '', address_city: '', address_postcode: '',
+  ni_number: '',
+  bank_account_name: '', bank_name: '', bank_sort_code: '', bank_account_number: '',
   ec1_name: '', ec1_relationship: '', ec1_phone: '',
   ec2_name: '', ec2_relationship: '', ec2_phone: '',
-  bank_account_name: '', bank_sort_code: '', bank_account_number: '', bank_name: '',
-  contract_type: '' as ContractType | '',
-  contract_start_date: '', contract_end_date: '',
-  pay_rate: '', pay_frequency: '' as PayFrequency | '',
-  ni_number: '', utr_number: '', tax_code: '',
-  admin_notes: '',
+  additional_needs: '',
 }
 
-function ConfidentialSection({ staffId, viewerId }: { staffId: string; viewerId: string }) {
-  const [fields, setFields] = useState(EMPTY_CONFIDENTIAL)
+function PersonalDetailsSection({ staffId, canEdit }: { staffId: string; canEdit: boolean }) {
+  const [fields, setFields] = useState(EMPTY_PERSONAL)
   const [loaded, setLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase
-      .from('staff_confidential')
-      .select('*')
-      .eq('staff_id', staffId)
-      .maybeSingle()
+    supabase.from('staff_personal').select('*').eq('staff_id', staffId).maybeSingle()
       .then(({ data }) => {
         if (data) {
           setFields({
+            date_of_birth: data.date_of_birth ?? '',
+            address_line1: data.address_line1 ?? '',
+            address_line2: data.address_line2 ?? '',
+            address_city: data.address_city ?? '',
+            address_postcode: data.address_postcode ?? '',
+            ni_number: data.ni_number ?? '',
+            bank_account_name: data.bank_account_name ?? '',
+            bank_name: data.bank_name ?? '',
+            bank_sort_code: data.bank_sort_code ?? '',
+            bank_account_number: data.bank_account_number ?? '',
             ec1_name: data.ec1_name ?? '',
             ec1_relationship: data.ec1_relationship ?? '',
             ec1_phone: data.ec1_phone ?? '',
             ec2_name: data.ec2_name ?? '',
             ec2_relationship: data.ec2_relationship ?? '',
             ec2_phone: data.ec2_phone ?? '',
-            bank_account_name: data.bank_account_name ?? '',
-            bank_sort_code: data.bank_sort_code ?? '',
-            bank_account_number: data.bank_account_number ?? '',
-            bank_name: data.bank_name ?? '',
+            additional_needs: data.additional_needs ?? '',
+          })
+        }
+        setLoaded(true)
+      })
+  }, [staffId])
+
+  function set(key: keyof typeof EMPTY_PERSONAL, value: string) {
+    setFields(f => ({ ...f, [key]: value }))
+    setSaved(false)
+  }
+
+  async function save() {
+    setSaving(true); setError(null)
+    const payload: Partial<StaffPersonal> = {
+      staff_id: staffId,
+      date_of_birth: fields.date_of_birth || null,
+      address_line1: fields.address_line1 || null,
+      address_line2: fields.address_line2 || null,
+      address_city: fields.address_city || null,
+      address_postcode: fields.address_postcode || null,
+      ni_number: fields.ni_number || null,
+      bank_account_name: fields.bank_account_name || null,
+      bank_name: fields.bank_name || null,
+      bank_sort_code: fields.bank_sort_code || null,
+      bank_account_number: fields.bank_account_number || null,
+      ec1_name: fields.ec1_name || null,
+      ec1_relationship: fields.ec1_relationship || null,
+      ec1_phone: fields.ec1_phone || null,
+      ec2_name: fields.ec2_name || null,
+      ec2_relationship: fields.ec2_relationship || null,
+      ec2_phone: fields.ec2_phone || null,
+      additional_needs: fields.additional_needs || null,
+      updated_at: new Date().toISOString(),
+    }
+    const { error: err } = await supabase.from('staff_personal').upsert(payload, { onConflict: 'staff_id' })
+    if (err) setError(err.message)
+    else setSaved(true)
+    setSaving(false)
+  }
+
+  if (!loaded) return null
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 bg-[#1a3a6b] text-white px-4 py-3 rounded-t-2xl">
+        <User size={15} />
+        <p className="text-sm font-bold tracking-wide">Personal Details</p>
+        <span className="ml-auto text-xs text-white/60">Private — you &amp; directors only</span>
+      </div>
+      <div className="bg-blue-50 border border-blue-200 border-t-0 rounded-b-2xl px-4 pt-4 pb-5 flex flex-col gap-5">
+        {error && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{error}</p>}
+
+        {/* Personal */}
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-bold text-[#1a3a6b] uppercase tracking-wide">Personal</p>
+          <Input label="Date of Birth" type="date" value={fields.date_of_birth}
+            onChange={e => set('date_of_birth', e.target.value)} disabled={!canEdit} />
+          <Input label="Address Line 1" placeholder="e.g. 12 High Street"
+            value={fields.address_line1} onChange={e => set('address_line1', e.target.value)} disabled={!canEdit} />
+          <Input label="Address Line 2 (optional)" placeholder="e.g. Flat 3"
+            value={fields.address_line2} onChange={e => set('address_line2', e.target.value)} disabled={!canEdit} />
+          <div className="grid grid-cols-2 gap-2">
+            <Input label="City / Town" placeholder="e.g. Southampton"
+              value={fields.address_city} onChange={e => set('address_city', e.target.value)} disabled={!canEdit} />
+            <Input label="Postcode" placeholder="e.g. SO14 1AA"
+              value={fields.address_postcode} onChange={e => set('address_postcode', e.target.value)} disabled={!canEdit} />
+          </div>
+        </div>
+
+        {/* Financial */}
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-bold text-[#1a3a6b] uppercase tracking-wide">Financial</p>
+          <Input label="NI Number" placeholder="e.g. AB 12 34 56 C"
+            value={fields.ni_number} onChange={e => set('ni_number', e.target.value)} disabled={!canEdit} />
+          <Input label="Bank Account Holder Name"
+            value={fields.bank_account_name} onChange={e => set('bank_account_name', e.target.value)} disabled={!canEdit} />
+          <Input label="Bank Name" placeholder="e.g. Barclays"
+            value={fields.bank_name} onChange={e => set('bank_name', e.target.value)} disabled={!canEdit} />
+          <Input label="Sort Code" placeholder="e.g. 12-34-56"
+            value={fields.bank_sort_code} onChange={e => set('bank_sort_code', e.target.value)} disabled={!canEdit} />
+          <Input label="Account Number" placeholder="e.g. 12345678"
+            value={fields.bank_account_number} onChange={e => set('bank_account_number', e.target.value)} disabled={!canEdit} />
+        </div>
+
+        {/* Emergency contacts */}
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-bold text-[#1a3a6b] uppercase tracking-wide">Emergency Contact 1</p>
+          <Input label="Full Name" value={fields.ec1_name}
+            onChange={e => set('ec1_name', e.target.value)} disabled={!canEdit} />
+          <Input label="Relationship" placeholder="e.g. Spouse, Parent"
+            value={fields.ec1_relationship} onChange={e => set('ec1_relationship', e.target.value)} disabled={!canEdit} />
+          <Input label="Phone Number" type="tel" value={fields.ec1_phone}
+            onChange={e => set('ec1_phone', e.target.value)} disabled={!canEdit} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-bold text-[#1a3a6b] uppercase tracking-wide">Emergency Contact 2</p>
+          <Input label="Full Name" value={fields.ec2_name}
+            onChange={e => set('ec2_name', e.target.value)} disabled={!canEdit} />
+          <Input label="Relationship" placeholder="e.g. Sibling, Friend"
+            value={fields.ec2_relationship} onChange={e => set('ec2_relationship', e.target.value)} disabled={!canEdit} />
+          <Input label="Phone Number" type="tel" value={fields.ec2_phone}
+            onChange={e => set('ec2_phone', e.target.value)} disabled={!canEdit} />
+        </div>
+
+        {/* Additional needs */}
+        <div>
+          <p className="text-xs font-bold text-[#1a3a6b] uppercase tracking-wide mb-2">Additional Needs</p>
+          <textarea
+            rows={3}
+            placeholder="Any medical conditions, accessibility needs, or other info we should know…"
+            value={fields.additional_needs}
+            onChange={e => { set('additional_needs', e.target.value) }}
+            disabled={!canEdit}
+            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none disabled:opacity-60"
+          />
+        </div>
+
+        {canEdit && (
+          <Button onClick={save} disabled={saving}>
+            {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save Personal Details'}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Employment Section ───────────────────────────────────────────────────────
+
+const EMPTY_EMPLOYMENT = {
+  contract_type: '' as ContractType | '',
+  contract_start_date: '', contract_end_date: '',
+  pay_rate: '', pay_frequency: '' as PayFrequency | '',
+  utr_number: '', tax_code: '', admin_notes: '',
+}
+
+function EmploymentSection({ staffId, isDirector, viewerId }: { staffId: string; isDirector: boolean; viewerId: string }) {
+  const [fields, setFields] = useState(EMPTY_EMPLOYMENT)
+  const [loaded, setLoaded] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.from('staff_employment').select('*').eq('staff_id', staffId).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setFields({
             contract_type: (data.contract_type as ContractType) ?? '',
             contract_start_date: data.contract_start_date ?? '',
             contract_end_date: data.contract_end_date ?? '',
             pay_rate: data.pay_rate != null ? String(data.pay_rate) : '',
             pay_frequency: (data.pay_frequency as PayFrequency) ?? '',
-            ni_number: data.ni_number ?? '',
             utr_number: data.utr_number ?? '',
             tax_code: data.tax_code ?? '',
             admin_notes: data.admin_notes ?? '',
@@ -749,41 +902,27 @@ function ConfidentialSection({ staffId, viewerId }: { staffId: string; viewerId:
       })
   }, [staffId])
 
-  function set(key: keyof typeof EMPTY_CONFIDENTIAL, value: string) {
+  function set(key: keyof typeof EMPTY_EMPLOYMENT, value: string) {
     setFields(f => ({ ...f, [key]: value }))
     setSaved(false)
   }
 
   async function save() {
-    setSaving(true)
-    setError(null)
-    const payload: Partial<StaffConfidential> = {
+    setSaving(true); setError(null)
+    const payload: Partial<StaffEmployment> = {
       staff_id: staffId,
-      ec1_name: fields.ec1_name || null,
-      ec1_relationship: fields.ec1_relationship || null,
-      ec1_phone: fields.ec1_phone || null,
-      ec2_name: fields.ec2_name || null,
-      ec2_relationship: fields.ec2_relationship || null,
-      ec2_phone: fields.ec2_phone || null,
-      bank_account_name: fields.bank_account_name || null,
-      bank_sort_code: fields.bank_sort_code || null,
-      bank_account_number: fields.bank_account_number || null,
-      bank_name: fields.bank_name || null,
       contract_type: (fields.contract_type as ContractType) || null,
       contract_start_date: fields.contract_start_date || null,
       contract_end_date: fields.contract_end_date || null,
       pay_rate: fields.pay_rate ? parseFloat(fields.pay_rate) : null,
       pay_frequency: (fields.pay_frequency as PayFrequency) || null,
-      ni_number: fields.ni_number || null,
       utr_number: fields.utr_number || null,
       tax_code: fields.tax_code || null,
       admin_notes: fields.admin_notes || null,
       updated_by: viewerId,
       updated_at: new Date().toISOString(),
     }
-    const { error: err } = await supabase
-      .from('staff_confidential')
-      .upsert(payload, { onConflict: 'staff_id' })
+    const { error: err } = await supabase.from('staff_employment').upsert(payload, { onConflict: 'staff_id' })
     if (err) setError(err.message)
     else setSaved(true)
     setSaving(false)
@@ -791,121 +930,89 @@ function ConfidentialSection({ staffId, viewerId }: { staffId: string; viewerId:
 
   if (!loaded) return null
 
+  const CONTRACT_LABELS: Record<string, string> = {
+    employee: 'Employee', self_employed: 'Self-Employed',
+    zero_hours: 'Zero Hours', casual: 'Casual',
+  }
+  const PAY_LABELS: Record<string, string> = {
+    hourly: 'Hourly', per_session: 'Per Session',
+    weekly: 'Weekly', monthly: 'Monthly',
+  }
+
   return (
-    <div className="mt-2">
-      {/* Header banner */}
+    <div>
       <div className="flex items-center gap-2 bg-red-700 text-white px-4 py-3 rounded-t-2xl">
         <Lock size={15} />
-        <p className="text-sm font-bold tracking-wide">CONFIDENTIAL — DIRECTOR ONLY</p>
+        <p className="text-sm font-bold tracking-wide">Employment Details</p>
+        {!isDirector && <span className="ml-auto text-xs text-white/60">Set by Director</span>}
       </div>
-      <div className="bg-red-50 border border-red-200 border-t-0 rounded-b-2xl px-4 pt-4 pb-5 flex flex-col gap-5">
+      <div className="bg-red-50 border border-red-200 border-t-0 rounded-b-2xl px-4 pt-4 pb-5 flex flex-col gap-4">
+        {error && <p className="text-sm text-red-600 bg-red-100 rounded-xl px-3 py-2">{error}</p>}
 
-        {error && (
-          <div className="bg-red-100 border border-red-300 rounded-xl px-3 py-2">
-            <p className="text-sm text-red-700 font-medium">{error}</p>
+        {isDirector ? (
+          <>
+            <div className="flex flex-col gap-2">
+              <Select label="Contract Type" value={fields.contract_type} onChange={e => set('contract_type', e.target.value)}>
+                <option value="">— Select —</option>
+                <option value="employee">Employee</option>
+                <option value="self_employed">Self-Employed</option>
+                <option value="zero_hours">Zero Hours</option>
+                <option value="casual">Casual</option>
+              </Select>
+              <Input label="Contract Start Date" type="date" value={fields.contract_start_date}
+                onChange={e => set('contract_start_date', e.target.value)} />
+              <Input label="Contract End Date (if applicable)" type="date" value={fields.contract_end_date}
+                onChange={e => set('contract_end_date', e.target.value)} />
+              <Input label="Pay Rate (£)" type="number" placeholder="e.g. 12.50" value={fields.pay_rate}
+                onChange={e => set('pay_rate', e.target.value)} />
+              <Select label="Pay Frequency" value={fields.pay_frequency} onChange={e => set('pay_frequency', e.target.value)}>
+                <option value="">— Select —</option>
+                <option value="hourly">Hourly</option>
+                <option value="per_session">Per Session</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </Select>
+              <Input label="UTR Number (Self-Employed)" placeholder="10-digit UTR" value={fields.utr_number}
+                onChange={e => set('utr_number', e.target.value)} />
+              <Input label="Tax Code" placeholder="e.g. 1257L" value={fields.tax_code}
+                onChange={e => set('tax_code', e.target.value)} />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-2">Admin Notes (director only)</p>
+              <textarea rows={3} placeholder="Internal notes…"
+                value={fields.admin_notes} onChange={e => set('admin_notes', e.target.value)}
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
+              />
+            </div>
+            <Button onClick={save} disabled={saving}>
+              {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save Employment Details'}
+            </Button>
+          </>
+        ) : (
+          // Staff view — read-only
+          <div className="flex flex-col gap-2">
+            {fields.contract_type
+              ? <Row label="Contract Type" value={CONTRACT_LABELS[fields.contract_type] ?? fields.contract_type} />
+              : <p className="text-sm text-gray-400">Employment details not yet completed.</p>
+            }
+            {fields.contract_start_date && <Row label="Start Date" value={formatDate(fields.contract_start_date)} />}
+            {fields.contract_end_date && <Row label="End Date" value={formatDate(fields.contract_end_date)} />}
+            {fields.pay_rate && <Row label="Pay Rate" value={`£${parseFloat(fields.pay_rate).toFixed(2)} ${PAY_LABELS[fields.pay_frequency] ?? fields.pay_frequency}`} />}
+            {fields.tax_code && <Row label="Tax Code" value={fields.tax_code} />}
+            {fields.utr_number && <Row label="UTR Number" value={fields.utr_number} />}
           </div>
         )}
-
-        {/* Emergency contacts */}
-        <div>
-          <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-3">Emergency Contact 1</p>
-          <div className="flex flex-col gap-2">
-            <Input label="Full Name" placeholder="e.g. Jane Wood"
-              value={fields.ec1_name} onChange={e => set('ec1_name', e.target.value)} />
-            <Input label="Relationship" placeholder="e.g. Spouse, Parent"
-              value={fields.ec1_relationship} onChange={e => set('ec1_relationship', e.target.value)} />
-            <Input label="Phone Number" placeholder="e.g. 07700 900123" type="tel"
-              value={fields.ec1_phone} onChange={e => set('ec1_phone', e.target.value)} />
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-3">Emergency Contact 2</p>
-          <div className="flex flex-col gap-2">
-            <Input label="Full Name" placeholder="e.g. John Smith"
-              value={fields.ec2_name} onChange={e => set('ec2_name', e.target.value)} />
-            <Input label="Relationship" placeholder="e.g. Sibling, Friend"
-              value={fields.ec2_relationship} onChange={e => set('ec2_relationship', e.target.value)} />
-            <Input label="Phone Number" placeholder="e.g. 07700 900456" type="tel"
-              value={fields.ec2_phone} onChange={e => set('ec2_phone', e.target.value)} />
-          </div>
-        </div>
-
-        {/* Bank details */}
-        <div>
-          <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-3">Bank Details</p>
-          <div className="flex flex-col gap-2">
-            <Input label="Account Holder Name"
-              value={fields.bank_account_name} onChange={e => set('bank_account_name', e.target.value)} />
-            <Input label="Bank Name" placeholder="e.g. Barclays"
-              value={fields.bank_name} onChange={e => set('bank_name', e.target.value)} />
-            <Input label="Sort Code" placeholder="e.g. 12-34-56"
-              value={fields.bank_sort_code} onChange={e => set('bank_sort_code', e.target.value)} />
-            <Input label="Account Number" placeholder="e.g. 12345678"
-              value={fields.bank_account_number} onChange={e => set('bank_account_number', e.target.value)} />
-          </div>
-        </div>
-
-        {/* Contract & pay */}
-        <div>
-          <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-3">Contract &amp; Payment</p>
-          <div className="flex flex-col gap-2">
-            <Select label="Contract Type"
-              value={fields.contract_type}
-              onChange={e => set('contract_type', e.target.value)}>
-              <option value="">— Select —</option>
-              <option value="employee">Employee</option>
-              <option value="self_employed">Self-Employed</option>
-              <option value="zero_hours">Zero Hours</option>
-              <option value="casual">Casual</option>
-            </Select>
-            <Input label="Contract Start Date" type="date"
-              value={fields.contract_start_date} onChange={e => set('contract_start_date', e.target.value)} />
-            <Input label="Contract End Date (if applicable)" type="date"
-              value={fields.contract_end_date} onChange={e => set('contract_end_date', e.target.value)} />
-            <Input label="Pay Rate (£)" type="number" placeholder="e.g. 12.50"
-              value={fields.pay_rate} onChange={e => set('pay_rate', e.target.value)} />
-            <Select label="Pay Frequency"
-              value={fields.pay_frequency}
-              onChange={e => set('pay_frequency', e.target.value)}>
-              <option value="">— Select —</option>
-              <option value="hourly">Hourly</option>
-              <option value="per_session">Per Session</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </Select>
-          </div>
-        </div>
-
-        {/* HR / Tax */}
-        <div>
-          <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-3">HR &amp; Tax</p>
-          <div className="flex flex-col gap-2">
-            <Input label="NI Number" placeholder="e.g. AB 12 34 56 C"
-              value={fields.ni_number} onChange={e => set('ni_number', e.target.value)} />
-            <Input label="UTR Number (Self-Employed)" placeholder="10-digit UTR"
-              value={fields.utr_number} onChange={e => set('utr_number', e.target.value)} />
-            <Input label="Tax Code" placeholder="e.g. 1257L"
-              value={fields.tax_code} onChange={e => set('tax_code', e.target.value)} />
-          </div>
-        </div>
-
-        {/* Admin notes */}
-        <div>
-          <p className="text-xs font-bold text-red-800 uppercase tracking-wide mb-2">Admin Notes</p>
-          <textarea
-            rows={4}
-            placeholder="Internal notes, payment history, contract issues…"
-            value={fields.admin_notes}
-            onChange={e => set('admin_notes', e.target.value)}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none"
-          />
-        </div>
-
-        <Button onClick={save} disabled={saving}>
-          {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save Confidential Data'}
-        </Button>
       </div>
     </div>
   )
 }
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between py-2 border-b border-red-100 last:border-0">
+      <span className="text-sm text-gray-500">{label}</span>
+      <span className="text-sm font-semibold text-[#1a3a6b]">{value}</span>
+    </div>
+  )
+}
+
