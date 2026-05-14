@@ -365,13 +365,9 @@ export function StaffAdminPage() {
     setSaving(false)
   }
 
-  const areaGroups = AREAS.map(area => {
-    const areaSchoolIds = new Set(schools.filter(s => s.area === area).map(s => s.id))
-    const areaStaff = staff.filter(m => m.assignments?.some(a => areaSchoolIds.has(a.school_id)))
-    return { area, staff: areaStaff }
-  })
-
-  const unassigned = staff.filter(m => !m.assignments || m.assignments.length === 0)
+  const roleGroups = ROLES
+    .map(role => ({ role, members: staff.filter(m => m.role === role) }))
+    .filter(g => g.members.length > 0)
 
   const canAssignSchools = profile?.role === 'director' || profile?.role === 'area_lead' || profile?.role === 'lead_coach'
   const cardProps = { canManage: isDirector, canAssignSchools, editingId, editForm, editError, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit, onProfile: (id: string) => navigate(`/profile/${id}`) }
@@ -495,25 +491,16 @@ export function StaffAdminPage() {
           </Card>
         ) : (
           <>
-            {areaGroups.map(({ area, staff: areaStaff }) => {
-              if (areaStaff.length === 0) return null
-              return (
-                <div key={area}>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">{area}</p>
-                  <div className="flex flex-col gap-3">
-                    {areaStaff.map(m => <StaffCard key={m.id} member={m} {...cardProps} />)}
-                  </div>
-                </div>
-              )
-            })}
-            {unassigned.length > 0 && (
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">No Schools Assigned</p>
+            {roleGroups.map(({ role, members }) => (
+              <div key={role}>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">
+                  {ROLE_LABELS[role as Role]}s ({members.length})
+                </p>
                 <div className="flex flex-col gap-3">
-                  {unassigned.map(m => <StaffCard key={m.id} member={m} {...cardProps} />)}
+                  {members.map(m => <StaffCard key={m.id} member={m} {...cardProps} />)}
                 </div>
               </div>
-            )}
+            ))}
           </>
         )}
       </div>
