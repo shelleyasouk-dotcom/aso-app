@@ -545,16 +545,16 @@ export function CoachProfilePage() {
           </Card>
         )}
 
-        {/* Personal Details — staff fills in own; directors see all */}
-        {(isOwnProfile || viewer?.role === 'director') && targetId && (
+        {/* Personal Details — staff fills in own; area leads + directors can view */}
+        {(isOwnProfile || viewer?.role === 'director' || viewer?.role === 'area_lead') && targetId && (
           <PersonalDetailsSection
             staffId={targetId}
             canEdit={isOwnProfile || viewer?.role === 'director'}
           />
         )}
 
-        {/* Employment Details — directors fill in; staff can view own */}
-        {(isOwnProfile || viewer?.role === 'director') && targetId && (
+        {/* Employment Details — directors fill in; staff + area leads can view (no admin notes) */}
+        {(isOwnProfile || viewer?.role === 'director' || viewer?.role === 'area_lead') && targetId && (
           <EmploymentSection
             staffId={targetId}
             isDirector={viewer?.role === 'director'}
