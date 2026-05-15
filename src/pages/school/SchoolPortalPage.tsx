@@ -10,12 +10,14 @@ import {
   Users,
   CheckCircle,
   AlertTriangle,
+  ChevronRight,
+  ArrowLeftRight,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
-import { useSchoolId, useIsAdminView } from '../../hooks/useSchoolId'
+import { useSchoolId, useIsAdminView, setActiveSchoolId, getActiveSchoolId } from '../../hooks/useSchoolId'
 import type { School } from '../../types'
 
 function nextOccurrence(dayName: string): string {
@@ -29,6 +31,7 @@ function nextOccurrence(dayName: string): string {
   return next.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
 }
 
+interface Assignment { school_id: string; label: string | null; school?: School }
 interface Stat { label: string; value: string | number }
 
 export function SchoolPortalPage() {
@@ -41,8 +44,43 @@ export function SchoolPortalPage() {
   const [childCount, setChildCount] = useState<number>(0)
   const [sessionCount, setSessionCount] = useState<number>(0)
   const [loading, setLoading] = useState(true)
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [showPicker, setShowPicker] = useState(false)
+
+  // For school role: fetch all their assignments
+  useEffect(() => {
+    if (profile?.role !== 'school') return
+    async function loadAssignments() {
+      const { data } = await supabase
+        .from('school_portal_assignments')
+        .select('school_id, label, school:schools(id,name,session_day,session_time,area)')
+        .eq('user_id', profile!.id)
+      if (!data || data.length === 0) return
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const list: Assignment[] = data.map((r: any) => ({
+        school_id: r.school_id,
+        label: r.label,
+        school: Array.isArray(r.school) ? r.school[0] : r.school,
+      }))
+      setAssignments(list)
+
+      // If no active selection yet, auto-select if only one school
+      if (!getActiveSchoolId()) {
+        if (list.length === 1) {
+          setActiveSchoolId(list[0].school_id)
+        } else {
+          // Multiple — show picker
+          setShowPicker(true)
+          setLoading(false)
+        }
+      }
+    }
+    loadAssignments()
+  }, [profile?.id, profile?.role])
 
   useEffect(() => {
+    if (showPicker) return
     if (!schoolId) {
       setLoading(false)
       return
@@ -60,9 +98,49 @@ export function SchoolPortalPage() {
       setLoading(false)
     }
     load()
-  }, [schoolId])
+  }, [schoolId, showPicker])
+
+  function pickSchool(id: string) {
+    setActiveSchoolId(id)
+    setShowPicker(false)
+    setLoading(true)
+  }
 
   if (!profile) return null
+
+  // School picker screen
+  if (showPicker && assignments.length > 0) {
+    return (
+      <SchoolLayout title="Select School">
+        <div className="px-4 pt-8 flex flex-col gap-4">
+          <div className="text-center mb-2">
+            <p className="text-xl font-bold text-[#1a3a6b]">Which school?</p>
+            <p className="text-sm text-gray-500 mt-1">Select a school to view its portal</p>
+          </div>
+          {assignments.map(a => (
+            <Card
+              key={a.school_id}
+              onClick={() => pickSchool(a.school_id)}
+              className="flex items-center gap-4"
+            >
+              <div className="w-11 h-11 rounded-xl bg-[#1a3a6b]/10 flex items-center justify-center shrink-0">
+                <Users size={22} className="text-[#1a3a6b]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-[#1a3a6b]">{a.school?.name ?? a.school_id}</p>
+                {a.label && <p className="text-xs font-semibold text-[#f5c518]">{a.label}</p>}
+                {a.school?.session_day && (
+                  <p className="text-xs text-gray-500 mt-0.5">{a.school.session_day}s · {a.school.session_time}</p>
+                )}
+              </div>
+              <ChevronRight size={18} className="text-gray-300 shrink-0" />
+            </Card>
+          ))}
+        </div>
+      </SchoolLayout>
+    )
+  }
+
   if (!schoolId && !loading) {
     return (
       <SchoolLayout title="School Portal">
@@ -91,12 +169,12 @@ export function SchoolPortalPage() {
 
   const qs = isAdminView ? `?schoolId=${params.get('schoolId')}` : ''
   const tiles = [
-    { label: 'Weekly Register',     icon: ClipboardList,  path: `/school-portal/register${qs}`,     desc: 'View attendance records' },
-    { label: 'Club Schedule',       icon: Calendar,       path: `/school-portal/club${qs}`,          desc: 'Upcoming sessions' },
-    { label: 'Documents',           icon: FolderOpen,     path: `/school-portal/documents${qs}`,     desc: 'Policies & shared files' },
-    { label: 'Safeguarding',        icon: ShieldCheck,    path: `/school-portal/safeguarding${qs}`,  desc: 'DSL & DDSL contacts' },
-    { label: 'Impact Reports',      icon: FileText,       path: `/school-portal/reports${qs}`,       desc: 'Termly reports' },
-    { label: 'School Info Form',    icon: ClipboardCheck, path: `/school-portal/info${qs}`,          desc: school?.facility_form_completed ? 'View submitted form' : 'Action required' },
+    { label: 'Weekly Register',  icon: ClipboardList,  path: `/school-portal/register${qs}`,    desc: 'View attendance records' },
+    { label: 'Club Schedule',    icon: Calendar,       path: `/school-portal/club${qs}`,         desc: 'Upcoming sessions' },
+    { label: 'Documents',        icon: FolderOpen,     path: `/school-portal/documents${qs}`,    desc: 'Policies & shared files' },
+    { label: 'Safeguarding',     icon: ShieldCheck,    path: `/school-portal/safeguarding${qs}`, desc: 'DSL & DDSL contacts' },
+    { label: 'Impact Reports',   icon: FileText,       path: `/school-portal/reports${qs}`,      desc: 'Termly reports' },
+    { label: 'School Info Form', icon: ClipboardCheck, path: `/school-portal/info${qs}`,         desc: school?.facility_form_completed ? 'View submitted form' : 'Action required' },
   ]
 
   return (
@@ -110,6 +188,16 @@ export function SchoolPortalPage() {
             className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#1a3a6b] text-white text-xs font-semibold"
           >
             ← Admin view — tap to return to school admin panel
+          </button>
+        )}
+
+        {/* Switch school button (multi-school users only) */}
+        {!isAdminView && assignments.length > 1 && (
+          <button
+            onClick={() => { setActiveSchoolId(null); setShowPicker(true) }}
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-[#1a3a6b]/30 text-[#1a3a6b] text-xs font-semibold"
+          >
+            <ArrowLeftRight size={14} /> Switch school
           </button>
         )}
 
@@ -182,7 +270,7 @@ export function SchoolPortalPage() {
                     <CheckCircle size={18} className="text-green-500 shrink-0" />
                   )}
                   {isAction && (
-                    <Users size={18} className="text-amber-500 shrink-0" />
+                    <AlertTriangle size={18} className="text-amber-500 shrink-0" />
                   )}
                 </Card>
               )

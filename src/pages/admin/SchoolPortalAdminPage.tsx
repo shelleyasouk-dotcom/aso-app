@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Building2, ShieldCheck, FileText, Upload, CheckCircle,
-  ClipboardList, Users, Link2, AlertTriangle, Eye, FolderOpen, Trash2
+  ClipboardList, Users, Link2, AlertTriangle, Eye, FolderOpen, Trash2, Plus
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -51,28 +51,30 @@ export function SchoolPortalAdminPage() {
   const [uploadingDoc, setUploadingDoc] = useState(false)
   const [docError, setDocError] = useState<string | null>(null)
 
-  // Link account
+  // Portal accounts
+  interface PortalAccount { id: string; user_id: string; label: string | null; profile?: Profile }
+  const [portalAccounts, setPortalAccounts] = useState<PortalAccount[]>([])
   const [linkEmail, setLinkEmail] = useState('')
+  const [linkLabel, setLinkLabel] = useState('')
   const [linkSaving, setLinkSaving] = useState(false)
   const [linkMsg, setLinkMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [linkedUser, setLinkedUser] = useState<Profile | null>(null)
 
   useEffect(() => {
     if (!id) return
     async function load() {
-      const [schoolRes, reportsRes, childRes, sessionRes, linkedRes, docsRes] = await Promise.all([
+      const [schoolRes, reportsRes, childRes, sessionRes, assignmentsRes, docsRes] = await Promise.all([
         supabase.from('schools').select('*').eq('id', id).single(),
         supabase.from('impact_reports').select('*').eq('school_id', id).order('created_at', { ascending: false }),
         supabase.from('children').select('id', { count: 'exact', head: true }).eq('school_id', id).eq('is_active', true),
         supabase.from('session_registers').select('id', { count: 'exact', head: true }).eq('school_id', id),
-        supabase.from('profiles').select('*').eq('school_id', id).eq('role', 'school').maybeSingle(),
+        supabase.from('school_portal_assignments').select('id, user_id, label, profile:profiles(id,full_name,email)').eq('school_id', id),
         supabase.from('school_documents').select('*').eq('school_id', id).order('created_at', { ascending: false }),
       ])
       if (schoolRes.data) setSchool(schoolRes.data)
       setReports(reportsRes.data ?? [])
       setChildCount(childRes.count ?? 0)
       setSessionCount(sessionRes.count ?? 0)
-      if (linkedRes.data) setLinkedUser(linkedRes.data)
+      setPortalAccounts((assignmentsRes.data ?? []) as unknown as PortalAccount[])
       setSchoolDocs(docsRes.data ?? [])
       setLoading(false)
     }
@@ -163,18 +165,29 @@ export function SchoolPortalAdminPage() {
       return
     }
     const target = profiles[0]
-    const { error: updateErr } = await supabase
-      .from('profiles')
-      .update({ role: 'school', school_id: id })
-      .eq('id', target.id)
-    if (updateErr) {
-      setLinkMsg({ type: 'error', text: 'Could not update profile: ' + updateErr.message })
+    // Ensure role is set to school
+    await supabase.from('profiles').update({ role: 'school' }).eq('id', target.id)
+    // Insert into assignments table (ignore duplicate)
+    const { data: inserted, error: insErr } = await supabase
+      .from('school_portal_assignments')
+      .insert({ user_id: target.id, school_id: id, label: linkLabel.trim() || null })
+      .select('id, user_id, label')
+      .single()
+    if (insErr) {
+      setLinkMsg({ type: 'error', text: insErr.code === '23505' ? 'This user is already linked to this school.' : insErr.message })
     } else {
-      setLinkedUser({ ...target, role: 'school', school_id: id })
+      setPortalAccounts(prev => [...prev, { ...inserted, profile: target }])
       setLinkMsg({ type: 'success', text: `${target.full_name} linked as school portal user.` })
       setLinkEmail('')
+      setLinkLabel('')
     }
     setLinkSaving(false)
+  }
+
+  async function removeAccount(assignmentId: string) {
+    if (!confirm('Remove this portal account from this school?')) return
+    await supabase.from('school_portal_assignments').delete().eq('id', assignmentId)
+    setPortalAccounts(prev => prev.filter(a => a.id !== assignmentId))
   }
 
   if (loading) {
@@ -401,43 +414,56 @@ export function SchoolPortalAdminPage() {
           )}
         </Card>
 
-        {/* Link portal account */}
+        {/* Portal accounts */}
         <Card>
           <div className="flex items-center gap-2 mb-4">
             <Link2 size={18} className="text-[#1a3a6b]" />
-            <p className="font-bold text-[#1a3a6b]">Portal Account</p>
+            <p className="font-bold text-[#1a3a6b]">Portal Accounts ({portalAccounts.length})</p>
           </div>
 
-          {linkedUser ? (
-            <div className="p-3 bg-green-50 rounded-xl">
-              <div className="flex items-center gap-2">
-                <CheckCircle size={18} className="text-green-600 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold text-green-800">{linkedUser.full_name}</p>
-                  <p className="text-xs text-green-700">{linkedUser.email}</p>
+          {portalAccounts.length > 0 && (
+            <div className="flex flex-col gap-2 mb-4">
+              {portalAccounts.map(a => (
+                <div key={a.id} className="flex items-center gap-3 p-3 bg-green-50 rounded-xl">
+                  <CheckCircle size={16} className="text-green-600 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-green-800">{(a.profile as Profile)?.full_name ?? 'Unknown'}</p>
+                    <p className="text-xs text-green-700">{(a.profile as Profile)?.email}</p>
+                    {a.label && <p className="text-xs text-[#1a3a6b] font-semibold mt-0.5">{a.label}</p>}
+                  </div>
+                  <button onClick={() => removeAccount(a.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
-              </div>
+              ))}
             </div>
-          ) : (
-            <>
-              <p className="text-sm text-gray-500 mb-3">
-                Link an existing Supabase auth user to this school's portal. First create the user account
-                in Supabase Dashboard, then enter their email below.
-              </p>
-              <div className="flex flex-col gap-3">
-                <Input
-                  label="User email"
-                  type="email"
-                  placeholder="school.contact@example.com"
-                  value={linkEmail}
-                  onChange={e => setLinkEmail(e.target.value)}
-                />
-                <Button onClick={linkAccount} disabled={linkSaving || !linkEmail.trim()}>
-                  {linkSaving ? 'Linking…' : 'Link Account'}
-                </Button>
-              </div>
-            </>
           )}
+
+          <div className="flex flex-col gap-3 p-3 bg-gray-50 rounded-xl">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <Plus size={12} className="inline mr-1" />Add Portal Account
+            </p>
+            <p className="text-xs text-gray-400">
+              Create the user in Supabase Auth first, then enter their email below.
+              The same email can be linked to multiple schools.
+            </p>
+            <Input
+              label="User email"
+              type="email"
+              placeholder="school.contact@example.com"
+              value={linkEmail}
+              onChange={e => setLinkEmail(e.target.value)}
+            />
+            <Input
+              label="Label (optional)"
+              placeholder="e.g. KS1, KS2, Primary"
+              value={linkLabel}
+              onChange={e => setLinkLabel(e.target.value)}
+            />
+            <Button onClick={linkAccount} disabled={linkSaving || !linkEmail.trim()}>
+              {linkSaving ? 'Linking…' : 'Link Account'}
+            </Button>
+          </div>
 
           {linkMsg && (
             <p className={`text-sm mt-3 ${linkMsg.type === 'success' ? 'text-green-700' : 'text-red-500'}`}>
