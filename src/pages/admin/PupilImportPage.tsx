@@ -144,20 +144,17 @@ export function PupilImportPage() {
     const errors: string[] = []
 
     for (const pupil of rows) {
-      const { error } = await supabase.from('children').upsert(
-        {
-          full_name: pupil.full_name,
-          date_of_birth: pupil.date_of_birth,
-          contact_email: pupil.contact_email,
-          contact_phone: pupil.contact_phone,
-          year_group: pupil.year_group,
-          additional_needs: pupil.additional_needs,
-          parent_name: pupil.parent_name,
-          school_id: selectedSchoolId,
-          is_active: true,
-        },
-        { onConflict: 'full_name,school_id', ignoreDuplicates: false }
-      )
+      const { error } = await supabase.from('children').insert({
+        full_name: pupil.full_name,
+        date_of_birth: pupil.date_of_birth,
+        contact_email: pupil.contact_email,
+        contact_phone: pupil.contact_phone,
+        year_group: pupil.year_group,
+        additional_needs: pupil.additional_needs,
+        parent_name: pupil.parent_name,
+        school_id: selectedSchoolId,
+        is_active: true,
+      })
       if (error) errors.push(`${pupil.full_name}: ${error.message}`)
       else imported++
     }
