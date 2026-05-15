@@ -120,9 +120,9 @@ export default function App() {
             </ProtectedRoute>
           } />
 
-          {/* Director only */}
+          {/* Director + Area Lead */}
           <Route path="/admin/schools" element={
-            <ProtectedRoute allowedRoles={['director']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <SchoolsAdminPage />
             </ProtectedRoute>
           } />
