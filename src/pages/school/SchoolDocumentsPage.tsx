@@ -166,9 +166,15 @@ export function SchoolDocumentsPage() {
           <Card className="text-center py-12">
             <FolderOpen size={40} className="text-gray-300 mx-auto mb-3" />
             <p className="font-semibold text-gray-500">No documents yet</p>
-            <p className="text-sm text-gray-400 mt-1">
-              ASO policies and your school's documents will appear here.
+            <p className="text-sm text-gray-400 mt-1 mb-4">
+              Your school's documents will appear here once uploaded by your ASO coordinator.
             </p>
+            <a
+              href="mailto:info@activeschool.org.uk?subject=Document Upload Request"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold"
+            >
+              Request document upload
+            </a>
           </Card>
         ) : (
           <>
