@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, Users, School, ChevronLeft } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { PageSpinner } from '../../components/ui/Spinner'
 
+type Portal = 'staff' | 'school'
+
 export function LoginPage() {
   const { user, loading, signIn } = useAuth()
+  const [portal, setPortal] = useState<Portal | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -41,8 +44,20 @@ export function LoginPage() {
     setResetSubmitting(false)
   }
 
+  function goBack() {
+    setPortal(null)
+    setEmail('')
+    setPassword('')
+    setError(null)
+    setShowForgot(false)
+    setResetSent(false)
+  }
+
+  const isSchool = portal === 'school'
+
   return (
     <div className="min-h-screen bg-[#1a3a6b] flex flex-col items-center justify-center px-6">
+
       {/* Logo */}
       <div className="mb-8 text-center">
         <img src="/logo white.png" alt="ASO" className="w-20 h-20 object-contain mx-auto mb-4" />
@@ -50,109 +65,166 @@ export function LoginPage() {
         <p className="text-blue-200 text-lg mt-1">Organisation</p>
       </div>
 
-      {/* Login card */}
-      <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6">
+      {/* Portal selection */}
+      {!portal ? (
+        <div className="w-full max-w-sm flex flex-col gap-4">
+          <p className="text-blue-200 text-sm text-center mb-2">Choose your portal to sign in</p>
 
-        {!showForgot ? (
-          <>
-            <h2 className="text-[#1a3a6b] text-xl font-bold mb-6 text-center">Staff Login</h2>
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <Input
-                id="email"
-                name="email"
-                label="Email"
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                inputMode="email"
-              />
-              <Input
-                id="password"
-                name="password"
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
+          <button
+            onClick={() => setPortal('staff')}
+            className="w-full bg-white rounded-2xl p-5 flex items-center gap-4 shadow-xl hover:bg-gray-50 active:bg-gray-100 transition-colors text-left"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#1a3a6b] flex items-center justify-center shrink-0">
+              <Users size={24} className="text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-[#1a3a6b] text-base">Staff Portal</p>
+              <p className="text-gray-500 text-sm mt-0.5">Coaches, leads & directors</p>
+            </div>
+          </button>
 
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm">
-                  {error}
-                </div>
-              )}
+          <button
+            onClick={() => setPortal('school')}
+            className="w-full bg-[#f5c518] rounded-2xl p-5 flex items-center gap-4 shadow-xl hover:bg-[#f5c518]/90 active:bg-[#f5c518]/80 transition-colors text-left"
+          >
+            <div className="w-12 h-12 rounded-xl bg-[#1a3a6b] flex items-center justify-center shrink-0">
+              <School size={24} className="text-[#f5c518]" />
+            </div>
+            <div>
+              <p className="font-bold text-[#1a3a6b] text-base">School Portal</p>
+              <p className="text-[#1a3a6b]/70 text-sm mt-0.5">School staff & administrators</p>
+            </div>
+          </button>
+        </div>
+      ) : (
+        /* Login form */
+        <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6">
 
-              <Button type="submit" size="lg" fullWidth disabled={submitting}>
-                {submitting ? 'Signing in…' : 'Sign In'}
-              </Button>
+          {/* Back button + portal badge */}
+          <div className="flex items-center gap-3 mb-5">
+            <button
+              onClick={goBack}
+              className="p-1.5 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors text-gray-400"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl flex-1 ${isSchool ? 'bg-[#f5c518]/20' : 'bg-[#1a3a6b]/10'}`}>
+              {isSchool
+                ? <School size={16} className="text-[#1a3a6b]" />
+                : <Users size={16} className="text-[#1a3a6b]" />
+              }
+              <span className="text-sm font-semibold text-[#1a3a6b]">
+                {isSchool ? 'School Portal' : 'Staff Portal'}
+              </span>
+            </div>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => setShowForgot(true)}
-                className="text-sm text-[#1a3a6b] text-center hover:underline"
-              >
-                Forgot your password?
-              </button>
-            </form>
-          </>
-        ) : (
-          <>
-            <h2 className="text-[#1a3a6b] text-xl font-bold mb-2 text-center">Reset Password</h2>
-            <p className="text-gray-500 text-sm text-center mb-6">
-              Enter your email and we'll send you a reset link
-            </p>
-
-            {resetSent ? (
-              <div className="flex flex-col items-center gap-3 py-4">
-                <CheckCircle size={40} className="text-green-500" />
-                <p className="text-green-700 font-semibold text-center">Reset email sent!</p>
-                <p className="text-gray-500 text-sm text-center">
-                  Check your inbox and click the link to set a new password.
-                </p>
-                <button
-                  onClick={() => { setShowForgot(false); setResetSent(false) }}
-                  className="text-sm text-[#1a3a6b] hover:underline mt-2"
-                >
-                  Back to login
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleForgotPassword} className="flex flex-col gap-4">
+          {!showForgot ? (
+            <>
+              <h2 className="text-[#1a3a6b] text-xl font-bold mb-5 text-center">
+                {isSchool ? 'School Sign In' : 'Staff Sign In'}
+              </h2>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <Input
-                  id="forgot-email"
-                  name="forgot-email"
+                  id="email"
+                  name="email"
                   label="Email"
                   type="email"
                   placeholder="your@email.com"
-                  value={forgotEmail}
-                  onChange={e => setForgotEmail(e.target.value)}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
                   required
                   autoComplete="email"
                   inputMode="email"
                 />
-                <Button type="submit" size="lg" fullWidth disabled={resetSubmitting}>
-                  {resetSubmitting ? 'Sending…' : 'Send Reset Link'}
+                <Input
+                  id="password"
+                  name="password"
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <Button type="submit" size="lg" fullWidth disabled={submitting}>
+                  {submitting ? 'Signing in…' : 'Sign In'}
                 </Button>
+
                 <button
                   type="button"
-                  onClick={() => setShowForgot(false)}
-                  className="text-sm text-gray-400 text-center hover:underline"
+                  onClick={() => setShowForgot(true)}
+                  className="text-sm text-[#1a3a6b] text-center hover:underline"
                 >
-                  Back to login
+                  Forgot your password?
                 </button>
               </form>
-            )}
-          </>
-        )}
-      </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-[#1a3a6b] text-xl font-bold mb-2 text-center">Reset Password</h2>
+              <p className="text-gray-500 text-sm text-center mb-6">
+                Enter your email and we'll send you a reset link
+              </p>
+
+              {resetSent ? (
+                <div className="flex flex-col items-center gap-3 py-4">
+                  <CheckCircle size={40} className="text-green-500" />
+                  <p className="text-green-700 font-semibold text-center">Reset email sent!</p>
+                  <p className="text-gray-500 text-sm text-center">
+                    Check your inbox and click the link to set a new password.
+                  </p>
+                  <button
+                    onClick={() => { setShowForgot(false); setResetSent(false) }}
+                    className="text-sm text-[#1a3a6b] hover:underline mt-2"
+                  >
+                    Back to login
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="flex flex-col gap-4">
+                  <Input
+                    id="forgot-email"
+                    name="forgot-email"
+                    label="Email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                    inputMode="email"
+                  />
+                  <Button type="submit" size="lg" fullWidth disabled={resetSubmitting}>
+                    {resetSubmitting ? 'Sending…' : 'Send Reset Link'}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgot(false)}
+                    className="text-sm text-gray-400 text-center hover:underline"
+                  >
+                    Back to login
+                  </button>
+                </form>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       <p className="text-blue-300 text-sm mt-8 text-center">
-        Issues signing in? Contact your Area Lead or Director.
+        {portal === 'school'
+          ? 'Issues signing in? Contact info@activeschool.org.uk'
+          : 'Issues signing in? Contact your Area Lead or Director.'
+        }
       </p>
     </div>
   )
