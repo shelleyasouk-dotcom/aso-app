@@ -11,7 +11,7 @@ import { PageSpinner } from '../../components/ui/Spinner'
 type Portal = 'staff' | 'school'
 
 export function LoginPage() {
-  const { user, loading, signIn } = useAuth()
+  const { user, profile, loading, signIn } = useAuth()
   const [portal, setPortal] = useState<Portal | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -23,7 +23,11 @@ export function LoginPage() {
   const [resetSubmitting, setResetSubmitting] = useState(false)
 
   if (loading) return <PageSpinner />
-  if (user) return <Navigate to="/dashboard" replace />
+  if (user) {
+    const isAdmin = profile?.role === 'director' || profile?.role === 'area_lead'
+    if (portal === 'school' && isAdmin) return <Navigate to="/admin/schools" replace />
+    return <Navigate to="/dashboard" replace />
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
