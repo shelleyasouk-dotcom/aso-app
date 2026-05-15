@@ -334,3 +334,53 @@ export interface ImpactReport {
   uploaded_by: string | null
   created_at: string
 }
+
+export interface SchoolDocument {
+  id: string
+  school_id: string | null  // null = shared with all schools
+  title: string
+  category: string
+  file_path: string
+  file_name: string
+  file_size: number | null
+  version: string | null
+  uploaded_by: string | null
+  created_at: string
+}
+
+export interface SchoolInfoForm {
+  id: string
+  school_id: string
+  submitted_by: string | null
+  submitted_at: string
+  headteacher_name: string | null
+  contact_name: string | null
+  contact_title: string | null
+  contact_email: string | null
+  contact_phone: string | null
+  school_address: string | null
+  school_type_desc: string | null
+  number_on_roll: string | null
+  space_types: string | null
+  space_size: string | null
+  floor_surface: string | null
+  max_pupils_space: string | null
+  obstructions: string | null
+  available_days: string | null
+  school_finish_time: string | null
+  pickup_time: string | null
+  has_lockup_contact: boolean | null
+  lockup_contact: string | null
+  toilets_accessible: boolean | null
+  storage_available: boolean | null
+  has_existing_equipment: boolean | null
+  existing_equipment: string | null
+  dsl_name: string | null
+  dsl_contact: string | null
+  backup_contact: string | null
+  visitor_signin: string | null
+  year_groups: string | null
+  num_clubs: string | null
+  additional_info: string | null
+  created_at: string
+}

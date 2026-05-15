@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Trash2, Pencil, School as SchoolIcon, ExternalLink, CheckCircle, AlertTriangle } from 'lucide-react'
+import { Plus, Trash2, Pencil, School as SchoolIcon, ExternalLink, CheckCircle, AlertTriangle, FolderOpen, Upload, FileText, ChevronDown, ChevronRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
-import type { School } from '../../types'
+import type { School, SchoolDocument } from '../../types'
+
+const SHARED_DOC_CATEGORIES = [
+  { value: 'policy',   label: 'ASO Policies & Procedures' },
+  { value: 'guidance', label: 'Guidance & Resources' },
+  { value: 'other',    label: 'Other' },
+]
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
@@ -84,12 +90,63 @@ export function SchoolsAdminPage() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => { loadSchools() }, [])
+  // Shared documents (visible to all schools)
+  const [sharedDocs, setSharedDocs] = useState<SchoolDocument[]>([])
+  const [sharedDocForm, setSharedDocForm] = useState({ title: '', category: 'policy', version: '' })
+  const [uploadingShared, setUploadingShared] = useState(false)
+  const [sharedDocError, setSharedDocError] = useState<string | null>(null)
+  const [showSharedDocs, setShowSharedDocs] = useState(false)
+  const sharedDocInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { loadSchools(); loadSharedDocs() }, [])
 
   async function loadSchools() {
     const { data } = await supabase.from('schools').select('*').order('name')
     if (data) setSchools(sortByDay(data))
     setLoading(false)
+  }
+
+  async function loadSharedDocs() {
+    const { data } = await supabase
+      .from('school_documents')
+      .select('*')
+      .is('school_id', null)
+      .order('created_at', { ascending: false })
+    setSharedDocs(data ?? [])
+  }
+
+  async function uploadSharedDoc(file: File) {
+    if (!sharedDocForm.title) { setSharedDocError('Please enter a document title first.'); return }
+    setUploadingShared(true)
+    setSharedDocError(null)
+    const fileName = `shared/${Date.now()}-${file.name}`
+    const { error: storageErr } = await supabase.storage
+      .from('school-shared-docs')
+      .upload(fileName, file, { upsert: false })
+    if (storageErr) { setSharedDocError('Upload failed: ' + storageErr.message); setUploadingShared(false); return }
+    const { data: inserted, error: dbErr } = await supabase
+      .from('school_documents')
+      .insert({
+        school_id: null,
+        title: sharedDocForm.title,
+        category: sharedDocForm.category,
+        version: sharedDocForm.version || null,
+        file_path: fileName,
+        file_name: file.name,
+        file_size: file.size,
+      })
+      .select()
+      .single()
+    if (dbErr) { setSharedDocError('File uploaded but record failed: ' + dbErr.message) }
+    else { setSharedDocs(prev => [inserted, ...prev]); setSharedDocForm({ title: '', category: 'policy', version: '' }) }
+    setUploadingShared(false)
+  }
+
+  async function deleteSharedDoc(doc: SchoolDocument) {
+    if (!confirm(`Remove "${doc.title}"?`)) return
+    await supabase.storage.from('school-shared-docs').remove([doc.file_path])
+    await supabase.from('school_documents').delete().eq('id', doc.id)
+    setSharedDocs(prev => prev.filter(d => d.id !== doc.id))
   }
 
   async function addSchool() {
@@ -138,6 +195,85 @@ export function SchoolsAdminPage() {
         <Button variant="primary" size="lg" fullWidth onClick={() => setShowAddForm(!showAddForm)}>
           <Plus size={20} /> Add School
         </Button>
+
+        {/* Shared ASO documents */}
+        <Card>
+          <button
+            onClick={() => setShowSharedDocs(v => !v)}
+            className="w-full flex items-center gap-3 text-left"
+          >
+            <FolderOpen size={18} className="text-[#1a3a6b]" />
+            <div className="flex-1">
+              <p className="font-bold text-[#1a3a6b]">Shared ASO Documents</p>
+              <p className="text-xs text-gray-400">{sharedDocs.length} document{sharedDocs.length !== 1 ? 's' : ''} visible to all schools</p>
+            </div>
+            {showSharedDocs ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
+          </button>
+
+          {showSharedDocs && (
+            <div className="mt-4 flex flex-col gap-3">
+              <div className="p-3 bg-gray-50 rounded-xl flex flex-col gap-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Upload Shared Document</p>
+                <Input
+                  label="Document title"
+                  placeholder="e.g. ASO Working with Schools Policy v1"
+                  value={sharedDocForm.title}
+                  onChange={e => setSharedDocForm(f => ({ ...f, title: e.target.value }))}
+                />
+                <Input
+                  label="Version (optional)"
+                  placeholder="e.g. v1.0"
+                  value={sharedDocForm.version}
+                  onChange={e => setSharedDocForm(f => ({ ...f, version: e.target.value }))}
+                />
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-semibold text-gray-700">Category</label>
+                  <select
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b] bg-white"
+                    value={sharedDocForm.category}
+                    onChange={e => setSharedDocForm(f => ({ ...f, category: e.target.value }))}
+                  >
+                    {SHARED_DOC_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
+                <input
+                  ref={sharedDocInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  className="hidden"
+                  onChange={e => { if (e.target.files?.[0]) uploadSharedDoc(e.target.files[0]) }}
+                />
+                <Button
+                  variant="primary"
+                  onClick={() => sharedDocInputRef.current?.click()}
+                  disabled={uploadingShared || !sharedDocForm.title}
+                >
+                  <Upload size={16} /> {uploadingShared ? 'Uploading…' : 'Choose File to Upload'}
+                </Button>
+                {sharedDocError && <p className="text-red-500 text-xs">{sharedDocError}</p>}
+              </div>
+
+              {sharedDocs.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-2">No shared documents yet.</p>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  {sharedDocs.map(d => (
+                    <div key={d.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+                      <FileText size={15} className="text-[#1a3a6b] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{d.title}</p>
+                        <p className="text-xs text-gray-400">{d.version ? `${d.version} · ` : ''}{d.file_name}</p>
+                      </div>
+                      <button onClick={() => deleteSharedDoc(d)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
 
         {showAddForm && (
           <Card>

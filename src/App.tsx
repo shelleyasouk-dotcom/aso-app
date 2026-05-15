@@ -38,6 +38,8 @@ import { SchoolClubInfoPage } from './pages/school/SchoolClubInfoPage'
 import { SchoolSafeguardingPage } from './pages/school/SchoolSafeguardingPage'
 import { SchoolImpactReportsPage } from './pages/school/SchoolImpactReportsPage'
 import { SchoolFacilityPage } from './pages/school/SchoolFacilityPage'
+import { SchoolDocumentsPage } from './pages/school/SchoolDocumentsPage'
+import { SchoolInfoFormPage } from './pages/school/SchoolInfoFormPage'
 import { SchoolPortalAdminPage } from './pages/admin/SchoolPortalAdminPage'
 
 export default function App() {
@@ -200,6 +202,12 @@ export default function App() {
           } />
           <Route path="/school-portal/facility" element={
             <ProtectedRoute><SchoolFacilityPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/documents" element={
+            <ProtectedRoute><SchoolDocumentsPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/info" element={
+            <ProtectedRoute><SchoolInfoFormPage /></ProtectedRoute>
           } />
 
           {/* Admin: school portal view */}

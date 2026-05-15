@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   FileText,
   ClipboardCheck,
+  FolderOpen,
   Users,
   CheckCircle,
   AlertTriangle,
@@ -88,9 +89,10 @@ export function SchoolPortalPage() {
   const tiles = [
     { label: 'Weekly Register',     icon: ClipboardList,  path: `/school-portal/register${qs}`,     desc: 'View attendance records' },
     { label: 'Club Schedule',       icon: Calendar,       path: `/school-portal/club${qs}`,          desc: 'Upcoming sessions' },
+    { label: 'Documents',           icon: FolderOpen,     path: `/school-portal/documents${qs}`,     desc: 'Policies & shared files' },
     { label: 'Safeguarding',        icon: ShieldCheck,    path: `/school-portal/safeguarding${qs}`,  desc: 'DSL & DDSL contacts' },
     { label: 'Impact Reports',      icon: FileText,       path: `/school-portal/reports${qs}`,       desc: 'Termly reports' },
-    { label: 'Facility Assessment', icon: ClipboardCheck, path: `/school-portal/facility${qs}`,      desc: school?.facility_form_completed ? 'View submitted form' : 'Action required' },
+    { label: 'School Info Form',    icon: ClipboardCheck, path: `/school-portal/info${qs}`,          desc: school?.facility_form_completed ? 'View submitted form' : 'Action required' },
   ]
 
   return (
@@ -120,7 +122,7 @@ export function SchoolPortalPage() {
 
         {/* Facility form banner */}
         {school && !school.facility_form_completed && (
-          <Card className="bg-amber-50 border border-amber-200" onClick={() => navigate(`/school-portal/facility${qs}`)}>
+          <Card className="bg-amber-50 border border-amber-200" onClick={() => navigate(`/school-portal/info${qs}`)}>
             <div className="flex items-start gap-3">
               <AlertTriangle size={20} className="text-amber-500 shrink-0 mt-0.5" />
               <div>
@@ -162,7 +164,7 @@ export function SchoolPortalPage() {
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">Your Portal</p>
           <div className="flex flex-col gap-3">
             {tiles.map(({ label, icon: Icon, path, desc }) => {
-              const isAction = label === 'Facility Assessment' && !school?.facility_form_completed
+              const isAction = label === 'School Info Form' && !school?.facility_form_completed
               return (
                 <Card key={path} onClick={() => navigate(path)} className="flex items-center gap-4">
                   <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${isAction ? 'bg-amber-100' : 'bg-[#1a3a6b]/10'}`}>
@@ -172,7 +174,7 @@ export function SchoolPortalPage() {
                     <p className="font-semibold text-[#1a3a6b] text-sm">{label}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
                   </div>
-                  {label === 'Facility Assessment' && school?.facility_form_completed && (
+                  {label === 'School Info Form' && school?.facility_form_completed && (
                     <CheckCircle size={18} className="text-green-500 shrink-0" />
                   )}
                   {isAction && (

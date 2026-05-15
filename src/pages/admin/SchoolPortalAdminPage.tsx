@@ -2,14 +2,21 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Building2, ShieldCheck, FileText, Upload, CheckCircle,
-  ClipboardList, Users, Link2, AlertTriangle, Eye
+  ClipboardList, Users, Link2, AlertTriangle, Eye, FolderOpen, Trash2
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
-import type { School, ImpactReport, Profile } from '../../types'
+import type { School, ImpactReport, Profile, SchoolDocument } from '../../types'
+
+const DOC_CATEGORIES = [
+  { value: 'letter_of_assurance', label: 'Letter of Assurance' },
+  { value: 'partnership',         label: 'Partnership Agreement' },
+  { value: 'guidance',            label: 'Guidance' },
+  { value: 'other',               label: 'Other' },
+]
 
 function Row({ label, value }: { label: string; value: string | boolean | null | undefined }) {
   const display = value === null || value === undefined ? '—'
@@ -36,6 +43,13 @@ export function SchoolPortalAdminPage() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [reportForm, setReportForm] = useState({ term_name: '', sport: '' })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const docInputRef = useRef<HTMLInputElement>(null)
+
+  // School documents
+  const [schoolDocs, setSchoolDocs] = useState<SchoolDocument[]>([])
+  const [docForm, setDocForm] = useState({ title: '', category: 'letter_of_assurance' })
+  const [uploadingDoc, setUploadingDoc] = useState(false)
+  const [docError, setDocError] = useState<string | null>(null)
 
   // Link account
   const [linkEmail, setLinkEmail] = useState('')
@@ -46,18 +60,20 @@ export function SchoolPortalAdminPage() {
   useEffect(() => {
     if (!id) return
     async function load() {
-      const [schoolRes, reportsRes, childRes, sessionRes, linkedRes] = await Promise.all([
+      const [schoolRes, reportsRes, childRes, sessionRes, linkedRes, docsRes] = await Promise.all([
         supabase.from('schools').select('*').eq('id', id).single(),
         supabase.from('impact_reports').select('*').eq('school_id', id).order('created_at', { ascending: false }),
         supabase.from('children').select('id', { count: 'exact', head: true }).eq('school_id', id).eq('is_active', true),
         supabase.from('session_registers').select('id', { count: 'exact', head: true }).eq('school_id', id),
         supabase.from('profiles').select('*').eq('school_id', id).eq('role', 'school').maybeSingle(),
+        supabase.from('school_documents').select('*').eq('school_id', id).order('created_at', { ascending: false }),
       ])
       if (schoolRes.data) setSchool(schoolRes.data)
       setReports(reportsRes.data ?? [])
       setChildCount(childRes.count ?? 0)
       setSessionCount(sessionRes.count ?? 0)
       if (linkedRes.data) setLinkedUser(linkedRes.data)
+      setSchoolDocs(docsRes.data ?? [])
       setLoading(false)
     }
     load()
@@ -98,6 +114,39 @@ export function SchoolPortalAdminPage() {
       setReportForm({ term_name: '', sport: '' })
     }
     setUploading(false)
+  }
+
+  async function uploadDoc(file: File) {
+    if (!id || !docForm.title) { setDocError('Please enter a document title first.'); return }
+    setUploadingDoc(true)
+    setDocError(null)
+    const fileName = `${id}/${Date.now()}-${file.name}`
+    const { error: storageErr } = await supabase.storage
+      .from('school-docs')
+      .upload(fileName, file, { contentType: 'application/pdf', upsert: false })
+    if (storageErr) { setDocError('Upload failed: ' + storageErr.message); setUploadingDoc(false); return }
+    const { data: inserted, error: dbErr } = await supabase
+      .from('school_documents')
+      .insert({
+        school_id: id,
+        title: docForm.title,
+        category: docForm.category,
+        file_path: fileName,
+        file_name: file.name,
+        file_size: file.size,
+      })
+      .select()
+      .single()
+    if (dbErr) { setDocError('File uploaded but record failed: ' + dbErr.message) }
+    else { setSchoolDocs(prev => [inserted, ...prev]); setDocForm({ title: '', category: 'letter_of_assurance' }) }
+    setUploadingDoc(false)
+  }
+
+  async function deleteDoc(doc: SchoolDocument) {
+    if (!confirm(`Remove "${doc.title}"?`)) return
+    await supabase.storage.from('school-docs').remove([doc.file_path])
+    await supabase.from('school_documents').delete().eq('id', doc.id)
+    setSchoolDocs(prev => prev.filter(d => d.id !== doc.id))
   }
 
   async function linkAccount() {
@@ -284,6 +333,68 @@ export function SchoolPortalAdminPage() {
                     <p className="text-sm font-semibold text-gray-800 truncate">{r.term_name}</p>
                     <p className="text-xs text-gray-400">{r.file_name}</p>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* School-specific documents */}
+        <Card>
+          <div className="flex items-center gap-2 mb-4">
+            <FolderOpen size={18} className="text-[#1a3a6b]" />
+            <p className="font-bold text-[#1a3a6b]">School Documents ({schoolDocs.length})</p>
+          </div>
+
+          <div className="flex flex-col gap-3 mb-4 p-3 bg-gray-50 rounded-xl">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Upload Document</p>
+            <Input
+              label="Document title"
+              placeholder="e.g. Letter of Assurance 2025"
+              value={docForm.title}
+              onChange={e => setDocForm(f => ({ ...f, title: e.target.value }))}
+            />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-gray-700">Category</label>
+              <select
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b] bg-white"
+                value={docForm.category}
+                onChange={e => setDocForm(f => ({ ...f, category: e.target.value }))}
+              >
+                {DOC_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+            <input
+              ref={docInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx"
+              className="hidden"
+              onChange={e => { if (e.target.files?.[0]) uploadDoc(e.target.files[0]) }}
+            />
+            <Button
+              variant="primary"
+              onClick={() => docInputRef.current?.click()}
+              disabled={uploadingDoc || !docForm.title}
+            >
+              <Upload size={16} /> {uploadingDoc ? 'Uploading…' : 'Choose File to Upload'}
+            </Button>
+            {docError && <p className="text-red-500 text-xs">{docError}</p>}
+          </div>
+
+          {schoolDocs.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-2">No documents uploaded yet.</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {schoolDocs.map(d => (
+                <div key={d.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+                  <FileText size={16} className="text-[#1a3a6b] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{d.title}</p>
+                    <p className="text-xs text-gray-400">{d.file_name}</p>
+                  </div>
+                  <button onClick={() => deleteDoc(d)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50">
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               ))}
             </div>

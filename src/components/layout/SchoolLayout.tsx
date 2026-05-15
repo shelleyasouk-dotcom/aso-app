@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   ClipboardList,
-  Calendar,
+  FolderOpen,
   ShieldCheck,
   LogOut,
   ChevronLeft,
@@ -19,7 +19,7 @@ interface SchoolLayoutProps {
 const NAV_ITEMS = [
   { path: '/school-portal',              icon: LayoutDashboard, label: 'Home' },
   { path: '/school-portal/register',     icon: ClipboardList,   label: 'Register' },
-  { path: '/school-portal/club',         icon: Calendar,        label: 'Club' },
+  { path: '/school-portal/documents',    icon: FolderOpen,      label: 'Documents' },
   { path: '/school-portal/safeguarding', icon: ShieldCheck,     label: 'Safeguarding' },
 ]
 
