@@ -24,7 +24,9 @@ export function LoginPage() {
 
   if (loading) return <PageSpinner />
   if (user) {
-    const isAdmin = profile?.role === 'director' || profile?.role === 'area_lead'
+    if (!profile) return <PageSpinner />
+    if (profile.role === 'school') return <Navigate to="/school-portal" replace />
+    const isAdmin = profile.role === 'director' || profile.role === 'area_lead'
     if (portal === 'school' && isAdmin) return <Navigate to="/admin/schools" replace />
     return <Navigate to="/dashboard" replace />
   }
