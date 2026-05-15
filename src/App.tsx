@@ -40,6 +40,7 @@ import { SchoolImpactReportsPage } from './pages/school/SchoolImpactReportsPage'
 import { SchoolFacilityPage } from './pages/school/SchoolFacilityPage'
 import { SchoolDocumentsPage } from './pages/school/SchoolDocumentsPage'
 import { SchoolInfoFormPage } from './pages/school/SchoolInfoFormPage'
+import { SchoolPoliciesPage } from './pages/school/SchoolPoliciesPage'
 import { SchoolPortalAdminPage } from './pages/admin/SchoolPortalAdminPage'
 
 export default function App() {
@@ -208,6 +209,9 @@ export default function App() {
           } />
           <Route path="/school-portal/info" element={
             <ProtectedRoute><SchoolInfoFormPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/policies" element={
+            <ProtectedRoute><SchoolPoliciesPage /></ProtectedRoute>
           } />
 
           {/* Admin: school portal view */}

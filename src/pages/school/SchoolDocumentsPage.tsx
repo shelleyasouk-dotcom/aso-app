@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { FolderOpen, FileText, Download, ChevronDown, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { FolderOpen, FileText, Download, ChevronDown, ChevronRight, ShieldCheck } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
@@ -93,6 +94,7 @@ function AccordionSection({
 
 export function SchoolDocumentsPage() {
   const schoolId = useSchoolId()
+  const navigate = useNavigate()
   const [docs, setDocs] = useState<SchoolDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState<string | null>(null)
@@ -144,6 +146,21 @@ export function SchoolDocumentsPage() {
   return (
     <SchoolLayout title="Documents" showBack>
       <div className="px-4 pt-6 pb-4 flex flex-col gap-4">
+
+        {/* Partnership Policies — always visible */}
+        <button
+          onClick={() => navigate('/school-portal/policies')}
+          className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-[#1a3a6b] text-white text-left"
+        >
+          <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+            <ShieldCheck size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm">Partnership Policies</p>
+            <p className="text-xs text-white/70">ASO Working with Schools Policy v1.0 — 14 sections</p>
+          </div>
+          <ChevronRight size={18} className="text-white/60 shrink-0" />
+        </button>
 
         {docs.length === 0 ? (
           <Card className="text-center py-12">
