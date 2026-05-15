@@ -57,10 +57,10 @@ export function AdminPage() {
       color: 'bg-green-50 text-green-800',
     },
     {
-      label: 'Bulk Import',
-      description: 'Upload schools, staff & children via CSV',
+      label: 'Import Pupils',
+      description: 'Upload Wix registration CSV to enrol pupils',
       icon: Upload,
-      path: '/admin/bulk-import',
+      path: '/admin/import-pupils',
       color: 'bg-yellow-50 text-[#1a3a6b]',
     },
     {

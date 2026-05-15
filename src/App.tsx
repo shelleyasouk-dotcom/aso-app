@@ -42,6 +42,7 @@ import { SchoolDocumentsPage } from './pages/school/SchoolDocumentsPage'
 import { SchoolInfoFormPage } from './pages/school/SchoolInfoFormPage'
 import { SchoolPoliciesPage } from './pages/school/SchoolPoliciesPage'
 import { SchoolPortalAdminPage } from './pages/admin/SchoolPortalAdminPage'
+import { PupilImportPage } from './pages/admin/PupilImportPage'
 
 export default function App() {
   return (
@@ -215,6 +216,11 @@ export default function App() {
           } />
 
           {/* Admin: school portal view */}
+          <Route path="/admin/import-pupils" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <PupilImportPage />
+            </ProtectedRoute>
+          } />
           <Route path="/admin/school-portal/:id" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <SchoolPortalAdminPage />

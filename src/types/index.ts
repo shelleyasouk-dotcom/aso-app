@@ -82,6 +82,10 @@ export interface Child {
   full_name: string
   date_of_birth: string | null
   contact_email: string | null
+  contact_phone: string | null
+  parent_name: string | null
+  year_group: string | null
+  additional_needs: string | null
   school_id: string
   assigned_coach_id: string | null
   is_active: boolean
