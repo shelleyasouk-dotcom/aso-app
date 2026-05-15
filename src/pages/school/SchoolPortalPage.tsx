@@ -111,11 +111,11 @@ export function SchoolPortalPage() {
   // School picker screen
   if (showPicker && assignments.length > 0) {
     return (
-      <SchoolLayout title="Select School">
+      <SchoolLayout title="Select Club">
         <div className="px-4 pt-8 flex flex-col gap-4">
           <div className="text-center mb-2">
-            <p className="text-xl font-bold text-[#1a3a6b]">Which school?</p>
-            <p className="text-sm text-gray-500 mt-1">Select a school to view its portal</p>
+            <p className="text-xl font-bold text-[#1a3a6b]">Which club?</p>
+            <p className="text-sm text-gray-500 mt-1">Select a club to view its portal</p>
           </div>
           {assignments.map(a => (
             <Card
@@ -197,7 +197,7 @@ export function SchoolPortalPage() {
             onClick={() => { setActiveSchoolId(null); setShowPicker(true) }}
             className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-[#1a3a6b]/30 text-[#1a3a6b] text-xs font-semibold"
           >
-            <ArrowLeftRight size={14} /> Switch school
+            <ArrowLeftRight size={14} /> Switch club
           </button>
         )}
 
