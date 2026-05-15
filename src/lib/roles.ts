@@ -8,6 +8,11 @@ export const ROLE_LABELS: Record<Role, string> = {
   junior_coach: 'Junior Coach',
   outreach_worker: 'Outreach Worker',
   media_tech: 'Media & Tech',
+  school: 'School',
+}
+
+export function isSchoolUser(role: Role): boolean {
+  return role === 'school'
 }
 
 export function canViewAllSchools(role: Role): boolean {

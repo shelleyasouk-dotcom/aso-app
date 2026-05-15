@@ -1,4 +1,4 @@
-export type Role = 'director' | 'area_lead' | 'lead_coach' | 'assistant_coach' | 'junior_coach' | 'outreach_worker' | 'media_tech'
+export type Role = 'director' | 'area_lead' | 'lead_coach' | 'assistant_coach' | 'junior_coach' | 'outreach_worker' | 'media_tech' | 'school'
 
 export interface Profile {
   id: string
@@ -14,6 +14,7 @@ export interface Profile {
   safeguarding_expiry?: string
   first_aid_expiry?: string
   can_clock_anywhere?: boolean
+  school_id?: string | null
   created_at: string
 }
 
@@ -48,6 +49,23 @@ export interface School {
   session_day: string
   session_time: string
   created_at: string
+  // Portal fields (added via school_portal.sql migration)
+  headteacher_name?: string | null
+  contact_name?: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
+  dsl_name?: string | null
+  dsl_email?: string | null
+  dsl_phone?: string | null
+  ddsl_name?: string | null
+  ddsl_email?: string | null
+  ddsl_phone?: string | null
+  mat_name?: string | null
+  school_type?: string | null
+  region?: string | null
+  area_lead_id?: string | null
+  facility_form_completed?: boolean
+  updated_at?: string
 }
 
 export interface StaffSchoolAssignment {
@@ -286,4 +304,33 @@ export interface CrmInteraction {
   outcome: CrmOutcome | null
   created_at: string
   staff?: Profile
+}
+
+export interface FacilityAssessment {
+  id: string
+  school_id: string
+  submitted_by: string | null
+  submitted_at: string
+  space_description: string | null
+  space_size: string | null
+  availability_notes: string | null
+  changing_facilities: string | null
+  welfare_facilities: string | null
+  storage_available: boolean | null
+  storage_notes: string | null
+  existing_equipment: string | null
+  additional_info: string | null
+  created_at: string
+}
+
+export interface ImpactReport {
+  id: string
+  school_id: string
+  term_name: string
+  sport: string | null
+  file_path: string
+  file_name: string
+  generated_at: string | null
+  uploaded_by: string | null
+  created_at: string
 }

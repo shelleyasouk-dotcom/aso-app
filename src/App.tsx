@@ -32,6 +32,13 @@ import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
 import { SessionsPage } from './pages/sessions/SessionsPage'
 import { AbsencesPage } from './pages/absences/AbsencesPage'
 import { MyAreaPage } from './pages/myarea/MyAreaPage'
+import { SchoolPortalPage } from './pages/school/SchoolPortalPage'
+import { SchoolRegisterPage } from './pages/school/SchoolRegisterPage'
+import { SchoolClubInfoPage } from './pages/school/SchoolClubInfoPage'
+import { SchoolSafeguardingPage } from './pages/school/SchoolSafeguardingPage'
+import { SchoolImpactReportsPage } from './pages/school/SchoolImpactReportsPage'
+import { SchoolFacilityPage } from './pages/school/SchoolFacilityPage'
+import { SchoolPortalAdminPage } from './pages/admin/SchoolPortalAdminPage'
 
 export default function App() {
   return (
@@ -173,6 +180,33 @@ export default function App() {
           } />
           <Route path="/absences" element={
             <ProtectedRoute><AbsencesPage /></ProtectedRoute>
+          } />
+
+          {/* School portal — school role only (enforced in ProtectedRoute) */}
+          <Route path="/school-portal" element={
+            <ProtectedRoute><SchoolPortalPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/register" element={
+            <ProtectedRoute><SchoolRegisterPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/club" element={
+            <ProtectedRoute><SchoolClubInfoPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/safeguarding" element={
+            <ProtectedRoute><SchoolSafeguardingPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/reports" element={
+            <ProtectedRoute><SchoolImpactReportsPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/facility" element={
+            <ProtectedRoute><SchoolFacilityPage /></ProtectedRoute>
+          } />
+
+          {/* Admin: school portal view */}
+          <Route path="/admin/school-portal/:id" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <SchoolPortalAdminPage />
+            </ProtectedRoute>
           } />
 
           {/* Catch-all */}

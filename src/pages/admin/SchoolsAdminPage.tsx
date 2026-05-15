@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Pencil, School as SchoolIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, Trash2, Pencil, School as SchoolIcon, ExternalLink, CheckCircle, AlertTriangle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
@@ -74,6 +75,7 @@ function SchoolFormFields({ form, set }: { form: SchoolForm; set: (f: SchoolForm
 }
 
 export function SchoolsAdminPage() {
+  const navigate = useNavigate()
   const [schools, setSchools] = useState<School[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -181,25 +183,51 @@ export function SchoolsAdminPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold text-[#1a3a6b]">{school.name}</p>
-                            <p className="text-sm text-gray-500 mt-0.5">{school.address}</p>
-                            {school.area && <p className="text-xs text-[#1a3a6b]/60 font-medium mt-0.5">{school.area}</p>}
-                            <p className="text-xs text-gray-400 mt-1">{school.session_time}</p>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-bold text-[#1a3a6b]">{school.name}</p>
+                              <p className="text-sm text-gray-500 mt-0.5">{school.address}</p>
+                              {school.area && <p className="text-xs text-[#1a3a6b]/60 font-medium mt-0.5">{school.area}</p>}
+                              <p className="text-xs text-gray-400 mt-1">{school.session_time}</p>
+                            </div>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => startEdit(school)}
+                                className="p-2 rounded-xl text-[#1a3a6b] hover:bg-blue-50 active:bg-blue-100 transition-colors"
+                              >
+                                <Pencil size={17} />
+                              </button>
+                              <button
+                                onClick={() => deleteSchool(school.id)}
+                                className="p-2 rounded-xl text-red-400 hover:bg-red-50 active:bg-red-100 transition-colors"
+                              >
+                                <Trash2 size={17} />
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex gap-1">
+                          {/* Portal status + link */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                              school.facility_form_completed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {school.facility_form_completed
+                                ? <CheckCircle size={11} />
+                                : <AlertTriangle size={11} />
+                              }
+                              {school.facility_form_completed ? 'Form done' : 'Form pending'}
+                            </div>
+                            <div className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                              school.dsl_name ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
+                              {school.dsl_name ? <CheckCircle size={11} /> : <AlertTriangle size={11} />}
+                              {school.dsl_name ? 'DSL on file' : 'DSL missing'}
+                            </div>
                             <button
-                              onClick={() => startEdit(school)}
-                              className="p-2 rounded-xl text-[#1a3a6b] hover:bg-blue-50 active:bg-blue-100 transition-colors"
+                              onClick={() => navigate(`/admin/school-portal/${school.id}`)}
+                              className="ml-auto flex items-center gap-1 text-xs font-semibold text-[#1a3a6b] px-2 py-0.5 rounded-full bg-[#1a3a6b]/10 hover:bg-[#1a3a6b]/20 transition-colors"
                             >
-                              <Pencil size={17} />
-                            </button>
-                            <button
-                              onClick={() => deleteSchool(school.id)}
-                              className="p-2 rounded-xl text-red-400 hover:bg-red-50 active:bg-red-100 transition-colors"
-                            >
-                              <Trash2 size={17} />
+                              <ExternalLink size={11} /> View Portal
                             </button>
                           </div>
                         </div>
