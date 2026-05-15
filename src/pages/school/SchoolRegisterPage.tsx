@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
+import { useSchoolId } from '../../hooks/useSchoolId'
 
 interface Child { id: string; full_name: string }
 interface Entry { id: string; child_id: string; present: boolean; child?: Child }
@@ -16,16 +17,17 @@ interface Register {
 
 export function SchoolRegisterPage() {
   const { profile } = useAuth()
+  const schoolId = useSchoolId()
   const [registers, setRegisters] = useState<Register[]>([])
   const [selectedId, setSelectedId] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!profile?.school_id) return
+    if (!schoolId) return
     supabase
       .from('session_registers')
       .select('id, session_date, notes, register_entries(id, child_id, present, children(id, full_name))')
-      .eq('school_id', profile.school_id)
+      .eq('school_id', schoolId)
       .order('session_date', { ascending: false })
       .limit(6)
       .then(({ data }) => {

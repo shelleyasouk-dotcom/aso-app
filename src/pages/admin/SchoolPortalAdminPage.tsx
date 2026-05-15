@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   Building2, ShieldCheck, FileText, Upload, CheckCircle,
-  ClipboardList, Users, Link2, AlertTriangle
+  ClipboardList, Users, Link2, AlertTriangle, Eye
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -26,6 +26,7 @@ function Row({ label, value }: { label: string; value: string | boolean | null |
 
 export function SchoolPortalAdminPage() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [school, setSchool] = useState<School | null>(null)
   const [reports, setReports] = useState<ImpactReport[]>([])
   const [childCount, setChildCount] = useState(0)
@@ -150,6 +151,14 @@ export function SchoolPortalAdminPage() {
   return (
     <Layout title={school.name} showBack>
       <div className="px-4 pt-6 pb-4 flex flex-col gap-5">
+
+        {/* View as school button */}
+        <button
+          onClick={() => navigate(`/school-portal?schoolId=${id}`)}
+          className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold"
+        >
+          <Eye size={16} /> View as School
+        </button>
 
         {/* Status flags */}
         <div className="grid grid-cols-2 gap-3">

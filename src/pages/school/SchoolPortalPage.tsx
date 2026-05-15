@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ClipboardList,
   Calendar,
@@ -14,6 +14,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
+import { useSchoolId, useIsAdminView } from '../../hooks/useSchoolId'
 import type { School } from '../../types'
 
 function nextOccurrence(dayName: string): string {
@@ -32,18 +33,21 @@ interface Stat { label: string; value: string | number }
 export function SchoolPortalPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
+  const [params] = useSearchParams()
+  const schoolId = useSchoolId()
+  const isAdminView = useIsAdminView()
   const [school, setSchool] = useState<School | null>(null)
   const [childCount, setChildCount] = useState<number>(0)
   const [sessionCount, setSessionCount] = useState<number>(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!profile?.school_id) return
+    if (!schoolId) return
     async function load() {
       const [schoolRes, childRes, sessionRes] = await Promise.all([
-        supabase.from('schools').select('*').eq('id', profile!.school_id!).single(),
-        supabase.from('children').select('id', { count: 'exact', head: true }).eq('school_id', profile!.school_id!).eq('is_active', true),
-        supabase.from('session_registers').select('id', { count: 'exact', head: true }).eq('school_id', profile!.school_id!),
+        supabase.from('schools').select('*').eq('id', schoolId!).single(),
+        supabase.from('children').select('id', { count: 'exact', head: true }).eq('school_id', schoolId!).eq('is_active', true),
+        supabase.from('session_registers').select('id', { count: 'exact', head: true }).eq('school_id', schoolId!),
       ])
       if (schoolRes.data) setSchool(schoolRes.data)
       setChildCount(childRes.count ?? 0)
@@ -54,6 +58,15 @@ export function SchoolPortalPage() {
   }, [profile?.school_id])
 
   if (!profile) return null
+  if (!schoolId && !loading) {
+    return (
+      <SchoolLayout title="School Portal">
+        <div className="px-4 pt-8 text-center">
+          <p className="text-gray-500 text-sm">No school linked to this account.</p>
+        </div>
+      </SchoolLayout>
+    )
+  }
   if (loading) {
     return (
       <SchoolLayout title="School Portal">
@@ -71,17 +84,28 @@ export function SchoolPortalPage() {
     { label: 'Sessions delivered', value: sessionCount },
   ]
 
+  const qs = isAdminView ? `?schoolId=${params.get('schoolId')}` : ''
   const tiles = [
-    { label: 'Weekly Register',     icon: ClipboardList,  path: '/school-portal/register',     desc: 'View attendance records' },
-    { label: 'Club Schedule',       icon: Calendar,       path: '/school-portal/club',          desc: 'Upcoming sessions' },
-    { label: 'Safeguarding',        icon: ShieldCheck,    path: '/school-portal/safeguarding',  desc: 'DSL & DDSL contacts' },
-    { label: 'Impact Reports',      icon: FileText,       path: '/school-portal/reports',       desc: 'Termly reports' },
-    { label: 'Facility Assessment', icon: ClipboardCheck, path: '/school-portal/facility',      desc: school?.facility_form_completed ? 'View submitted form' : 'Action required' },
+    { label: 'Weekly Register',     icon: ClipboardList,  path: `/school-portal/register${qs}`,     desc: 'View attendance records' },
+    { label: 'Club Schedule',       icon: Calendar,       path: `/school-portal/club${qs}`,          desc: 'Upcoming sessions' },
+    { label: 'Safeguarding',        icon: ShieldCheck,    path: `/school-portal/safeguarding${qs}`,  desc: 'DSL & DDSL contacts' },
+    { label: 'Impact Reports',      icon: FileText,       path: `/school-portal/reports${qs}`,       desc: 'Termly reports' },
+    { label: 'Facility Assessment', icon: ClipboardCheck, path: `/school-portal/facility${qs}`,      desc: school?.facility_form_completed ? 'View submitted form' : 'Action required' },
   ]
 
   return (
     <SchoolLayout title={school?.name ?? 'School Portal'}>
       <div className="px-4 pt-6 pb-4 flex flex-col gap-5">
+
+        {/* Admin viewing banner */}
+        {isAdminView && (
+          <button
+            onClick={() => navigate(`/admin/school-portal/${params.get('schoolId')}`)}
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#1a3a6b] text-white text-xs font-semibold"
+          >
+            ← Admin view — tap to return to school admin panel
+          </button>
+        )}
 
         {/* Welcome */}
         <div>
@@ -96,7 +120,7 @@ export function SchoolPortalPage() {
 
         {/* Facility form banner */}
         {school && !school.facility_form_completed && (
-          <Card className="bg-amber-50 border border-amber-200" onClick={() => navigate('/school-portal/facility')}>
+          <Card className="bg-amber-50 border border-amber-200" onClick={() => navigate(`/school-portal/facility${qs}`)}>
             <div className="flex items-start gap-3">
               <AlertTriangle size={20} className="text-amber-500 shrink-0 mt-0.5" />
               <div>

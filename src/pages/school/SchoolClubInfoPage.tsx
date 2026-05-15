@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
+import { useSchoolId } from '../../hooks/useSchoolId'
 import type { School } from '../../types'
 
 interface Register {
@@ -33,19 +34,20 @@ function formatShort(d: Date): string {
 
 export function SchoolClubInfoPage() {
   const { profile } = useAuth()
+  const schoolId = useSchoolId()
   const [school, setSchool] = useState<School | null>(null)
   const [recentSessions, setRecentSessions] = useState<Register[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!profile?.school_id) return
+    if (!schoolId) return
     async function load() {
       const [schoolRes, sessionRes] = await Promise.all([
-        supabase.from('schools').select('*').eq('id', profile!.school_id!).single(),
+        supabase.from('schools').select('*').eq('id', schoolId!).single(),
         supabase
           .from('session_registers')
           .select('id, session_date, notes')
-          .eq('school_id', profile!.school_id!)
+          .eq('school_id', schoolId!)
           .order('session_date', { ascending: false })
           .limit(4),
       ])

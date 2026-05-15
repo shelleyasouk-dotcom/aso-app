@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
+import { useSchoolId } from '../../hooks/useSchoolId'
 import type { School, FacilityAssessment } from '../../types'
 
 const LABEL = 'text-sm font-semibold text-gray-700'
@@ -48,6 +49,7 @@ function Row({ label, value }: { label: string; value: string | boolean | null }
 
 export function SchoolFacilityPage() {
   const { profile } = useAuth()
+  const schoolId = useSchoolId()
   const [school, setSchool] = useState<School | null>(null)
   const [assessment, setAssessment] = useState<FacilityAssessment | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY)
@@ -57,11 +59,11 @@ export function SchoolFacilityPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!profile?.school_id) return
+    if (!schoolId) return
     async function load() {
       const [schoolRes, assessRes] = await Promise.all([
-        supabase.from('schools').select('*').eq('id', profile!.school_id!).single(),
-        supabase.from('facility_assessments').select('*').eq('school_id', profile!.school_id!).maybeSingle(),
+        supabase.from('schools').select('*').eq('id', schoolId!).single(),
+        supabase.from('facility_assessments').select('*').eq('school_id', schoolId!).maybeSingle(),
       ])
       if (schoolRes.data) setSchool(schoolRes.data)
       if (assessRes.data) {
@@ -84,12 +86,12 @@ export function SchoolFacilityPage() {
   }, [profile?.school_id])
 
   async function submit() {
-    if (!profile?.school_id) return
+    if (!schoolId) return
     setSaving(true)
     setError(null)
     const payload = {
-      school_id: profile.school_id,
-      submitted_by: profile.id,
+      school_id: schoolId,
+      submitted_by: profile?.id ?? null,
       submitted_at: new Date().toISOString(),
       ...form,
     }
@@ -102,7 +104,7 @@ export function SchoolFacilityPage() {
     if (err) {
       setError('Could not save form. Please try again.')
     } else {
-      await supabase.from('schools').update({ facility_form_completed: true }).eq('id', profile.school_id)
+      await supabase.from('schools').update({ facility_form_completed: true }).eq('id', schoolId)
       setAssessment(upserted)
       setSaved(true)
       if (school) setSchool({ ...school, facility_form_completed: true })

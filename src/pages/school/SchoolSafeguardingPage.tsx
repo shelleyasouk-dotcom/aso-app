@@ -6,6 +6,7 @@ import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Button } from '../../components/ui/Button'
+import { useSchoolId } from '../../hooks/useSchoolId'
 type ContactFields = {
   dsl_name: string
   dsl_email: string
@@ -16,8 +17,8 @@ type ContactFields = {
 }
 
 export function SchoolSafeguardingPage() {
-  const { profile } = useAuth()
-  const [, setSchool] = useState<Record<string, unknown> | null>(null)
+  useAuth()
+  const schoolId = useSchoolId()
   const [form, setForm] = useState<ContactFields>({
     dsl_name: '', dsl_email: '', dsl_phone: '',
     ddsl_name: '', ddsl_email: '', ddsl_phone: '',
@@ -28,15 +29,14 @@ export function SchoolSafeguardingPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!profile?.school_id) return
+    if (!schoolId) return
     supabase
       .from('schools')
       .select('*')
-      .eq('id', profile.school_id)
+      .eq('id', schoolId)
       .single()
       .then(({ data }) => {
         if (data) {
-          setSchool(data)
           setForm({
             dsl_name:   data.dsl_name   ?? '',
             dsl_email:  data.dsl_email  ?? '',
@@ -48,16 +48,16 @@ export function SchoolSafeguardingPage() {
         }
         setLoading(false)
       })
-  }, [profile?.school_id])
+  }, [schoolId])
 
   async function save() {
-    if (!profile?.school_id) return
+    if (!schoolId) return
     setSaving(true)
     setError(null)
     const { error: err } = await supabase
       .from('schools')
       .update({ ...form, updated_at: new Date().toISOString() })
-      .eq('id', profile.school_id)
+      .eq('id', schoolId)
     if (err) {
       setError('Could not save changes. Please try again.')
     } else {

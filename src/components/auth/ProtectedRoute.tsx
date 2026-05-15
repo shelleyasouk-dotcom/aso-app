@@ -17,14 +17,15 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   if (!profile) return <PageSpinner />
 
   const isSchoolPortal = location.pathname.startsWith('/school-portal')
+  const isAdminViewingPortal = isSchoolPortal && (profile.role === 'director' || profile.role === 'area_lead')
 
   // School users must stay in the school portal
   if (profile.role === 'school' && !isSchoolPortal) {
     return <Navigate to="/school-portal" replace />
   }
 
-  // Staff/admin users cannot access school portal routes
-  if (profile.role !== 'school' && isSchoolPortal) {
+  // Non-school, non-admin users cannot access school portal routes
+  if (!isAdminViewingPortal && profile.role !== 'school' && isSchoolPortal) {
     return <Navigate to="/dashboard" replace />
   }
 

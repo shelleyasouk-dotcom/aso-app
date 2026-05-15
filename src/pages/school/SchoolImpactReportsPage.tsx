@@ -4,20 +4,22 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
+import { useSchoolId } from '../../hooks/useSchoolId'
 import type { ImpactReport } from '../../types'
 
 export function SchoolImpactReportsPage() {
   const { profile } = useAuth()
+  const schoolId = useSchoolId()
   const [reports, setReports] = useState<ImpactReport[]>([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!profile?.school_id) return
+    if (!schoolId) return
     supabase
       .from('impact_reports')
       .select('*')
-      .eq('school_id', profile.school_id)
+      .eq('school_id', schoolId)
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setReports(data ?? [])
