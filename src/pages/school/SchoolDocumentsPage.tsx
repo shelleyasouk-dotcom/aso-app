@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { FolderOpen, FileText, Download, ChevronDown, ChevronRight, ShieldCheck } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
-import { Card } from '../../components/ui/Card'
 import { useSchoolId } from '../../hooks/useSchoolId'
 import type { SchoolDocument } from '../../types'
 
@@ -162,24 +161,9 @@ export function SchoolDocumentsPage() {
           <ChevronRight size={18} className="text-white/60 shrink-0" />
         </button>
 
-        {docs.length === 0 ? (
-          <Card className="text-center py-12">
-            <FolderOpen size={40} className="text-gray-300 mx-auto mb-3" />
-            <p className="font-semibold text-gray-500">No documents yet</p>
-            <p className="text-sm text-gray-400 mt-1 mb-4">
-              Your school's documents will appear here once uploaded by your ASO coordinator.
-            </p>
-            <a
-              href="mailto:info@activeschool.org.uk?subject=Document Upload Request"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold"
-            >
-              Request document upload
-            </a>
-          </Card>
-        ) : (
-          <>
-            {/* ASO shared documents */}
-            {sharedDocs.length > 0 && (
+        <>
+          {/* ASO shared documents */}
+          {sharedDocs.length > 0 && (
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">
                   ASO Policies &amp; Guidance
@@ -219,8 +203,7 @@ export function SchoolDocumentsPage() {
                 </div>
               </div>
             )}
-          </>
-        )}
+        </>
 
       </div>
     </SchoolLayout>
