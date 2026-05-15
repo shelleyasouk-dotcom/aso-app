@@ -43,7 +43,11 @@ export function SchoolPortalPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!schoolId) return
+    if (!schoolId) {
+      setLoading(false)
+      return
+    }
+    setLoading(true)
     async function load() {
       const [schoolRes, childRes, sessionRes] = await Promise.all([
         supabase.from('schools').select('*').eq('id', schoolId!).single(),
@@ -56,7 +60,7 @@ export function SchoolPortalPage() {
       setLoading(false)
     }
     load()
-  }, [profile?.school_id])
+  }, [schoolId])
 
   if (!profile) return null
   if (!schoolId && !loading) {
