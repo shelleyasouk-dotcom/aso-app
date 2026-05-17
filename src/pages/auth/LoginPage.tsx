@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
-import { CheckCircle, Users, School, ChevronLeft } from 'lucide-react'
+import { Navigate, useNavigate } from 'react-router-dom'
+import { CheckCircle, Users, School, ChevronLeft, Heart } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../../components/ui/Button'
@@ -12,6 +12,7 @@ type Portal = 'staff' | 'school'
 
 export function LoginPage() {
   const { user, profile, loading, signIn } = useAuth()
+  const navigate = useNavigate()
   const [portal, setPortal] = useState<Portal | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,6 +26,7 @@ export function LoginPage() {
   if (loading) return <PageSpinner />
   if (user) {
     if (!profile) return <PageSpinner />
+    if (profile.role === 'parent') return <Navigate to="/portal/my-bookings" replace />
     if (profile.role === 'school') return <Navigate to="/school-portal" replace />
     const isAdmin = profile.role === 'director' || profile.role === 'area_lead'
     if (portal === 'school' && isAdmin) return <Navigate to="/admin/schools" replace />
@@ -62,7 +64,7 @@ export function LoginPage() {
   const isSchool = portal === 'school'
 
   return (
-    <div className="min-h-screen bg-[#1a3a6b] flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-[#1a3a6b] flex flex-col items-center justify-center px-6 py-10 overflow-y-auto">
 
       {/* Logo */}
       <div className="mb-8 text-center">
@@ -99,6 +101,19 @@ export function LoginPage() {
             <div>
               <p className="font-bold text-[#1a3a6b] text-base">School Portal</p>
               <p className="text-[#1a3a6b]/70 text-sm mt-0.5">School staff & administrators</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => navigate('/portal')}
+            className="w-full bg-emerald-500 rounded-2xl p-5 flex items-center gap-4 shadow-xl hover:bg-emerald-400 active:bg-emerald-600 transition-colors text-left"
+          >
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Heart size={24} className="text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-white text-base">Parent Portal</p>
+              <p className="text-white/75 text-sm mt-0.5">Find clubs & book sessions</p>
             </div>
           </button>
         </div>
@@ -227,10 +242,10 @@ export function LoginPage() {
       )}
 
       <p className="text-blue-300 text-sm mt-8 text-center">
-        {portal === 'school'
-          ? 'Issues signing in? Contact info@activeschool.org.uk'
-          : 'Issues signing in? Contact your Area Lead or Director.'
-        }
+        Issues signing in? Contact admin —{' '}
+        <a href="mailto:info@activeschool.org.uk" className="text-white underline hover:text-blue-200">
+          info@activeschool.org.uk
+        </a>
       </p>
     </div>
   )

@@ -1,6 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { ParentProtectedRoute } from './components/auth/ParentProtectedRoute'
+import { PortalHomePage } from './pages/portal/PortalHomePage'
+import { PortalClubsPage } from './pages/portal/PortalClubsPage'
+import { PortalClubDetailPage } from './pages/portal/PortalClubDetailPage'
+import { PortalSportsPage } from './pages/portal/PortalSportsPage'
+import { PortalAffiliationsPage } from './pages/portal/PortalAffiliationsPage'
+import { PortalAboutPage } from './pages/portal/PortalAboutPage'
+import { PortalLoginPage } from './pages/portal/PortalLoginPage'
+import { PortalRegisterPage } from './pages/portal/PortalRegisterPage'
+import { PortalDashboardPage } from './pages/portal/PortalDashboardPage'
 
 import { LoginPage } from './pages/auth/LoginPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
@@ -250,6 +260,21 @@ export default function App() {
             <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
               <IncidentReportFormPage />
             </ProtectedRoute>
+          } />
+
+          {/* Parent portal — public */}
+          <Route path="/portal" element={<PortalHomePage />} />
+          <Route path="/portal/clubs" element={<PortalClubsPage />} />
+          <Route path="/portal/clubs/:id" element={<PortalClubDetailPage />} />
+          <Route path="/portal/sports" element={<PortalSportsPage />} />
+          <Route path="/portal/affiliations" element={<PortalAffiliationsPage />} />
+          <Route path="/portal/about" element={<PortalAboutPage />} />
+          <Route path="/portal/login" element={<PortalLoginPage />} />
+          <Route path="/portal/register" element={<PortalRegisterPage />} />
+
+          {/* Parent portal — protected (parent login required) */}
+          <Route path="/portal/my-bookings" element={
+            <ParentProtectedRoute><PortalDashboardPage /></ParentProtectedRoute>
           } />
 
           {/* Catch-all */}
