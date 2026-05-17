@@ -16,6 +16,7 @@ import {
   CalendarOff,
   CalendarCheck,
   HelpCircle,
+  ShieldAlert,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -79,6 +80,7 @@ export function MyAreaPage() {
   const coachingTiles: Tile[] = [
     { label: 'Registers', description: 'Session attendance', icon: ClipboardList, path: '/registers', color: 'bg-yellow-50 text-[#1a3a6b]' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
+    { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
   ]
 
   const managementTiles: Tile[] = [

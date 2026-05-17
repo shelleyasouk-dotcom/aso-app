@@ -43,6 +43,9 @@ import { SchoolInfoFormPage } from './pages/school/SchoolInfoFormPage'
 import { SchoolPoliciesPage } from './pages/school/SchoolPoliciesPage'
 import { SchoolPortalAdminPage } from './pages/admin/SchoolPortalAdminPage'
 import { PupilImportPage } from './pages/admin/PupilImportPage'
+import { IncidentReportFormPage } from './pages/incidents/IncidentReportFormPage'
+import { IncidentReportsPage } from './pages/incidents/IncidentReportsPage'
+import { IncidentReportDetailPage } from './pages/incidents/IncidentReportDetailPage'
 
 export default function App() {
   return (
@@ -224,6 +227,28 @@ export default function App() {
           <Route path="/admin/school-portal/:id" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <SchoolPortalAdminPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Incident reports — lead coaches create, area leads/directors review */}
+          <Route path="/incidents" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+              <IncidentReportsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/incidents/new" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+              <IncidentReportFormPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/incidents/:id" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+              <IncidentReportDetailPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/incidents/:id/edit" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+              <IncidentReportFormPage />
             </ProtectedRoute>
           } />
 

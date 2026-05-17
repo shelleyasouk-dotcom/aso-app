@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -83,6 +83,13 @@ export function AdminPage() {
       icon: UsersRound,
       path: '/coach-pool',
       color: 'bg-violet-50 text-violet-700',
+    },
+    {
+      label: 'Incident Reports',
+      description: 'Review and sign off accident & incident reports',
+      icon: ShieldAlert,
+      path: '/incidents',
+      color: 'bg-red-50 text-red-700',
     },
   ]
 

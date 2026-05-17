@@ -352,6 +352,45 @@ export interface SchoolDocument {
   created_at: string
 }
 
+export type IncidentType = 'accident' | 'incident' | 'near_miss'
+export type IncidentStatus = 'draft' | 'submitted' | 'reviewed' | 'closed'
+
+export const INCIDENT_TYPE_LABELS: Record<IncidentType, string> = {
+  accident: 'Accident',
+  incident: 'Incident',
+  near_miss: 'Near Miss',
+}
+
+export interface IncidentReport {
+  id: string
+  created_at: string
+  updated_at: string
+  reported_by: string
+  school_id: string | null
+  incident_type: IncidentType
+  incident_date: string
+  incident_time: string | null
+  incident_location: string | null
+  persons_involved: string
+  description: string
+  injuries: string | null
+  first_aid_given: boolean
+  first_aid_details: string | null
+  first_aid_given_by: string | null
+  parent_notified: boolean
+  parent_notified_details: string | null
+  witnesses: string | null
+  immediate_action: string | null
+  status: IncidentStatus
+  reviewed_by: string | null
+  reviewed_at: string | null
+  further_action_required: boolean
+  further_action_notes: string | null
+  reporter?: Profile
+  school?: School
+  reviewer?: Profile
+}
+
 export interface SchoolInfoForm {
   id: string
   school_id: string

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { School, Pin, Megaphone, ChevronRight, ChevronRight as ArrowRight, UserCircle } from 'lucide-react'
+import { School, Pin, Megaphone, ChevronRight, ChevronRight as ArrowRight, UserCircle, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -79,6 +79,11 @@ export function DashboardPage() {
             </Card>
           )}
         </div>
+
+        {/* Pending incident reports — area leads and directors */}
+        {(profile.role === 'area_lead' || profile.role === 'director') && (
+          <PendingIncidentsAlert />
+        )}
 
         {/* Announcements */}
         <AnnouncementsSection area={profile.area} isDirector={profile.role === 'director'} />
@@ -184,6 +189,39 @@ function AnnouncementsSection({ area, isDirector }: { area?: string; isDirector:
         )}
       </div>
     </div>
+  )
+}
+
+function PendingIncidentsAlert() {
+  const [count, setCount] = useState(0)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    supabase
+      .from('incident_reports')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'submitted')
+      .then(({ count: c }) => setCount(c ?? 0))
+  }, [])
+
+  if (count === 0) return null
+
+  return (
+    <button
+      onClick={() => navigate('/incidents')}
+      className="w-full flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl px-4 py-3.5 text-left active:opacity-90 transition-opacity"
+    >
+      <div className="w-9 h-9 bg-red-600 rounded-xl flex items-center justify-center shrink-0">
+        <ShieldAlert size={18} className="text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-red-700 text-sm">
+          {count} incident report{count !== 1 ? 's' : ''} pending review
+        </p>
+        <p className="text-xs text-red-500 mt-0.5">Tap to review and sign off</p>
+      </div>
+      <ChevronRight size={16} className="text-red-300 shrink-0" />
+    </button>
   )
 }
 
