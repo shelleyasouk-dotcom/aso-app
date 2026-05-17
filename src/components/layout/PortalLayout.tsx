@@ -195,7 +195,9 @@ export function PortalLayout({ children }: PortalLayoutProps) {
           </div>
           <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p className="text-white/40 text-xs">© {new Date().getFullYear()} Active School Organisation. All rights reserved.</p>
-            <p className="text-white/40 text-xs">United Kingdom</p>
+            <Link to="/login" className="text-white/40 hover:text-white/70 text-xs transition-colors">
+              ← Back to main login
+            </Link>
           </div>
         </div>
       </footer>
