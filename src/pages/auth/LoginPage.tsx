@@ -112,8 +112,8 @@ export function LoginPage() {
               <Heart size={24} className="text-white" />
             </div>
             <div>
-              <p className="font-bold text-white text-base">Parent Portal</p>
-              <p className="text-white/75 text-sm mt-0.5">Find clubs & book sessions</p>
+              <p className="font-bold text-white text-base">Community Hub</p>
+              <p className="text-white/75 text-sm mt-0.5">Clubs, sports, affiliations & more</p>
             </div>
           </button>
         </div>
