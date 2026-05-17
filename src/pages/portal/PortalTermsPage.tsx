@@ -54,6 +54,12 @@ export function PortalTermsPage() {
       {/* Header */}
       <div className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] text-white py-10 px-4">
         <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-white rounded-xl p-1 shrink-0">
+              <img src="/Untitled-2 (1).png" alt="Active School" className="h-10 w-10 object-contain" />
+            </div>
+            <img src="/Untitled-1.png" alt="Active School" className="h-7 object-contain" />
+          </div>
           <p className="text-white/60 text-xs font-semibold uppercase tracking-widest mb-2">Version 1.0 | 2026</p>
           <h1 className="text-3xl font-extrabold mb-1">Parent Terms &amp; Conditions</h1>
           <p className="text-white/70 text-sm">After-School Gymnastics &amp; Multi-Sport Clubs</p>

@@ -13,18 +13,24 @@ export function PortalDashboardPage() {
     <PortalLayout>
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Welcome */}
-        <div className="flex items-center justify-between gap-3 mb-6">
-          <div>
-            <h1 className="text-2xl font-extrabold text-gray-900">Hi, {firstName}! 👋</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Welcome to your ASO parent account.</p>
+        <div className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] text-white rounded-2xl p-5 mb-6">
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-white rounded-xl p-1 shrink-0">
+                <img src="/Untitled-2 (1).png" alt="Active School" className="h-9 w-9 object-contain" />
+              </div>
+              <img src="/Untitled-1.png" alt="Active School" className="h-6 object-contain" />
+            </div>
+            <button
+              onClick={signOut}
+              className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white transition-colors"
+            >
+              <LogOut size={14} />
+              Sign out
+            </button>
           </div>
-          <button
-            onClick={signOut}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-600 transition-colors"
-          >
-            <LogOut size={14} />
-            Sign out
-          </button>
+          <h1 className="text-2xl font-extrabold text-white">Hi, {firstName}!</h1>
+          <p className="text-sm text-white/70 mt-0.5">Welcome to your Community Hub account.</p>
         </div>
 
         {/* T&C banner */}

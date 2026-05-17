@@ -87,8 +87,8 @@ export function PortalClubDetailPage() {
                 </span>
               )}
             </div>
-            <div className="w-12 h-12 bg-[#f5c518] rounded-xl flex items-center justify-center shrink-0">
-              <span className="text-[#1a3a6b] font-black text-sm">ASO</span>
+            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
+              <img src="/Untitled-2 (1).png" alt="Active School" className="w-10 h-10 object-contain" />
             </div>
           </div>
 
