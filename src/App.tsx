@@ -11,6 +11,7 @@ import { PortalAboutPage } from './pages/portal/PortalAboutPage'
 import { PortalLoginPage } from './pages/portal/PortalLoginPage'
 import { PortalRegisterPage } from './pages/portal/PortalRegisterPage'
 import { PortalDashboardPage } from './pages/portal/PortalDashboardPage'
+import { PortalTermsPage } from './pages/portal/PortalTermsPage'
 
 import { LoginPage } from './pages/auth/LoginPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
@@ -271,6 +272,7 @@ export default function App() {
           <Route path="/portal/about" element={<PortalAboutPage />} />
           <Route path="/portal/login" element={<PortalLoginPage />} />
           <Route path="/portal/register" element={<PortalRegisterPage />} />
+          <Route path="/portal/terms" element={<PortalTermsPage />} />
 
           {/* Parent portal — protected (parent login required) */}
           <Route path="/portal/my-bookings" element={

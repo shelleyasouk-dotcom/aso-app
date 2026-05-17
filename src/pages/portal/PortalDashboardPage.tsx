@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Search, LogOut, ChevronRight, BookOpen } from 'lucide-react'
+import { Search, LogOut, ChevronRight, BookOpen, FileText } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 
@@ -24,6 +24,23 @@ export function PortalDashboardPage() {
           >
             <LogOut size={14} />
             Sign out
+          </button>
+        </div>
+
+        {/* T&C banner */}
+        <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 mb-4 flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-amber-400 flex items-center justify-center shrink-0">
+            <FileText size={18} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-amber-800 text-sm">Please read our Terms &amp; Conditions</p>
+            <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">Before booking, please read and familiarise yourself with our parent T&amp;Cs covering fees, cancellations, safeguarding and more.</p>
+          </div>
+          <button
+            onClick={() => navigate('/portal/terms')}
+            className="shrink-0 bg-amber-400 hover:bg-amber-500 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Read
           </button>
         </div>
 

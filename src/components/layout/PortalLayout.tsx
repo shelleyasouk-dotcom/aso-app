@@ -190,6 +190,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                 <Link to="/portal/login" className="text-white/60 hover:text-white text-sm transition-colors">Parent Login</Link>
                 <Link to="/portal/register" className="text-white/60 hover:text-white text-sm transition-colors">Create Account</Link>
                 <Link to="/portal/clubs" className="text-white/60 hover:text-white text-sm transition-colors">Find a Club</Link>
+                <Link to="/portal/terms" className="text-white/60 hover:text-white text-sm transition-colors">Terms &amp; Conditions</Link>
               </div>
             </div>
           </div>
