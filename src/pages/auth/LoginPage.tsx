@@ -64,7 +64,7 @@ export function LoginPage() {
   const isSchool = portal === 'school'
 
   return (
-    <div className="min-h-screen bg-[#1a3a6b] flex flex-col items-center justify-center px-6">
+    <div className="min-h-screen bg-[#1a3a6b] flex flex-col items-center justify-center px-6 py-10 overflow-y-auto">
 
       {/* Logo */}
       <div className="mb-8 text-center">
