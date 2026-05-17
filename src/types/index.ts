@@ -1,4 +1,4 @@
-export type Role = 'director' | 'area_lead' | 'lead_coach' | 'assistant_coach' | 'junior_coach' | 'outreach_worker' | 'media_tech' | 'school'
+export type Role = 'director' | 'area_lead' | 'lead_coach' | 'assistant_coach' | 'junior_coach' | 'outreach_worker' | 'media_tech' | 'school' | 'parent'
 
 export interface Profile {
   id: string

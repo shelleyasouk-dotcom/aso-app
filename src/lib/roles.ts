@@ -9,6 +9,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   outreach_worker: 'Outreach Worker',
   media_tech: 'Media & Tech',
   school: 'School',
+  parent: 'Parent',
 }
 
 export function isSchoolUser(role: Role): boolean {
