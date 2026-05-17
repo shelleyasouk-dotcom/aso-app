@@ -39,10 +39,10 @@ export function PortalLayout({ children }: PortalLayoutProps) {
             onClick={() => navigate('/portal')}
             className="flex items-center gap-2 shrink-0"
           >
-            <div className="w-9 h-9 bg-[#f5c518] rounded-lg flex items-center justify-center">
-              <span className="text-[#1a3a6b] font-black text-sm">ASO</span>
+            <div className="bg-white rounded-xl p-1 shrink-0">
+              <img src="/Untitled-2 (1).png" alt="Active School" className="h-8 w-8 object-contain" />
             </div>
-            <span className="font-bold text-base hidden sm:block">Active School Org</span>
+            <img src="/Untitled-1.png" alt="Active School" className="h-7 object-contain hidden sm:block" />
           </button>
 
           {/* Desktop nav */}
@@ -165,10 +165,10 @@ export function PortalLayout({ children }: PortalLayoutProps) {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 bg-[#f5c518] rounded-lg flex items-center justify-center">
-                  <span className="text-[#1a3a6b] font-black text-xs">ASO</span>
+                <div className="bg-white rounded-lg p-0.5">
+                  <img src="/Untitled-2 (1).png" alt="Active School" className="h-8 w-8 object-contain" />
                 </div>
-                <span className="font-bold">Active School Org</span>
+                <img src="/Untitled-1.png" alt="Active School" className="h-6 object-contain" />
               </div>
               <p className="text-white/60 text-sm leading-relaxed">
                 Inspiring young people through sport and physical activity across UK schools.

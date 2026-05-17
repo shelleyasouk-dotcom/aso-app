@@ -47,6 +47,11 @@ export function PortalHomePage() {
       {/* Hero */}
       <section className="bg-gradient-to-br from-[#1a3a6b] via-[#1e4a8c] to-[#142f58] text-white py-20 px-4">
         <div className="max-w-3xl mx-auto text-center">
+          <img
+            src="/AS Brand Sheet (2) - Edited.png"
+            alt="Active School"
+            className="w-44 h-44 object-contain mx-auto -mb-2"
+          />
           <div className="inline-flex items-center gap-2 bg-[#f5c518]/20 text-[#f5c518] text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
             <Star size={14} />
             UK's Premier School Sports Clubs

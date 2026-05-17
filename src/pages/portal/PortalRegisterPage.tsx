@@ -51,9 +51,7 @@ export function PortalRegisterPage() {
         <div className="w-full max-w-sm">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
             <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-[#1a3a6b] rounded-xl flex items-center justify-center mx-auto mb-3">
-                <span className="text-[#f5c518] font-black text-sm">ASO</span>
-              </div>
+              <img src="/Untitled-2 (1).png" alt="Active School" className="w-20 h-20 object-contain mx-auto mb-2" />
               <h1 className="text-xl font-extrabold text-gray-900">Create Account</h1>
               <p className="text-sm text-gray-500 mt-1">Free parent account — takes 30 seconds</p>
             </div>

@@ -33,6 +33,7 @@ export function PortalAboutPage() {
       {/* Hero */}
       <section className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] text-white py-12 px-4">
         <div className="max-w-3xl mx-auto text-center">
+          <img src="/AS Brand Sheet (2) - Edited.png" alt="Active School" className="w-36 h-36 object-contain mx-auto mb-2" />
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-3">About Active School Organisation</h1>
           <p className="text-white/70 text-base leading-relaxed">
             We're passionate about getting young people active. ASO runs after-school sports clubs that are fun, safe, and award-winning.
@@ -43,8 +44,8 @@ export function PortalAboutPage() {
       {/* Mission */}
       <section className="max-w-3xl mx-auto px-4 py-10">
         <div className="flex flex-col sm:flex-row gap-6 items-center">
-          <div className="w-24 h-24 bg-[#f5c518] rounded-2xl flex items-center justify-center shrink-0">
-            <span className="text-[#1a3a6b] font-black text-2xl">ASO</span>
+          <div className="w-24 h-24 shrink-0">
+            <img src="/Untitled-2 (1).png" alt="Active School" className="w-full h-full object-contain" />
           </div>
           <div>
             <h2 className="text-xl font-extrabold text-gray-900 mb-2">Our Mission</h2>
