@@ -242,10 +242,10 @@ export function LoginPage() {
       )}
 
       <p className="text-blue-300 text-sm mt-8 text-center">
-        {portal === 'school'
-          ? 'Issues signing in? Contact info@activeschool.org.uk'
-          : 'Issues signing in? Contact your Area Lead or Director.'
-        }
+        Issues signing in? Contact admin —{' '}
+        <a href="mailto:info@activeschool.org.uk" className="text-white underline hover:text-blue-200">
+          info@activeschool.org.uk
+        </a>
       </p>
     </div>
   )
