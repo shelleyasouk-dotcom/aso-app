@@ -24,15 +24,42 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     )
 
-    // Verify the requesting user
     const { data: { user }, error: userErr } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', ''),
     )
     if (userErr || !user) throw new Error('Unauthorized')
 
-    const { club_term_id, child } = await req.json() as {
+    const { club_term_id, child, consents } = await req.json() as {
       club_term_id: string
-      child: { full_name: string; year_group?: string; class_name?: string; additional_needs?: string }
+      child: {
+        full_name: string
+        date_of_birth?: string | null
+        year_group?: string | null
+        class_name?: string | null
+        additional_needs?: string | null
+        parent_name?: string | null
+        parent_relationship?: string | null
+        parent_phone?: string | null
+        address_line1?: string | null
+        address_city?: string | null
+        address_postcode?: string | null
+        emergency_contact_name?: string | null
+        emergency_contact_relationship?: string | null
+        emergency_contact_phone?: string | null
+        secondary_emergency_name?: string | null
+        secondary_emergency_phone?: string | null
+        secondary_emergency_email?: string | null
+        collection_person?: string | null
+        walk_home_alone?: boolean | null
+        photo_consent?: boolean | null
+      }
+      consents?: {
+        medically_fit?: boolean | null
+        first_aid_permission?: boolean | null
+        fees_acknowledged?: boolean | null
+        policy_agreed?: boolean | null
+        signature_name?: string | null
+      }
     }
 
     // Fetch the term + school
@@ -52,7 +79,7 @@ Deno.serve(async (req) => {
       .eq('status', 'confirmed')
     if ((count ?? 0) >= term.capacity) throw new Error('This club is full')
 
-    // Check parent doesn't already have a confirmed booking for this term
+    // Check for duplicate booking
     const { count: dupCount } = await supabase
       .from('parent_bookings')
       .select('id', { count: 'exact', head: true })
@@ -61,10 +88,13 @@ Deno.serve(async (req) => {
       .in('status', ['confirmed', 'pending_payment'])
     if ((dupCount ?? 0) > 0) throw new Error('You already have a booking for this term')
 
-    // Save child to parent_children if new
+    // Upsert child record (full profile)
     const { data: savedChild } = await supabase
       .from('parent_children')
-      .upsert({ parent_id: user.id, ...child }, { onConflict: 'parent_id,full_name' })
+      .upsert(
+        { parent_id: user.id, ...child },
+        { onConflict: 'parent_id,full_name' },
+      )
       .select('id')
       .single()
     const childId = savedChild?.id
@@ -72,7 +102,6 @@ Deno.serve(async (req) => {
     const origin = req.headers.get('origin') ?? 'http://localhost:5173'
     const school = term.school as { id: string; name: string }
 
-    // Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'payment',
@@ -98,19 +127,26 @@ Deno.serve(async (req) => {
       },
     })
 
-    // Insert pending booking
+    // Insert pending booking with consent snapshot
     await supabase.from('parent_bookings').insert({
       parent_id: user.id,
       school_id: school.id,
       club_term_id,
       parent_child_id: childId,
       child_name: child.full_name,
+      child_dob: child.date_of_birth ?? null,
       child_year_group: child.year_group ?? null,
       child_class: child.class_name ?? null,
       child_additional_needs: child.additional_needs ?? null,
       stripe_session_id: session.id,
       amount_pence: term.price_pence,
       status: 'pending_payment',
+      medically_fit: consents?.medically_fit ?? null,
+      first_aid_permission: consents?.first_aid_permission ?? null,
+      fees_acknowledged: consents?.fees_acknowledged ?? null,
+      policy_agreed: consents?.policy_agreed ?? null,
+      signature_name: consents?.signature_name ?? null,
+      signed_at: new Date().toISOString(),
     })
 
     return new Response(JSON.stringify({ url: session.url }), {

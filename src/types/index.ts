@@ -377,6 +377,21 @@ export interface ParentChild {
   year_group: string | null
   class_name: string | null
   additional_needs: string | null
+  parent_name: string | null
+  parent_relationship: string | null
+  parent_phone: string | null
+  address_line1: string | null
+  address_city: string | null
+  address_postcode: string | null
+  emergency_contact_name: string | null
+  emergency_contact_relationship: string | null
+  emergency_contact_phone: string | null
+  secondary_emergency_name: string | null
+  secondary_emergency_phone: string | null
+  secondary_emergency_email: string | null
+  collection_person: string | null
+  walk_home_alone: boolean | null
+  photo_consent: boolean | null
   created_at: string
 }
 
@@ -397,6 +412,12 @@ export interface ParentBooking {
   stripe_payment_intent: string | null
   amount_pence: number | null
   status: 'pending_payment' | 'confirmed' | 'cancelled' | 'refunded'
+  medically_fit: boolean | null
+  first_aid_permission: boolean | null
+  fees_acknowledged: boolean | null
+  policy_agreed: boolean | null
+  signature_name: string | null
+  signed_at: string | null
   created_at: string
   updated_at: string
   school?: School
