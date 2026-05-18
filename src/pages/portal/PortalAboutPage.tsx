@@ -50,10 +50,16 @@ export function PortalAboutPage() {
           <div>
             <h2 className="text-xl font-extrabold text-gray-900 mb-2">Our Mission</h2>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Active School Organisation exists to inspire a generation of young people to love sport and physical activity. We believe that every child deserves access to high-quality coaching, structured progression, and the chance to represent their school with pride.
+              At Active School Organisation, our mission is to inspire a generation of children to develop a lifelong love of sport, movement, and physical activity.
             </p>
-            <p className="text-gray-600 text-sm leading-relaxed mt-2">
-              We partner with primary schools across the UK to deliver after-school clubs that combine fun, skills development, and nationally recognised UKAG award pathways.
+            <p className="text-gray-600 text-sm leading-relaxed mt-3">
+              We believe every child deserves the opportunity to feel confident, capable, and proud of what they can achieve, regardless of their background or ability. Through high-quality coaching, structured progression pathways, and positive sporting experiences, we help children build not only physical skills, but resilience, confidence, discipline, and self-belief.
+            </p>
+            <p className="text-gray-600 text-sm leading-relaxed mt-3">
+              We proudly partner with primary schools across the UK to deliver professional after-school programmes that combine fun, development, and achievement. Through our nationally recognised UKAG award pathways, children are given clear goals to work towards while representing their school with pride and becoming part of something bigger than themselves.
+            </p>
+            <p className="text-gray-600 text-sm leading-relaxed mt-3 font-semibold text-gray-700">
+              Our aim is simple — create healthier, happier, more confident children through sport.
             </p>
           </div>
         </div>
