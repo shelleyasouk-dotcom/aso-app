@@ -14,6 +14,9 @@ import { PortalDashboardPage } from './pages/portal/PortalDashboardPage'
 import { PortalTermsPage } from './pages/portal/PortalTermsPage'
 import { PortalBookingPage } from './pages/portal/PortalBookingPage'
 import { PortalBookingConfirmedPage } from './pages/portal/PortalBookingConfirmedPage'
+import { PortalBasketPage } from './pages/portal/PortalBasketPage'
+import { PortalMyChildrenPage } from './pages/portal/PortalMyChildrenPage'
+import { BasketProvider } from './contexts/BasketContext'
 import { ClubTermsAdminPage } from './pages/admin/ClubTermsAdminPage'
 import { BookingsAdminPage } from './pages/admin/BookingsAdminPage'
 import { SchoolRosterPage } from './pages/school/SchoolRosterPage'
@@ -67,6 +70,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <BasketProvider>
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
@@ -284,7 +288,11 @@ export default function App() {
             <ParentProtectedRoute><PortalDashboardPage /></ParentProtectedRoute>
           } />
           <Route path="/portal/book/:termId" element={<PortalBookingPage />} />
+          <Route path="/portal/basket" element={<PortalBasketPage />} />
           <Route path="/portal/booking-confirmed" element={<PortalBookingConfirmedPage />} />
+          <Route path="/portal/my-children" element={
+            <ParentProtectedRoute><PortalMyChildrenPage /></ParentProtectedRoute>
+          } />
 
           {/* School portal — class roster */}
           <Route path="/school-portal/roster" element={
@@ -306,6 +314,7 @@ export default function App() {
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        </BasketProvider>
       </AuthProvider>
     </BrowserRouter>
   )
