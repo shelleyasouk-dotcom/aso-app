@@ -23,6 +23,102 @@ const HOW_IT_WORKS = [
   { step: '3', title: 'Get Active!', desc: 'Your child joins expert-led sessions and progresses through the UKAG Award Pathway.' },
 ]
 
+// ─── Example timetable ────────────────────────────────────────────────────────
+
+type Venue = 'hall' | 'outdoor' | 'classroom'
+interface TimetableClass { venue: Venue; emoji: string; sport: string; years: string }
+interface DaySlots { early: TimetableClass[]; late: TimetableClass[] }
+
+const VENUE_STYLE: Record<Venue, { bg: string; border: string; text: string; dot: string; label: string }> = {
+  hall:      { bg: 'bg-blue-50',   border: 'border-blue-200',  text: 'text-blue-800',   dot: 'bg-blue-500',   label: 'Sports Hall' },
+  outdoor:   { bg: 'bg-green-50',  border: 'border-green-200', text: 'text-green-800',  dot: 'bg-green-500',  label: 'Outdoor Space' },
+  classroom: { bg: 'bg-purple-50', border: 'border-purple-200',text: 'text-purple-800', dot: 'bg-purple-500', label: 'Classroom' },
+}
+
+const EXAMPLE_TIMETABLE: Record<string, DaySlots> = {
+  Monday: {
+    early: [
+      { venue: 'hall',    emoji: '🤸', sport: 'Gymnastics',  years: 'Yr 3 & 4' },
+      { venue: 'outdoor', emoji: '⚽', sport: 'Football',    years: 'Yr 5 & 6' },
+    ],
+    late: [
+      { venue: 'hall',      emoji: '🤸', sport: 'Gymnastics', years: 'Yr 5 & 6' },
+      { venue: 'classroom', emoji: '🧘', sport: 'Yoga',       years: 'Mixed' },
+    ],
+  },
+  Tuesday: {
+    early: [
+      { venue: 'hall',    emoji: '🏀', sport: 'Basketball', years: 'Yr 4 & 5' },
+      { venue: 'outdoor', emoji: '🏉', sport: 'Tag Rugby',  years: 'Yr 3 & 4' },
+    ],
+    late: [
+      { venue: 'hall',    emoji: '🏐', sport: 'Netball',   years: 'Yr 5 & 6' },
+      { venue: 'outdoor', emoji: '🏉', sport: 'Tag Rugby', years: 'Yr 5 & 6' },
+    ],
+  },
+  Wednesday: {
+    early: [
+      { venue: 'hall',    emoji: '🤾', sport: 'Trampolining', years: 'Yr 3 & 4' },
+      { venue: 'outdoor', emoji: '🎾', sport: 'Tennis',       years: 'Yr 3–5' },
+    ],
+    late: [
+      { venue: 'hall',    emoji: '🤾', sport: 'Trampolining', years: 'Yr 5 & 6' },
+      { venue: 'outdoor', emoji: '⚽', sport: 'Football',     years: 'Yr 3 & 4' },
+    ],
+  },
+  Thursday: {
+    early: [
+      { venue: 'hall',    emoji: '🏃', sport: 'Multi-sport', years: 'Yr 3 & 4' },
+      { venue: 'outdoor', emoji: '🏏', sport: 'Cricket',     years: 'Yr 4 & 5' },
+    ],
+    late: [
+      { venue: 'hall',      emoji: '🏀', sport: 'Basketball', years: 'Yr 5 & 6' },
+      { venue: 'classroom', emoji: '🧘', sport: 'Yoga',       years: 'Mixed' },
+    ],
+  },
+  Friday: {
+    early: [
+      { venue: 'hall',    emoji: '🏐', sport: 'Netball',   years: 'Yr 3 & 4' },
+      { venue: 'outdoor', emoji: '🏃', sport: 'Athletics', years: 'Yr 5 & 6' },
+    ],
+    late: [
+      { venue: 'hall',    emoji: '🏃', sport: 'Multi-sport', years: 'Yr 5 & 6' },
+      { venue: 'outdoor', emoji: '⚽', sport: 'Football',    years: 'Mixed' },
+    ],
+  },
+}
+
+const EXAMPLE_WEEKS = [
+  { label: 'Wk 1', dates: '7–11 Sep' },
+  { label: 'Wk 2', dates: '14–18 Sep' },
+  { label: 'Wk 3', dates: '21–25 Sep' },
+  { label: 'Wk 4', dates: '28 Sep–2 Oct' },
+  { label: 'Wk 5', dates: '5–9 Oct' },
+  { label: 'Wk 6', dates: '12–16 Oct' },
+]
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+const DAY_SHORT: Record<string, string> = {
+  Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri',
+}
+
+function ClassCard({ cls }: { cls: TimetableClass }) {
+  const v = VENUE_STYLE[cls.venue]
+  return (
+    <div className={`rounded-lg border px-2 py-1.5 ${v.bg} ${v.border}`}>
+      <div className="flex items-center gap-1 mb-0.5">
+        <span className="text-sm">{cls.emoji}</span>
+        <span className={`text-xs font-bold leading-tight ${v.text}`}>{cls.sport}</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${v.dot}`} />
+        <span className="text-[10px] text-gray-500 leading-none">{v.label}</span>
+      </div>
+      <p className="text-[10px] text-gray-400 mt-0.5">{cls.years}</p>
+    </div>
+  )
+}
+
 export function PortalHomePage() {
   const navigate = useNavigate()
   const [regions, setRegions] = useState<string[]>([])
@@ -175,6 +271,111 @@ export function PortalHomePage() {
               <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Example timetable */}
+      <section className="bg-gray-50 py-12 px-4">
+        <div className="max-w-5xl mx-auto">
+
+          {/* Header */}
+          <div className="text-center mb-6">
+            <span className="inline-block bg-[#f5c518] text-[#1a3a6b] text-xs font-extrabold px-3 py-1 rounded-full mb-3 tracking-wide uppercase">
+              Example Term
+            </span>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">A Full Term at Maple Primary</h2>
+            <p className="text-gray-500 text-sm">Autumn Term 1 · September – October 2026 · 6-week block · 20 sessions per week</p>
+          </div>
+
+          {/* Stats strip */}
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            {[
+              { value: '6', label: 'Weeks' },
+              { value: '10', label: 'Sports' },
+              { value: '120', label: 'Sessions in term' },
+              { value: '3', label: 'Venues on site' },
+            ].map(s => (
+              <div key={s.label} className="bg-white border border-gray-200 rounded-xl px-5 py-3 text-center shadow-sm">
+                <p className="text-2xl font-extrabold text-[#1a3a6b]">{s.value}</p>
+                <p className="text-xs text-gray-400 font-medium">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Legend */}
+          <div className="flex flex-wrap justify-center gap-4 mb-5">
+            {(Object.entries(VENUE_STYLE) as [Venue, typeof VENUE_STYLE[Venue]][]).map(([, v]) => (
+              <div key={v.label} className="flex items-center gap-1.5">
+                <span className={`w-2.5 h-2.5 rounded-full ${v.dot}`} />
+                <span className="text-xs font-medium text-gray-600">{v.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Timetable grid — horizontal scroll on mobile */}
+          <div className="overflow-x-auto pb-2">
+            <div className="min-w-[640px]">
+
+              {/* Day headers */}
+              <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] gap-2 mb-2">
+                <div />
+                {DAYS.map(day => (
+                  <div key={day} className="text-center">
+                    <div className="bg-[#1a3a6b] text-white text-xs font-bold py-2 rounded-lg">{DAY_SHORT[day]}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 3:15pm row */}
+              <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] gap-2 mb-2">
+                <div className="flex items-start pt-1">
+                  <span className="text-xs font-bold text-gray-500 leading-tight">3:15–<br/>4:15pm</span>
+                </div>
+                {DAYS.map(day => (
+                  <div key={day} className="flex flex-col gap-1">
+                    {EXAMPLE_TIMETABLE[day].early.map((cls, i) => (
+                      <ClassCard key={i} cls={cls} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* 4:15pm row */}
+              <div className="grid grid-cols-[80px_1fr_1fr_1fr_1fr_1fr] gap-2">
+                <div className="flex items-start pt-1">
+                  <span className="text-xs font-bold text-gray-500 leading-tight">4:15–<br/>5:15pm</span>
+                </div>
+                {DAYS.map(day => (
+                  <div key={day} className="flex flex-col gap-1">
+                    {EXAMPLE_TIMETABLE[day].late.map((cls, i) => (
+                      <ClassCard key={i} cls={cls} />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 6-week strip */}
+          <div className="mt-6">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide text-center mb-3">6-Week Block</p>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {EXAMPLE_WEEKS.map((wk, i) => (
+                <div key={wk.label} className={`rounded-xl border text-center py-3 px-2 ${
+                  i === 0 ? 'bg-[#1a3a6b] border-[#1a3a6b] text-white' : 'bg-white border-gray-200'
+                }`}>
+                  <p className={`text-xs font-extrabold ${i === 0 ? 'text-[#f5c518]' : 'text-[#1a3a6b]'}`}>{wk.label}</p>
+                  <p className={`text-[10px] mt-0.5 ${i === 0 ? 'text-white/70' : 'text-gray-400'}`}>{wk.dates}</p>
+                  <p className={`text-[10px] font-semibold mt-1 ${i === 0 ? 'text-white/90' : 'text-gray-500'}`}>20 sessions</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-gray-400 mt-4">
+            Example only — actual sports and times vary by school. Contact us to discuss what's possible at your school.
+          </p>
+
         </div>
       </section>
 
