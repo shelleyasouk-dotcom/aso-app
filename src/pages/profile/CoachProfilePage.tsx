@@ -297,30 +297,35 @@ export function CoachProfilePage() {
     }
     setUploadingPhoto(true)
     setUploadError(null)
-    setUploadStep(`Got file: ${file.name} (${file.type || 'unknown type'}, ${(file.size / 1024).toFixed(0)} KB)`)
+    setUploadStep('Uploading photo…')
 
-    const path = `photos/${targetId}/profile.jpg`
-    const contentType = file.type || 'image/jpeg'
+    // Determine extension — fall back to jpg for HEIC/unknown types from iPhone
+    const mime = file.type || 'image/jpeg'
+    const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg'
+    const path = `photos/${targetId}/profile.${ext}`
 
-    setUploadStep('Uploading to storage…')
     const { error: storageErr } = await supabase.storage
       .from('coach-files')
-      .upload(path, file, { upsert: true, contentType })
+      .upload(path, file, { upsert: true, contentType: mime })
 
     if (storageErr) {
-      setUploadError(`Storage error: ${storageErr.message}`)
+      if (storageErr.message.includes('Bucket not found') || storageErr.message.includes('not found')) {
+        setUploadError('Storage not configured. Ask your director to run fix_photo_upload.sql in the Supabase SQL editor.')
+      } else {
+        setUploadError(`Upload failed: ${storageErr.message}`)
+      }
       setUploadStep(null)
       setUploadingPhoto(false)
       return
     }
 
-    setUploadStep('Saving photo URL…')
+    setUploadStep('Saving…')
     const { data: urlData } = supabase.storage.from('coach-files').getPublicUrl(path)
     const url = `${urlData.publicUrl}?t=${Date.now()}`
 
     const { error: dbErr } = await supabase.from('profiles').update({ photo_url: url }).eq('id', targetId)
     if (dbErr) {
-      setUploadError(`Database error: ${dbErr.message}`)
+      setUploadError(`Could not save photo: ${dbErr.message}`)
       setUploadStep(null)
       setUploadingPhoto(false)
       return
