@@ -13,6 +13,8 @@ const SPORTS = [
   { emoji: '🎾', name: 'Tennis' },
   { emoji: '🤸', name: 'Gymnastics' },
   { emoji: '🏃', name: 'Athletics' },
+  { emoji: '🧘', name: 'Yoga' },
+  { emoji: '🤾', name: 'Trampolining' },
 ]
 
 const HOW_IT_WORKS = [

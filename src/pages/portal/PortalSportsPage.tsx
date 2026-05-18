@@ -83,6 +83,26 @@ const SPORTS = [
     color: 'bg-blue-50 border-blue-200',
     badge: 'bg-blue-100 text-blue-700',
   },
+  {
+    emoji: '🧘',
+    name: 'Yoga',
+    tagline: 'Mindfulness and movement combined',
+    description: 'Child-friendly yoga sessions building flexibility, balance and body awareness through fun poses, breathing exercises and relaxation techniques.',
+    ageRange: '5–11',
+    benefits: ['Flexibility & balance', 'Focus & calm', 'Body awareness', 'Mindfulness'],
+    color: 'bg-teal-50 border-teal-200',
+    badge: 'bg-teal-100 text-teal-700',
+  },
+  {
+    emoji: '🤾',
+    name: 'Trampolining',
+    tagline: 'Bounce, flip and fly safely',
+    description: 'British Gymnastics-aligned trampolining developing core strength, coordination and aerial awareness through progressive skills in a fully supervised environment.',
+    ageRange: '8–16',
+    benefits: ['Core strength', 'Coordination', 'Spatial awareness', 'Confidence'],
+    color: 'bg-indigo-50 border-indigo-200',
+    badge: 'bg-indigo-100 text-indigo-700',
+  },
 ]
 
 export function PortalSportsPage() {
