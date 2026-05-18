@@ -11,6 +11,14 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Always return 200 so the client can read the error body
+function ok(body: unknown) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { ...CORS, 'Content-Type': 'application/json' },
+  })
+}
+
 interface ChildData {
   full_name: string
   date_of_birth?: string | null
@@ -53,7 +61,7 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) throw new Error('Unauthorized')
+    if (!authHeader) return ok({ error: 'Unauthorized' })
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -63,38 +71,36 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userErr } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', ''),
     )
-    if (userErr || !user) throw new Error('Unauthorized')
+    if (userErr || !user) return ok({ error: 'Unauthorized' })
 
     const { items, consents } = await req.json() as {
       items: BookingItem[]
       consents?: ConsentData
     }
 
-    if (!items || items.length === 0) throw new Error('No items in booking')
+    if (!items || items.length === 0) return ok({ error: 'No items in booking' })
 
     const origin = req.headers.get('origin') ?? 'http://localhost:5173'
     const signedAt = new Date().toISOString()
 
-    // Process each booking item
+    // Process each booking item, keeping a reference to the original item
     const processedItems: Array<{
-      term: any
+      originalItem: BookingItem
+      term: Record<string, unknown>
       school: { id: string; name: string }
       childId: string | null
       childName: string
       pricePence: number
-      clubTermId: string
-      schoolId: string
     }> = []
 
     for (const item of items) {
-      // Fetch term + school
       const { data: term, error: termErr } = await supabase
         .from('club_terms')
         .select('*, school:schools(id,name)')
         .eq('id', item.club_term_id)
         .eq('is_active', true)
         .single()
-      if (termErr || !term) throw new Error(`Term not found: ${item.club_term_id}`)
+      if (termErr || !term) return ok({ error: `Term not found or inactive` })
 
       const school = term.school as { id: string; name: string }
 
@@ -104,21 +110,23 @@ Deno.serve(async (req) => {
         .select('id', { count: 'exact', head: true })
         .eq('club_term_id', item.club_term_id)
         .eq('status', 'confirmed')
-      if ((count ?? 0) >= term.capacity) throw new Error(`${school.name} club is full`)
+      if ((count ?? 0) >= (term.capacity as number)) return ok({ error: `${school.name} is full` })
 
-      // Check for duplicate booking for this parent + term
+      // Duplicate check: same parent, same term, same child name — confirmed bookings only
+      // (pending_payment is fine; they may be mid-checkout)
+      const childName = item.child.full_name
       const { count: dupCount } = await supabase
         .from('parent_bookings')
         .select('id', { count: 'exact', head: true })
         .eq('club_term_id', item.club_term_id)
         .eq('parent_id', user.id)
-        .in('status', ['confirmed', 'pending_payment'])
-      if ((dupCount ?? 0) > 0) throw new Error(`Already have a booking for ${school.name}`)
+        .ilike('child_name', childName)
+        .eq('status', 'confirmed')
+      if ((dupCount ?? 0) > 0) return ok({ error: `${childName} already has a confirmed booking for ${school.name}` })
 
-      // Upsert child record
+      // Upsert child profile
       let childId: string | null = null
       if (item.existing_child_id) {
-        // Update existing child with any new info
         await supabase
           .from('parent_children')
           .update({ ...item.child })
@@ -137,7 +145,14 @@ Deno.serve(async (req) => {
         childId = savedChild?.id ?? null
       }
 
-      processedItems.push({ term, school, childId, childName: item.child.full_name, pricePence: term.price_pence, clubTermId: item.club_term_id, schoolId: school.id })
+      processedItems.push({
+        originalItem: item,
+        term,
+        school,
+        childId,
+        childName,
+        pricePence: term.price_pence as number,
+      })
     }
 
     // Build Stripe line items
@@ -146,18 +161,17 @@ Deno.serve(async (req) => {
         currency: 'gbp',
         product_data: {
           name: `ASO Club — ${pi.school.name}`,
-          description: `${pi.term.term_name} · ${pi.term.num_sessions} sessions · ${pi.childName}`,
+          description: `${(pi.term as any).term_name} · ${(pi.term as any).num_sessions} sessions · ${pi.childName}`,
         },
         unit_amount: pi.pricePence,
       },
       quantity: 1,
     }))
 
-    // Metadata for webhook — store all booking info as JSON
     const bookingsMeta = processedItems.map(pi => ({
-      club_term_id: pi.clubTermId,
+      club_term_id: pi.originalItem.club_term_id,
       parent_child_id: pi.childId ?? '',
-      school_id: pi.schoolId,
+      school_id: pi.school.id,
     }))
 
     const session = await stripe.checkout.sessions.create({
@@ -173,16 +187,17 @@ Deno.serve(async (req) => {
       },
     })
 
-    // Insert pending bookings for all items
+    // Insert all pending bookings — each uses its own originalItem data
     const bookingRows = processedItems.map(pi => ({
       parent_id: user.id,
-      school_id: pi.schoolId,
-      club_term_id: pi.clubTermId,
+      school_id: pi.school.id,
+      club_term_id: pi.originalItem.club_term_id,
       parent_child_id: pi.childId,
       child_name: pi.childName,
-      child_year_group: items.find(i => i.club_term_id === pi.clubTermId)?.child.year_group ?? null,
-      child_class: items.find(i => i.club_term_id === pi.clubTermId)?.child.class_name ?? null,
-      child_additional_needs: items.find(i => i.club_term_id === pi.clubTermId)?.child.additional_needs ?? null,
+      child_dob: pi.originalItem.child.date_of_birth ?? null,
+      child_year_group: pi.originalItem.child.year_group ?? null,
+      child_class: pi.originalItem.child.class_name ?? null,
+      child_additional_needs: pi.originalItem.child.additional_needs ?? null,
       stripe_session_id: session.id,
       amount_pence: pi.pricePence,
       status: 'pending_payment',
@@ -194,15 +209,12 @@ Deno.serve(async (req) => {
       signed_at: signedAt,
     }))
 
-    await supabase.from('parent_bookings').insert(bookingRows)
+    const { error: insertErr } = await supabase.from('parent_bookings').insert(bookingRows)
+    if (insertErr) return ok({ error: `Failed to create booking: ${insertErr.message}` })
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...CORS, 'Content-Type': 'application/json' },
-    })
+    return ok({ url: session.url })
+
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
-      status: 400,
-      headers: { ...CORS, 'Content-Type': 'application/json' },
-    })
+    return ok({ error: (err as Error).message })
   }
 })
