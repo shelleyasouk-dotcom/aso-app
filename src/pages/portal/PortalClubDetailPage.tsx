@@ -267,7 +267,7 @@ export function PortalClubDetailPage() {
             {[
               'Expert coaching from qualified, DBS-checked staff',
               'Multi-sport programme covering a range of activities',
-              'UKAG award progression to recognise achievement',
+              'UKAG Award Pathway (Level 1–6) to recognise achievement',
               'Inclusive sessions suitable for all ability levels',
               'Safe, structured environment with safeguarding trained coaches',
             ].map(point => (

@@ -4,9 +4,9 @@ import { PortalLayout } from '../../components/layout/PortalLayout'
 const AFFILIATIONS = [
   {
     abbr: 'UKAG',
-    name: 'UK Active Gymnastics',
-    description: 'Our gymnastics programmes are fully aligned with the UKAG award pathway, giving children a recognised progression framework from Level 1 to Level 5.',
-    category: 'Governing Body',
+    name: 'UK Academies of Gymnastics',
+    description: 'Our gymnastics programmes are fully aligned with the nationally recognised UKAG Award Pathway, providing children with a clear and structured progression journey from Level 1 through to Level 6.',
+    category: 'Training & Licensing',
     color: 'bg-blue-600',
     link: null,
   },

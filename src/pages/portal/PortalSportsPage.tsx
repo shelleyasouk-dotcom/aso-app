@@ -66,10 +66,10 @@ const SPORTS = [
   {
     emoji: '🤸',
     name: 'Gymnastics',
-    tagline: 'UKAG-accredited programme',
-    description: 'British Gymnastics and UKAG-aligned sessions building core strength, flexibility and movement confidence through floor and apparatus work.',
+    tagline: 'UKAG Award Pathway programme',
+    description: 'Sessions fully aligned with the UKAG Award Pathway, building core strength, flexibility, coordination, and technical gymnastics skills through progressive floor and apparatus work.',
     ageRange: '4–11',
-    benefits: ['Core strength', 'Flexibility', 'Body awareness', 'UKAG awards'],
+    benefits: ['Core strength', 'Flexibility', 'Coordination', 'UKAG Level 1–6'],
     color: 'bg-pink-50 border-pink-200',
     badge: 'bg-pink-100 text-pink-700',
   },
@@ -152,19 +152,20 @@ export function PortalSportsPage() {
       <section className="bg-[#1a3a6b] text-white py-10 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="text-4xl mb-3">🏅</div>
-          <h2 className="text-2xl font-extrabold mb-2">UKAG Award Progression</h2>
+          <h2 className="text-2xl font-extrabold mb-2">UKAG Award Pathway</h2>
           <p className="text-white/70 text-sm mb-6 leading-relaxed">
-            All ASO sessions are aligned with the UK Active Gymnastics (UKAG) award pathway, giving children a structured route from Level 1 through to Level 5. Awards are presented in sessions and certificates sent home.
+            Our gymnastics programmes are fully aligned with the nationally recognised UKAG Award Pathway, providing children with a clear and structured progression journey from Level 1 through to Level 6. Each level develops confidence, coordination, strength, flexibility, and technical gymnastics skills in a safe and engaging environment. Awards are presented in sessions and certificates sent home.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            {['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5'].map((level, i) => (
+            {['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6'].map((level, i) => (
               <div key={level} className="flex flex-col items-center gap-1">
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${
                   i === 0 ? 'bg-gray-300 border-gray-300 text-gray-700' :
                   i === 1 ? 'bg-yellow-300 border-yellow-300 text-yellow-800' :
                   i === 2 ? 'bg-amber-400 border-amber-400 text-amber-900' :
                   i === 3 ? 'bg-gray-400 border-gray-400 text-white' :
-                  'bg-yellow-500 border-yellow-500 text-yellow-900'
+                  i === 4 ? 'bg-yellow-500 border-yellow-500 text-yellow-900' :
+                  'bg-[#f5c518] border-[#f5c518] text-[#1a3a6b]'
                 }`}>
                   {i + 1}
                 </div>

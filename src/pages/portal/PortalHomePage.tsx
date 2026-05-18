@@ -20,7 +20,7 @@ const SPORTS = [
 const HOW_IT_WORKS = [
   { step: '1', title: 'Find Your Club', desc: 'Search by region or school to see ASO clubs near you.' },
   { step: '2', title: 'Book a Place', desc: 'Secure your child\'s spot with our simple booking process.' },
-  { step: '3', title: 'Get Active!', desc: 'Your child joins expert-led sessions and earns UKAG awards.' },
+  { step: '3', title: 'Get Active!', desc: 'Your child joins expert-led sessions and progresses through the UKAG Award Pathway.' },
 ]
 
 export function PortalHomePage() {
@@ -185,7 +185,7 @@ export function PortalHomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               'DBS-checked, qualified coaches at every session',
-              'UKAG award progression for all abilities',
+              'UKAG Award Pathway progression — Level 1 to Level 6',
               'Inclusive — every child welcomed regardless of ability',
               'Safeguarding trained staff in line with UK standards',
               'Regular parent updates and progress tracking',

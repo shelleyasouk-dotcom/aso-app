@@ -56,7 +56,7 @@ export function PortalAboutPage() {
               We believe every child deserves the opportunity to feel confident, capable, and proud of what they can achieve, regardless of their background or ability. Through high-quality coaching, structured progression pathways, and positive sporting experiences, we help children build not only physical skills, but resilience, confidence, discipline, and self-belief.
             </p>
             <p className="text-gray-600 text-sm leading-relaxed mt-3">
-              We proudly partner with primary schools across the UK to deliver professional after-school programmes that combine fun, development, and achievement. Through our nationally recognised UKAG award pathways, children are given clear goals to work towards while representing their school with pride and becoming part of something bigger than themselves.
+              We proudly partner with primary schools across the UK to deliver professional after-school programmes that combine fun, development, and achievement. Through the nationally recognised UKAG Award Pathway, children are given a clear and structured progression journey from Level 1 through to Level 6, working towards real goals while representing their school with pride and becoming part of something bigger than themselves.
             </p>
             <p className="text-gray-600 text-sm leading-relaxed mt-3 font-semibold text-gray-700">
               Our aim is simple — create healthier, happier, more confident children through sport.
@@ -119,7 +119,7 @@ export function PortalAboutPage() {
             {[
               { title: 'In-school delivery', desc: 'Sessions run within school grounds so parents don\'t need to arrange extra travel. Your child stays safe on a site they know.' },
               { title: 'Multi-sport approach', desc: 'Rather than specialising early, we expose children to a range of sports so they discover what they love.' },
-              { title: 'Award recognition', desc: 'The UKAG pathway gives children something concrete to achieve — certificates, badges, and recognition in school.' },
+              { title: 'Award recognition', desc: 'The UKAG Award Pathway (Level 1–6) gives children something concrete to achieve — certificates and recognition in school.' },
               { title: 'Small group coaching', desc: 'Kept to manageable group sizes so every child gets attention, feedback, and a great experience every session.' },
             ].map(item => (
               <div key={item.title} className="bg-white/10 rounded-xl p-5">
