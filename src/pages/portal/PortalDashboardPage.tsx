@@ -1,17 +1,45 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, LogOut, ChevronRight, BookOpen, FileText } from 'lucide-react'
+import { Search, LogOut, ChevronRight, BookOpen, FileText, Calendar, CheckCircle, Clock } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import type { ParentBooking } from '../../types'
+
+const STATUS_CONF = {
+  confirmed:      { label: 'Confirmed', colour: 'bg-green-100 text-green-700', icon: CheckCircle },
+  pending_payment:{ label: 'Awaiting payment', colour: 'bg-amber-100 text-amber-700', icon: Clock },
+  cancelled:      { label: 'Cancelled', colour: 'bg-gray-100 text-gray-500', icon: null },
+  refunded:       { label: 'Refunded', colour: 'bg-gray-100 text-gray-500', icon: null },
+}
 
 export function PortalDashboardPage() {
   const { profile, signOut } = useAuth()
   const navigate = useNavigate()
+  const [bookings, setBookings] = useState<ParentBooking[]>([])
+  const [loadingBookings, setLoadingBookings] = useState(true)
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'there'
+
+  useEffect(() => {
+    if (!profile) return
+    supabase
+      .from('parent_bookings')
+      .select('*, school:schools(name), club_term:club_terms(term_name,num_sessions,start_date,end_date)')
+      .eq('parent_id', profile.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setBookings((data ?? []) as ParentBooking[])
+        setLoadingBookings(false)
+      })
+  }, [profile])
+
+  const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending_payment')
 
   return (
     <PortalLayout>
       <div className="max-w-2xl mx-auto px-4 py-8">
+
         {/* Welcome */}
         <div className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] text-white rounded-2xl p-5 mb-6">
           <div className="flex items-center justify-between gap-3 mb-3">
@@ -30,7 +58,12 @@ export function PortalDashboardPage() {
             </button>
           </div>
           <h1 className="text-2xl font-extrabold text-white">Hi, {firstName}!</h1>
-          <p className="text-sm text-white/70 mt-0.5">Welcome to your Community Hub account.</p>
+          <p className="text-sm text-white/70 mt-0.5">
+            {activeBookings.length > 0
+              ? `You have ${activeBookings.length} active booking${activeBookings.length !== 1 ? 's' : ''}.`
+              : 'Welcome to your Community Hub account.'
+            }
+          </p>
         </div>
 
         {/* T&C banner */}
@@ -39,8 +72,8 @@ export function PortalDashboardPage() {
             <FileText size={18} className="text-white" />
           </div>
           <div className="flex-1">
-            <p className="font-bold text-amber-800 text-sm">Please read our Terms &amp; Conditions</p>
-            <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">Before booking, please read and familiarise yourself with our parent T&amp;Cs covering fees, cancellations, safeguarding and more.</p>
+            <p className="font-bold text-amber-800 text-sm">Terms &amp; Conditions</p>
+            <p className="text-xs text-amber-700 mt-0.5">Please read before booking — covers fees, cancellations &amp; safeguarding.</p>
           </div>
           <button
             onClick={() => navigate('/portal/terms')}
@@ -51,24 +84,74 @@ export function PortalDashboardPage() {
         </div>
 
         {/* My Bookings */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-4">
-          <div className="flex items-center gap-2 mb-4">
-            <BookOpen size={18} className="text-[#1a3a6b]" />
-            <h2 className="font-bold text-gray-800">My Bookings</h2>
-          </div>
-          <div className="text-center py-8 text-gray-400">
-            <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <BookOpen size={24} className="text-gray-300" />
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <BookOpen size={18} className="text-[#1a3a6b]" />
+              <h2 className="font-bold text-gray-800">My Bookings</h2>
             </div>
-            <p className="font-medium text-sm text-gray-500">No bookings yet</p>
-            <p className="text-xs mt-1 text-gray-400">Once you book your child into a club, it will appear here.</p>
+            <button
+              onClick={() => navigate('/portal/clubs')}
+              className="text-xs font-semibold text-[#1a3a6b] flex items-center gap-1"
+            >
+              Find a club <ChevronRight size={12} />
+            </button>
           </div>
-          <div className="mt-2 bg-blue-50 rounded-xl p-4">
-            <p className="text-sm font-semibold text-blue-800 mb-1">Online booking coming soon</p>
-            <p className="text-xs text-blue-700 leading-relaxed">
-              We're setting up online booking. In the meantime, contact your school office or the ASO coach at your school to register your child.
-            </p>
-          </div>
+
+          {loadingBookings ? (
+            <div className="text-center py-6 text-gray-400 text-sm">Loading…</div>
+          ) : activeBookings.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <BookOpen size={24} className="text-gray-300" />
+              </div>
+              <p className="font-medium text-sm text-gray-500">No active bookings</p>
+              <p className="text-xs mt-1 text-gray-400">Find a club and book your child's place.</p>
+              <button
+                onClick={() => navigate('/portal/clubs')}
+                className="mt-4 bg-[#1a3a6b] text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-[#142f58] transition-colors"
+              >
+                Browse clubs
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {activeBookings.map(b => {
+                const school = (b.school as any)?.name
+                const term = b.club_term as any
+                const conf = STATUS_CONF[b.status]
+                const Icon = conf.icon
+                return (
+                  <div key={b.id} className="border border-gray-100 rounded-xl p-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <p className="font-bold text-gray-800 text-sm">{school}</p>
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${conf.colour}`}>
+                        {Icon && <Icon size={10} />}
+                        {conf.label}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-0.5">
+                      {b.child_name}
+                      {(b.child_year_group || b.child_class) && ` · ${[b.child_year_group, b.child_class].filter(Boolean).join(' ')}`}
+                    </p>
+                    {term && (
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1">
+                        <Calendar size={11} />
+                        {term.term_name} · {new Date(term.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        {' – '}
+                        {new Date(term.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      </div>
+                    )}
+                    {b.amount_pence && b.status === 'confirmed' && (
+                      <p className="text-xs text-green-700 font-semibold mt-1">
+                        £{(b.amount_pence / 100).toFixed(2)} paid
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Quick actions */}
@@ -98,20 +181,6 @@ export function PortalDashboardPage() {
             <div className="flex-1">
               <p className="font-semibold text-gray-800 text-sm">Our Sports</p>
               <p className="text-xs text-gray-500 mt-0.5">See what sports ASO offers</p>
-            </div>
-            <ChevronRight size={16} className="text-gray-300 group-hover:text-[#1a3a6b] transition-colors" />
-          </button>
-
-          <button
-            onClick={() => navigate('/portal/about')}
-            className="flex items-center gap-3 bg-white border border-gray-200 rounded-xl p-4 hover:border-[#1a3a6b] transition-colors group text-left"
-          >
-            <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
-              <span className="text-lg">🏅</span>
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800 text-sm">About ASO</p>
-              <p className="text-xs text-gray-500 mt-0.5">Our mission, values &amp; coaches</p>
             </div>
             <ChevronRight size={16} className="text-gray-300 group-hover:text-[#1a3a6b] transition-colors" />
           </button>

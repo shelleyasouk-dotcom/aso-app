@@ -352,6 +352,57 @@ export interface SchoolDocument {
   created_at: string
 }
 
+export interface ClubTerm {
+  id: string
+  school_id: string
+  term_name: string
+  start_date: string
+  end_date: string
+  num_sessions: number
+  price_pence: number
+  capacity: number
+  priority_booking_opens: string | null
+  open_booking_opens: string | null
+  is_active: boolean
+  notes: string | null
+  created_at: string
+  school?: School
+}
+
+export interface ParentChild {
+  id: string
+  parent_id: string
+  full_name: string
+  date_of_birth: string | null
+  year_group: string | null
+  class_name: string | null
+  additional_needs: string | null
+  created_at: string
+}
+
+export interface ParentBooking {
+  id: string
+  parent_id: string
+  school_id: string
+  club_term_id: string | null
+  parent_child_id: string | null
+  child_name: string
+  child_dob: string | null
+  child_year_group: string | null
+  child_class: string | null
+  child_additional_needs: string | null
+  sport: string | null
+  notes: string | null
+  stripe_session_id: string | null
+  stripe_payment_intent: string | null
+  amount_pence: number | null
+  status: 'pending_payment' | 'confirmed' | 'cancelled' | 'refunded'
+  created_at: string
+  updated_at: string
+  school?: School
+  club_term?: ClubTerm
+}
+
 export type IncidentType = 'accident' | 'incident' | 'near_miss'
 export type IncidentStatus = 'draft' | 'submitted' | 'reviewed' | 'closed'
 

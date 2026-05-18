@@ -170,6 +170,7 @@ export function SchoolPortalPage() {
   const qs = isAdminView ? `?schoolId=${params.get('schoolId')}` : ''
   const tiles = [
     { label: 'Weekly Register',  icon: ClipboardList,  path: `/school-portal/register${qs}`,    desc: 'View attendance records' },
+    { label: 'Class Roster',     icon: Users,          path: `/school-portal/roster${qs}`,       desc: 'Children booked this term' },
     { label: 'Club Schedule',    icon: Calendar,       path: `/school-portal/club${qs}`,         desc: 'Upcoming sessions' },
     { label: 'Documents',        icon: FolderOpen,     path: `/school-portal/documents${qs}`,    desc: 'Policies & shared files' },
     { label: 'Safeguarding',     icon: ShieldCheck,    path: `/school-portal/safeguarding${qs}`, desc: 'DSL & DDSL contacts' },

@@ -12,6 +12,11 @@ import { PortalLoginPage } from './pages/portal/PortalLoginPage'
 import { PortalRegisterPage } from './pages/portal/PortalRegisterPage'
 import { PortalDashboardPage } from './pages/portal/PortalDashboardPage'
 import { PortalTermsPage } from './pages/portal/PortalTermsPage'
+import { PortalBookingPage } from './pages/portal/PortalBookingPage'
+import { PortalBookingConfirmedPage } from './pages/portal/PortalBookingConfirmedPage'
+import { ClubTermsAdminPage } from './pages/admin/ClubTermsAdminPage'
+import { BookingsAdminPage } from './pages/admin/BookingsAdminPage'
+import { SchoolRosterPage } from './pages/school/SchoolRosterPage'
 
 import { LoginPage } from './pages/auth/LoginPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
@@ -277,6 +282,25 @@ export default function App() {
           {/* Parent portal — protected (parent login required) */}
           <Route path="/portal/my-bookings" element={
             <ParentProtectedRoute><PortalDashboardPage /></ParentProtectedRoute>
+          } />
+          <Route path="/portal/book/:termId" element={<PortalBookingPage />} />
+          <Route path="/portal/booking-confirmed" element={<PortalBookingConfirmedPage />} />
+
+          {/* School portal — class roster */}
+          <Route path="/school-portal/roster" element={
+            <ProtectedRoute><SchoolRosterPage /></ProtectedRoute>
+          } />
+
+          {/* Admin — bookings & club terms */}
+          <Route path="/admin/club-terms" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <ClubTermsAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/bookings" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <BookingsAdminPage />
+            </ProtectedRoute>
           } />
 
           {/* Catch-all */}
