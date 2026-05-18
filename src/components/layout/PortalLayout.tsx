@@ -64,24 +64,43 @@ export function PortalLayout({ children }: PortalLayoutProps) {
 
           {/* Auth area */}
           <div className="ml-auto flex items-center gap-2">
-            {profile && isParent ? (
+            {profile ? (
               <div className="relative">
                 <button
                   onClick={() => setUserMenuOpen(v => !v)}
                   className="flex items-center gap-2 bg-white/10 hover:bg-white/20 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors"
                 >
                   <User size={16} />
-                  <span className="hidden sm:block max-w-28 truncate">{profile.full_name}</span>
+                  <span className="hidden sm:block max-w-32 truncate">{profile.full_name.split(' ')[0]}</span>
                   <ChevronDown size={14} />
                 </button>
                 {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 w-48 text-gray-800">
-                    <button
-                      onClick={() => { navigate('/portal/my-bookings'); setUserMenuOpen(false) }}
-                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 font-medium"
-                    >
-                      My Bookings
-                    </button>
+                  <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 w-52 text-gray-800 z-50">
+                    <div className="px-4 py-2.5 border-b border-gray-100">
+                      <p className="text-xs text-gray-400">Signed in as</p>
+                      <p className="text-sm font-semibold text-gray-800 truncate">{profile.full_name}</p>
+                      {profile.role !== 'parent' && (
+                        <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded mt-0.5 inline-block capitalize">
+                          {profile.role.replace('_', ' ')}
+                        </span>
+                      )}
+                    </div>
+                    {isParent && (
+                      <button
+                        onClick={() => { navigate('/portal/my-bookings'); setUserMenuOpen(false) }}
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 font-medium"
+                      >
+                        My Bookings
+                      </button>
+                    )}
+                    {!isParent && (
+                      <button
+                        onClick={() => { navigate('/dashboard'); setUserMenuOpen(false) }}
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 font-medium text-[#1a3a6b]"
+                      >
+                        ← Back to Staff Portal
+                      </button>
+                    )}
                     <hr className="my-1 border-gray-100" />
                     <button
                       onClick={() => { signOut(); setUserMenuOpen(false) }}
@@ -93,7 +112,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                   </div>
                 )}
               </div>
-            ) : !profile ? (
+            ) : (
               <>
                 <button
                   onClick={() => navigate('/portal/login')}
@@ -108,7 +127,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                   Register
                 </button>
               </>
-            ) : null}
+            )}
 
             {/* Mobile hamburger */}
             <button

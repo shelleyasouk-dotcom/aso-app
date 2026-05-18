@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, ChevronDown, ChevronUp, Trash2, Users } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, Trash2, Users, Pencil } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -17,6 +17,7 @@ export function ClubTermsAdminPage() {
   const [loading, setLoading] = useState(true)
   const [expandedSchool, setExpandedSchool] = useState<string | null>(null)
   const [showForm, setShowForm] = useState<string | null>(null) // school id
+  const [editingTermId, setEditingTermId] = useState<string | null>(null)
 
   // Form state
   const [termName, setTermName] = useState('')
@@ -62,6 +63,38 @@ export function ClubTermsAdminPage() {
     setTermName(''); setStartDate(''); setEndDate('')
     setNumSessions('6'); setPricePence('5400'); setCapacity('16')
     setPriorityDate(''); setOpenDate('')
+  }
+
+  function startEditing(term: TermWithCount) {
+    setEditingTermId(term.id)
+    setTermName(term.term_name)
+    setStartDate(term.start_date)
+    setEndDate(term.end_date)
+    setNumSessions(String(term.num_sessions))
+    setPricePence(String(term.price_pence))
+    setCapacity(String(term.capacity))
+    setPriorityDate(term.priority_booking_opens ?? '')
+    setOpenDate(term.open_booking_opens ?? '')
+    setShowForm(null)
+  }
+
+  async function handleUpdate() {
+    if (!editingTermId) return
+    setSaving(true)
+    await supabase.from('club_terms').update({
+      term_name: termName,
+      start_date: startDate,
+      end_date: endDate,
+      num_sessions: parseInt(numSessions),
+      price_pence: parseInt(pricePence),
+      capacity: parseInt(capacity),
+      priority_booking_opens: priorityDate || null,
+      open_booking_opens: openDate || null,
+    }).eq('id', editingTermId)
+    setEditingTermId(null)
+    resetForm()
+    await loadAll()
+    setSaving(false)
   }
 
   async function handleCreate(schoolId: string) {
@@ -130,53 +163,87 @@ export function ClubTermsAdminPage() {
                   {/* Existing terms */}
                   {schoolTerms.map(term => (
                     <div key={term.id} className={`border rounded-xl p-3 ${term.is_active ? 'border-[#1a3a6b]/30 bg-[#1a3a6b]/3' : 'border-gray-200 bg-gray-50'}`}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-semibold text-sm text-gray-800">{term.term_name}</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(term.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                            {' – '}
-                            {new Date(term.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            {' · '}{term.num_sessions} sessions
-                          </p>
-                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                            <span className="text-xs font-semibold text-[#1a3a6b]">
-                              £{(term.price_pence / 100).toFixed(0)}
-                            </span>
-                            <span className="flex items-center gap-1 text-xs text-gray-500">
-                              <Users size={11} />
-                              {term.confirmedCount}/{term.capacity} booked
-                            </span>
-                            {term.priority_booking_opens && (
-                              <span className="text-xs text-blue-600">
-                                Priority: {new Date(term.priority_booking_opens).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      {editingTermId === term.id ? (
+                        <div className="flex flex-col gap-3">
+                          <p className="text-sm font-bold text-[#1a3a6b]">Edit Term</p>
+                          <Input id="etn" label="Term name" placeholder="e.g. Spring 1 2026" value={termName} onChange={e => setTermName(e.target.value)} />
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input id="esd" label="Start date" type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                            <Input id="eed" label="End date" type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <Input id="ens" label="Sessions" type="number" value={numSessions} onChange={e => setNumSessions(e.target.value)} />
+                            <Input id="epp" label="Price (p)" type="number" value={pricePence} onChange={e => setPricePence(e.target.value)} />
+                            <Select label="Capacity" value={capacity} onChange={e => setCapacity(e.target.value)}>
+                              {CAPACITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                            </Select>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input id="epd" label="Priority opens" type="date" value={priorityDate} onChange={e => setPriorityDate(e.target.value)} />
+                            <Input id="eod" label="Open booking" type="date" value={openDate} onChange={e => setOpenDate(e.target.value)} />
+                          </div>
+                          <p className="text-xs text-gray-400">Price in pence: £54 = 5400.</p>
+                          <div className="flex gap-2">
+                            <Button size="sm" disabled={!termName || !startDate || !endDate || saving} onClick={handleUpdate}>
+                              {saving ? 'Saving…' : 'Save Changes'}
+                            </Button>
+                            <Button size="sm" variant="secondary" onClick={() => { setEditingTermId(null); resetForm() }}>
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold text-sm text-gray-800">{term.term_name}</p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(term.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                              {' – '}
+                              {new Date(term.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              {' · '}{term.num_sessions} sessions
+                            </p>
+                            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                              <span className="text-xs font-semibold text-[#1a3a6b]">
+                                £{(term.price_pence / 100).toFixed(0)}
                               </span>
-                            )}
-                            {term.open_booking_opens && (
-                              <span className="text-xs text-green-600">
-                                Open: {new Date(term.open_booking_opens).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                              <span className="flex items-center gap-1 text-xs text-gray-500">
+                                <Users size={11} />
+                                {term.confirmedCount}/{term.capacity} booked
                               </span>
+                              {term.priority_booking_opens && (
+                                <span className="text-xs text-blue-600">
+                                  Priority: {new Date(term.priority_booking_opens).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                </span>
+                              )}
+                              {term.open_booking_opens && (
+                                <span className="text-xs text-green-600">
+                                  Open: {new Date(term.open_booking_opens).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              onClick={() => toggleActive(term)}
+                              className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
+                                term.is_active
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-gray-100 text-gray-400'
+                              }`}
+                            >
+                              {term.is_active ? 'Active' : 'Draft'}
+                            </button>
+                            <button onClick={() => startEditing(term)} title="Edit term">
+                              <Pencil size={14} className="text-gray-400 hover:text-[#1a3a6b]" />
+                            </button>
+                            {term.confirmedCount === 0 && (
+                              <button onClick={() => deleteTerm(term.id)}>
+                                <Trash2 size={15} className="text-red-400 hover:text-red-600" />
+                              </button>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            onClick={() => toggleActive(term)}
-                            className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
-                              term.is_active
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-400'
-                            }`}
-                          >
-                            {term.is_active ? 'Active' : 'Draft'}
-                          </button>
-                          {term.confirmedCount === 0 && (
-                            <button onClick={() => deleteTerm(term.id)}>
-                              <Trash2 size={15} className="text-red-400 hover:text-red-600" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                      )}
                     </div>
                   ))}
 
