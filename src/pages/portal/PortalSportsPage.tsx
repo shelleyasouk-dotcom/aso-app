@@ -96,10 +96,10 @@ const SPORTS = [
   {
     emoji: '🤾',
     name: 'Trampolining',
-    tagline: 'Bounce, flip and fly safely',
-    description: 'British Gymnastics-aligned trampolining developing core strength, coordination and aerial awareness through progressive skills in a fully supervised environment.',
+    tagline: 'UKAG Award Pathway programme',
+    description: 'Trampolining delivered through the UKAG Award Pathway, developing core strength, coordination and aerial awareness through progressive skills in a fully supervised environment.',
     ageRange: '8–16',
-    benefits: ['Core strength', 'Coordination', 'Spatial awareness', 'Confidence'],
+    benefits: ['Core strength', 'Coordination', 'Spatial awareness', 'UKAG Level 1–6'],
     color: 'bg-indigo-50 border-indigo-200',
     badge: 'bg-indigo-100 text-indigo-700',
   },
