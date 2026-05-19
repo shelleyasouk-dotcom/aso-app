@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@layer components {
+  .input {
+    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ukag-500 focus:border-ukag-500;
+  }
+}
+
+@theme {
+  --color-ukag-50: #faf5ff;
+  --color-ukag-100: #f3e8ff;
+  --color-ukag-200: #e9d5ff;
+  --color-ukag-300: #d8b4fe;
+  --color-ukag-400: #c084fc;
+  --color-ukag-500: #a855f7;
+  --color-ukag-600: #9333ea;
+  --color-ukag-700: #7e22ce;
+  --color-ukag-800: #6b21a8;
+  --color-ukag-900: #581c87;
+}
