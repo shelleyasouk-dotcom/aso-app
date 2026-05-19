@@ -260,7 +260,8 @@ export function AbsencesPage() {
   // ── Scope ──────────────────────────────────────────────────────────────────
   const initScope = useCallback(async () => {
     if (!profile) return
-    if (profile.role === 'director') { setMySchoolIds(null); return }
+    // Director and area lead: null = "use area-based scope in loadTeam"
+    if (profile.role === 'director' || profile.role === 'area_lead') { setMySchoolIds(null); return }
     const { data } = await supabase
       .from('staff_school_assignments')
       .select('school_id')
@@ -290,6 +291,14 @@ export function AbsencesPage() {
       const { data } = await supabase.from('profiles').select('id, full_name, role, email, created_at').order('full_name')
       setTeamStaff((data as Profile[]) ?? [])
       staffIds = (data ?? []).map((s: Profile) => s.id)
+    } else if (profile.role === 'area_lead') {
+      // Scope to staff in the same area
+      let q = supabase.from('profiles').select('id, full_name, role, email, created_at').order('full_name')
+      if (profile.area) q = q.eq('area', profile.area)
+      const { data } = await q
+      const members = ((data as Profile[]) ?? []).filter(s => s.id !== profile.id)
+      setTeamStaff(members)
+      staffIds = members.map(m => m.id)
     } else if (mySchoolIds !== null && mySchoolIds.length > 0) {
       const { data: assignments } = await supabase
         .from('staff_school_assignments')
