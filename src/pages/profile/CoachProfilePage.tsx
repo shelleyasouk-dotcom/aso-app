@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X, Lock, User } from 'lucide-react'
+import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X, Lock, User, IdCard } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -189,6 +189,33 @@ function DocRow({ doc, canDelete, onView, onDelete }: {
   )
 }
 
+// ─── Compliance row for full-screen ID ────────────────────────────────────
+
+function ComplianceRow({ label, status, note, last }: {
+  label: string
+  status: 'yes' | 'no' | 'na'
+  note?: string
+  last?: boolean
+}) {
+  const chip = {
+    yes: { text: 'YES', cls: 'bg-green-500 text-white' },
+    no:  { text: 'NO',  cls: 'bg-red-500 text-white' },
+    na:  { text: 'N/A', cls: 'bg-white/20 text-white/60' },
+  }[status]
+
+  return (
+    <div className={`flex items-center justify-between px-4 py-3.5 ${last ? '' : 'border-b border-white/10'}`}>
+      <div>
+        <p className="text-white/80 text-sm font-medium">{label}</p>
+        {note && <p className="text-white/35 text-xs mt-0.5">{note}</p>}
+      </div>
+      <span className={`text-xs font-extrabold px-3 py-1 rounded-full tracking-wide ${chip.cls}`}>
+        {chip.text}
+      </span>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────
 
 export function CoachProfilePage() {
@@ -203,6 +230,7 @@ export function CoachProfilePage() {
     safeguarding_expiry: '',
     first_aid_expiry: '',
   })
+  const [showFullId, setShowFullId] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
@@ -479,8 +507,103 @@ export function CoachProfilePage() {
 
   const initials = subject.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 
+  const COACHING_ROLES = ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach']
+  const needsFirstAid = COACHING_ROLES.includes(subject.role)
+
+  function issuedWithin3Years(dateStr: string | null | undefined) {
+    if (!dateStr) return false
+    const issued = new Date(dateStr)
+    const cutoff = new Date()
+    cutoff.setFullYear(cutoff.getFullYear() - 3)
+    return issued >= cutoff
+  }
+
+  const dbsValid         = !!fields.dbs_number
+  const dbsCurrent       = issuedWithin3Years(fields.dbs_expiry)
+  const safeguardCurrent = issuedWithin3Years(fields.safeguarding_expiry)
+  const firstAidCurrent  = issuedWithin3Years(fields.first_aid_expiry)
+
   return (
     <Layout title={isOwnProfile ? 'My Profile' : subject.full_name} showBack>
+
+      {/* ── Full-screen ID overlay ── */}
+      {showFullId && (
+        <div className="fixed inset-0 z-50 bg-[#0d2247] flex flex-col" style={{ fontFamily: 'system-ui, sans-serif' }}>
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-5 pt-safe-top pt-6 pb-3 shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 bg-[#f5c518] rounded-xl flex items-center justify-center">
+                <span className="text-[#1a3a6b] font-black text-[11px] leading-none">ASO</span>
+              </div>
+              <span className="text-white/60 text-xs font-semibold tracking-wide uppercase">Digital Staff ID</span>
+            </div>
+            <button
+              onClick={() => setShowFullId(false)}
+              className="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center"
+            >
+              <X size={18} className="text-white" />
+            </button>
+          </div>
+
+          {/* Photo */}
+          <div className="flex flex-col items-center px-6 pt-4 pb-5 shrink-0">
+            <div className="w-32 h-32 rounded-3xl bg-white/10 border-4 border-white/20 overflow-hidden flex items-center justify-center mb-4">
+              {photoUrl
+                ? <img src={photoUrl} alt={subject.full_name} className="w-full h-full object-cover" />
+                : <span className="text-white font-black text-4xl">{initials}</span>
+              }
+            </div>
+            <h1 className="text-white font-extrabold text-2xl leading-tight text-center">{subject.full_name}</h1>
+            <p className="text-[#f5c518] font-semibold text-sm mt-1">{ROLE_LABELS[subject.role]}</p>
+            {subject.area && <p className="text-white/50 text-xs mt-0.5">{subject.area}</p>}
+            <p className="text-white/30 font-mono text-xs mt-2 tracking-widest">
+              ID · {subject.id.slice(0, 8).toUpperCase()}
+            </p>
+          </div>
+
+          {/* Compliance cards */}
+          <div className="flex-1 overflow-y-auto px-5 pb-8">
+            <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+
+              {/* DBS Number */}
+              <div className="px-4 py-3.5 border-b border-white/10">
+                <p className="text-white/40 text-[10px] uppercase tracking-wider mb-0.5">DBS Certificate Number</p>
+                <p className={`font-mono font-bold text-base ${fields.dbs_number ? 'text-white' : 'text-white/25 italic'}`}>
+                  {fields.dbs_number || 'Not recorded'}
+                </p>
+              </div>
+
+              {/* Enhanced DBS */}
+              <ComplianceRow label="Enhanced DBS Checked" status={dbsValid ? 'yes' : 'no'} />
+
+              {/* DBS up to date */}
+              <ComplianceRow label="DBS Up to Date" status={dbsCurrent ? 'yes' : (fields.dbs_expiry ? 'no' : 'no')} note={fields.dbs_expiry ? `Issued ${formatDate(fields.dbs_expiry)}` : undefined} />
+
+              {/* Safeguarding */}
+              <ComplianceRow label="Safeguarding Certificate" status={safeguardCurrent ? 'yes' : (fields.safeguarding_expiry ? 'no' : 'no')} note={fields.safeguarding_expiry ? `Issued ${formatDate(fields.safeguarding_expiry)}` : undefined} />
+
+              {/* First Aid */}
+              <ComplianceRow
+                label="First Aid Certificate"
+                status={needsFirstAid ? (firstAidCurrent ? 'yes' : 'no') : 'na'}
+                note={needsFirstAid && fields.first_aid_expiry ? `Issued ${formatDate(fields.first_aid_expiry)}` : undefined}
+                last
+              />
+            </div>
+
+            {/* Footer */}
+            <div className="mt-5 flex flex-col items-center gap-1">
+              <p className="text-white/30 text-[10px] text-center">
+                Active School Organisation Ltd · Verified {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              </p>
+              <p className="text-white/20 text-[10px] text-center">
+                This digital ID is for verification purposes only
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="px-4 pt-6 flex flex-col gap-5 pb-8">
 
         <CoachIdCard
@@ -494,6 +617,15 @@ export function CoachProfilePage() {
           safeguardingIssued={fields.safeguarding_expiry}
           firstAidIssued={fields.first_aid_expiry}
         />
+
+        {/* Show full ID button */}
+        <button
+          onClick={() => setShowFullId(true)}
+          className="w-full flex items-center justify-center gap-2 bg-[#1a3a6b] text-white font-bold py-3.5 rounded-2xl text-sm active:opacity-80"
+        >
+          <IdCard size={18} />
+          Show Full ID Card
+        </button>
 
         {/* Photo */}
         {canEdit && (
