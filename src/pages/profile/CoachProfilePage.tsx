@@ -309,20 +309,37 @@ export function CoachProfilePage() {
       .upload(path, file, { upsert: true, contentType: mime })
 
     if (storageErr) {
-      if (storageErr.message.includes('Bucket not found') || storageErr.message.includes('not found')) {
-        setUploadError('Storage not configured. Ask your director to run fix_photo_upload.sql in the Supabase SQL editor.')
+      const msg = storageErr.message
+      if (msg.includes('Bucket not found') || msg.includes('not found')) {
+        setUploadError('Storage bucket missing. Run supabase/fix_photo_upload.sql in the Supabase SQL Editor.')
+      } else if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('Unauthorized') || msg.includes('403')) {
+        setUploadError('Permission denied — storage policies not set up. Run supabase/fix_photo_upload.sql in the Supabase SQL Editor.')
       } else {
-        setUploadError(`Upload failed: ${storageErr.message}`)
+        setUploadError(`Upload failed: ${msg}`)
       }
       setUploadStep(null)
       setUploadingPhoto(false)
       return
     }
 
-    setUploadStep('Saving…')
+    setUploadStep('Verifying…')
     const { data: urlData } = supabase.storage.from('coach-files').getPublicUrl(path)
     const url = `${urlData.publicUrl}?t=${Date.now()}`
 
+    // Verify the URL is actually accessible (bucket must be public)
+    try {
+      const probe = await fetch(url, { method: 'HEAD' })
+      if (!probe.ok) {
+        setUploadError(`File uploaded but not publicly accessible (HTTP ${probe.status}). The storage bucket is not set to public. Run supabase/fix_photo_upload.sql in the Supabase SQL Editor, then try again.`)
+        setUploadStep(null)
+        setUploadingPhoto(false)
+        return
+      }
+    } catch {
+      // CORS may block HEAD on some setups — continue anyway
+    }
+
+    setUploadStep('Saving…')
     const { error: dbErr } = await supabase.from('profiles').update({ photo_url: url }).eq('id', targetId)
     if (dbErr) {
       setUploadError(`Could not save photo: ${dbErr.message}`)
@@ -518,8 +535,9 @@ export function CoachProfilePage() {
               </div>
             )}
             {uploadError && (
-              <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
-                <p className="text-sm text-red-700 font-medium">{uploadError}</p>
+              <div className="mt-3 bg-red-100 border-2 border-red-400 rounded-xl px-3 py-3">
+                <p className="text-sm text-red-800 font-bold mb-1">Upload failed</p>
+                <p className="text-sm text-red-700">{uploadError}</p>
               </div>
             )}
           </Card>
