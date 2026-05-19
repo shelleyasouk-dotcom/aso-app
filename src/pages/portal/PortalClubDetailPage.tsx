@@ -60,6 +60,7 @@ export function PortalClubDetailPage() {
           .eq('school_id', id)
           .eq('is_active', true)
           .gte('end_date', new Date().toISOString().split('T')[0])
+          .lt('start_date', `${new Date().getFullYear()}-07-01`) // exclude summer camps
           .order('start_date')
           .limit(1)
           .maybeSingle(),

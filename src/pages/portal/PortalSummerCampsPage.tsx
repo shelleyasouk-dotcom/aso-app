@@ -184,16 +184,33 @@ export function PortalSummerCampsPage() {
   useEffect(() => { loadCamps() }, [])
 
   async function loadCamps() {
-    // Fetch active summer camp terms (July–August 2026)
+    // Fetch active summer camp terms (July–August 2026) — no join to avoid silent failures
     const { data: terms } = await supabase
       .from('club_terms')
-      .select('*, school:schools(id,name,area,address_city,session_day,session_time)')
+      .select('*')
       .gte('start_date', '2026-07-01')
       .lte('start_date', '2026-08-31')
       .eq('is_active', true)
       .order('start_date')
 
-    const termList = (terms ?? []) as LiveTerm[]
+    const rawTerms = (terms ?? []) as ClubTerm[]
+
+    // Fetch schools for those terms separately
+    const schoolIds = [...new Set(rawTerms.map(t => t.school_id))]
+    const schoolMap: Record<string, School> = {}
+    if (schoolIds.length > 0) {
+      const { data: schoolRows } = await supabase
+        .from('schools')
+        .select('id,name,area,session_day,session_time')
+        .in('id', schoolIds)
+      ;(schoolRows ?? []).forEach((s: { id: string; name: string; area: string; session_day: string; session_time: string }) => { schoolMap[s.id] = s as unknown as School })
+    }
+
+    const termList: LiveTerm[] = rawTerms.map(t => ({
+      ...t,
+      school: schoolMap[t.school_id] ?? ({ id: t.school_id, name: '', area: '' } as unknown as School),
+      spotsLeft: t.capacity,
+    }))
 
     // Count confirmed bookings per term
     if (termList.length > 0) {
