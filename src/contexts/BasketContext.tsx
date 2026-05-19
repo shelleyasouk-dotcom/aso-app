@@ -84,17 +84,28 @@ const EMPTY_CONTACT: BasketContactData = {
   collectionPerson: '', walkHomeAlone: null,
 }
 
+export interface DiscountCode {
+  code: string
+  type: 'percentage' | 'fixed'
+  value: number
+  description: string | null
+}
+
 const STORAGE_KEY = 'aso_basket_v2'
 
 interface BasketContextType {
   items: BasketItem[]
   contactData: BasketContactData
+  discount: DiscountCode | null
   addItem: (item: Omit<BasketItem, 'id'>) => string
   removeItem: (id: string) => void
   updateItem: (id: string, updates: Partial<Omit<BasketItem, 'id'>>) => void
   updateContactData: (data: Partial<BasketContactData>) => void
+  setDiscount: (d: DiscountCode | null) => void
   clearBasket: () => void
   totalPence: number
+  discountAmountPence: number
+  finalPence: number
   hasNewChildren: boolean
 }
 
@@ -103,6 +114,7 @@ const BasketContext = createContext<BasketContextType | null>(null)
 export function BasketProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<BasketItem[]>([])
   const [contactData, setContactData] = useState<BasketContactData>(EMPTY_CONTACT)
+  const [discount, setDiscountState] = useState<DiscountCode | null>(null)
 
   // Load from storage on mount
   useEffect(() => {
@@ -112,6 +124,7 @@ export function BasketProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored)
         setItems(parsed.items ?? [])
         setContactData(parsed.contactData ?? EMPTY_CONTACT)
+        setDiscountState(parsed.discount ?? null)
       }
     } catch {
       /* ignore corrupt data */
@@ -120,8 +133,8 @@ export function BasketProvider({ children }: { children: ReactNode }) {
 
   // Persist to storage whenever basket changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, contactData }))
-  }, [items, contactData])
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, contactData, discount }))
+  }, [items, contactData, discount])
 
   const addItem = useCallback((item: Omit<BasketItem, 'id'>): string => {
     const id = crypto.randomUUID()
@@ -141,19 +154,29 @@ export function BasketProvider({ children }: { children: ReactNode }) {
     setContactData(prev => ({ ...prev, ...data }))
   }, [])
 
+  const setDiscount = useCallback((d: DiscountCode | null) => setDiscountState(d), [])
+
   const clearBasket = useCallback(() => {
     setItems([])
     setContactData(EMPTY_CONTACT)
+    setDiscountState(null)
     localStorage.removeItem(STORAGE_KEY)
   }, [])
 
   const totalPence = items.reduce((sum, i) => sum + i.pricePence, 0)
+  const discountAmountPence = discount
+    ? discount.type === 'percentage'
+      ? Math.round(totalPence * discount.value / 100)
+      : Math.min(Math.round(discount.value), totalPence)
+    : 0
+  const finalPence = totalPence - discountAmountPence
   const hasNewChildren = items.some(i => !i.child.existingChildId)
 
   return (
     <BasketContext.Provider value={{
-      items, contactData, addItem, removeItem, updateItem,
-      updateContactData, clearBasket, totalPence, hasNewChildren,
+      items, contactData, discount,
+      addItem, removeItem, updateItem, updateContactData, setDiscount,
+      clearBasket, totalPence, discountAmountPence, finalPence, hasNewChildren,
     }}>
       {children}
     </BasketContext.Provider>

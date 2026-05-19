@@ -21,6 +21,8 @@ import { PortalMyChildrenPage } from './pages/portal/PortalMyChildrenPage'
 import { BasketProvider } from './contexts/BasketContext'
 import { ClubTermsAdminPage } from './pages/admin/ClubTermsAdminPage'
 import { BookingsAdminPage } from './pages/admin/BookingsAdminPage'
+import { DiscountCodesAdminPage } from './pages/admin/DiscountCodesAdminPage'
+import { DataExportsPage } from './pages/admin/DataExportsPage'
 import { SchoolRosterPage } from './pages/school/SchoolRosterPage'
 
 import { LoginPage } from './pages/auth/LoginPage'
@@ -158,6 +160,16 @@ export default function App() {
           <Route path="/admin/staff" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <StaffAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/discount-codes" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <DiscountCodesAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/data-exports" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <DataExportsPage />
             </ProtectedRoute>
           } />
 

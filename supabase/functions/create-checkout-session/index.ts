@@ -73,9 +73,10 @@ Deno.serve(async (req) => {
     )
     if (userErr || !user) return ok({ error: 'Unauthorized' })
 
-    const { items, consents } = await req.json() as {
+    const { items, consents, discount_code } = await req.json() as {
       items: BookingItem[]
       consents?: ConsentData
+      discount_code?: string | null
     }
 
     if (!items || items.length === 0) return ok({ error: 'No items in booking' })
@@ -168,13 +169,49 @@ Deno.serve(async (req) => {
       quantity: 1,
     }))
 
-    const bookingsMeta = processedItems.map(pi => ({
+    // Validate discount code (if provided)
+    let validatedDiscount: { id: string; code: string; type: string; value: number; uses: number } | null = null
+    let stripeCouponId: string | null = null
+    let discountAmountPence = 0
+
+    if (discount_code) {
+      const today = new Date().toISOString().split('T')[0]
+      const { data: dcRow } = await supabase
+        .from('discount_codes')
+        .select('id,code,type,value,max_uses,uses,valid_from,valid_until,is_active')
+        .eq('code', discount_code.toUpperCase())
+        .eq('is_active', true)
+        .single()
+
+      if (dcRow &&
+        (!dcRow.valid_from || dcRow.valid_from <= today) &&
+        (!dcRow.valid_until || dcRow.valid_until >= today) &&
+        (dcRow.max_uses === null || dcRow.uses < dcRow.max_uses)
+      ) {
+        validatedDiscount = dcRow
+        const totalPence = processedItems.reduce((s: number, pi: { pricePence: number }) => s + pi.pricePence, 0)
+        discountAmountPence = dcRow.type === 'percentage'
+          ? Math.round(totalPence * dcRow.value / 100)
+          : Math.min(Math.round(dcRow.value), totalPence)
+
+        // Create a one-time Stripe coupon for this discount amount
+        const coupon = await stripe.coupons.create({
+          name: dcRow.code,
+          duration: 'once',
+          amount_off: discountAmountPence,
+          currency: 'gbp',
+        })
+        stripeCouponId = coupon.id
+      }
+    }
+
+    const bookingsMeta = processedItems.map((pi: { originalItem: BookingItem; childId: string | null; school: { id: string; name: string } }) => ({
       club_term_id: pi.originalItem.club_term_id,
       parent_child_id: pi.childId ?? '',
       school_id: pi.school.id,
     }))
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
       payment_method_types: ['card'],
       mode: 'payment',
       customer_email: user.email,
@@ -185,10 +222,30 @@ Deno.serve(async (req) => {
         parent_id: user.id,
         bookings: JSON.stringify(bookingsMeta),
       },
-    })
+    }
+    if (stripeCouponId) {
+      sessionParams.discounts = [{ coupon: stripeCouponId }]
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams)
+
+    // Increment discount code uses after session created
+    if (validatedDiscount) {
+      await supabase
+        .from('discount_codes')
+        .update({ uses: validatedDiscount.uses + 1 })
+        .eq('id', validatedDiscount.id)
+    }
+
+    // Per-booking proportional discount share
+    const totalPenceForDiscount = processedItems.reduce((s: number, pi: { pricePence: number }) => s + pi.pricePence, 0)
 
     // Insert all pending bookings — each uses its own originalItem data
-    const bookingRows = processedItems.map(pi => ({
+    const bookingRows = processedItems.map((pi: { originalItem: BookingItem; childId: string | null; school: { id: string; name: string }; childName: string; pricePence: number }) => {
+      const proportionalDiscount = totalPenceForDiscount > 0
+        ? Math.round(discountAmountPence * pi.pricePence / totalPenceForDiscount)
+        : 0
+      return {
       parent_id: user.id,
       school_id: pi.school.id,
       club_term_id: pi.originalItem.club_term_id,
@@ -199,7 +256,9 @@ Deno.serve(async (req) => {
       child_class: pi.originalItem.child.class_name ?? null,
       child_additional_needs: pi.originalItem.child.additional_needs ?? null,
       stripe_session_id: session.id,
-      amount_pence: pi.pricePence,
+      amount_pence: pi.pricePence - proportionalDiscount,
+      discount_code: validatedDiscount?.code ?? null,
+      discount_amount_pence: proportionalDiscount,
       status: 'pending_payment',
       medically_fit: consents?.medically_fit ?? null,
       first_aid_permission: consents?.first_aid_permission ?? null,
@@ -207,7 +266,7 @@ Deno.serve(async (req) => {
       policy_agreed: consents?.policy_agreed ?? null,
       signature_name: consents?.signature_name ?? null,
       signed_at: signedAt,
-    }))
+    }})
 
     const { error: insertErr } = await supabase.from('parent_bookings').insert(bookingRows)
     if (insertErr) return ok({ error: `Failed to create booking: ${insertErr.message}` })

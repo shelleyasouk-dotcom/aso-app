@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard, Tag, Download } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -104,6 +104,20 @@ export function AdminPage() {
       icon: CreditCard,
       path: '/admin/bookings',
       color: 'bg-emerald-50 text-emerald-700',
+    },
+    {
+      label: 'Discount Codes',
+      description: 'Create and manage discount codes for bookings',
+      icon: Tag,
+      path: '/admin/discount-codes',
+      color: 'bg-yellow-50 text-yellow-700',
+    },
+    {
+      label: 'Data Exports',
+      description: 'Download staff, parent & children contact lists as CSV',
+      icon: Download,
+      path: '/admin/data-exports',
+      color: 'bg-slate-50 text-slate-700',
     },
   ]
 

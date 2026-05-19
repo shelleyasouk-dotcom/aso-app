@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ShoppingCart, Trash2, ChevronDown, ChevronUp, Lock, AlertCircle, CheckCircle } from 'lucide-react'
+import { ShoppingCart, Trash2, ChevronDown, ChevronUp, Lock, AlertCircle, CheckCircle, Tag, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import {
   useBasket, isChildItemComplete, isContactDataComplete,
-  type BasketItem, type BasketContactData,
+  type BasketItem, type BasketContactData, type DiscountCode,
 } from '../../contexts/BasketContext'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import { Button } from '../../components/ui/Button'
@@ -145,7 +145,15 @@ function ContactForm({ data, onChange }: { data: BasketContactData; onChange: (d
 export function PortalBasketPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { items, contactData, removeItem, updateItem, updateContactData, clearBasket, totalPence, hasNewChildren } = useBasket()
+  const {
+    items, contactData, discount, removeItem, updateItem, updateContactData,
+    setDiscount, clearBasket, totalPence, discountAmountPence, finalPence, hasNewChildren,
+  } = useBasket()
+
+  // Discount code state
+  const [codeInput, setCodeInput] = useState('')
+  const [applyingCode, setApplyingCode] = useState(false)
+  const [codeError, setCodeError] = useState<string | null>(null)
 
   // Consent state
   const [medicallyFit, setMedicallyFit] = useState<boolean | null>(null)
@@ -156,6 +164,27 @@ export function PortalBasketPage() {
   const [signatureName, setSignatureName] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  async function applyDiscount() {
+    const code = codeInput.trim().toUpperCase()
+    if (!code) return
+    setApplyingCode(true)
+    setCodeError(null)
+    const today = new Date().toISOString().split('T')[0]
+    const { data, error: dbErr } = await supabase
+      .from('discount_codes')
+      .select('code,type,value,description,max_uses,uses,valid_from,valid_until,is_active')
+      .eq('code', code)
+      .eq('is_active', true)
+      .single()
+    setApplyingCode(false)
+    if (dbErr || !data) { setCodeError('Code not found or no longer active.'); return }
+    if (data.valid_until && data.valid_until < today) { setCodeError('This code has expired.'); return }
+    if (data.valid_from && data.valid_from > today) { setCodeError('This code is not valid yet.'); return }
+    if (data.max_uses !== null && data.uses >= data.max_uses) { setCodeError('This code has reached its maximum uses.'); return }
+    setDiscount({ code: data.code, type: data.type as DiscountCode['type'], value: data.value, description: data.description })
+    setCodeInput('')
+  }
 
   if (!user) {
     return (
@@ -238,6 +267,7 @@ export function PortalBasketPage() {
           policy_agreed: policyAgreed,
           signature_name: signatureName.trim(),
         },
+        discount_code: discount?.code ?? null,
       },
     })
 
@@ -344,10 +374,63 @@ export function PortalBasketPage() {
           </div>
         )}
 
+        {/* Discount code */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 mb-4">
+          <p className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-1.5"><Tag size={14} /> Discount Code</p>
+          {discount ? (
+            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
+              <div>
+                <p className="text-sm font-extrabold text-green-800 font-mono">{discount.code}</p>
+                <p className="text-xs text-green-600 mt-0.5">
+                  {discount.description || (discount.type === 'percentage' ? `${discount.value}% off` : `£${(discount.value / 100).toFixed(2)} off`)}
+                  {' · '}saving {formatPrice(discountAmountPence)}
+                </p>
+              </div>
+              <button onClick={() => setDiscount(null)} className="text-green-600 hover:text-red-500 transition-colors ml-3">
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Enter code…"
+                value={codeInput}
+                onChange={e => { setCodeInput(e.target.value.toUpperCase()); setCodeError(null) }}
+                onKeyDown={e => e.key === 'Enter' && applyDiscount()}
+                className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
+              />
+              <button
+                onClick={applyDiscount}
+                disabled={applyingCode || !codeInput.trim()}
+                className="bg-[#1a3a6b] text-white font-bold px-4 py-2 rounded-xl text-sm disabled:opacity-40 transition-colors hover:bg-[#142f58]"
+              >
+                {applyingCode ? '…' : 'Apply'}
+              </button>
+            </div>
+          )}
+          {codeError && <p className="text-xs text-red-600 mt-2">{codeError}</p>}
+        </div>
+
         {/* Order total */}
-        <div className="bg-gray-50 rounded-2xl px-4 py-3 flex items-center justify-between mb-4">
-          <p className="font-bold text-gray-700">Total</p>
-          <p className="text-xl font-extrabold text-[#1a3a6b]">{formatPrice(totalPence)}</p>
+        <div className="bg-gray-50 rounded-2xl px-4 py-3 mb-4">
+          {discount && (
+            <>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm text-gray-500">Subtotal</p>
+                <p className="text-sm text-gray-500">{formatPrice(totalPence)}</p>
+              </div>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-green-600 font-semibold flex items-center gap-1"><Tag size={12} /> {discount.code}</p>
+                <p className="text-sm text-green-600 font-semibold">−{formatPrice(discountAmountPence)}</p>
+              </div>
+              <hr className="border-gray-200 mb-2" />
+            </>
+          )}
+          <div className="flex items-center justify-between">
+            <p className="font-bold text-gray-700">Total</p>
+            <p className="text-xl font-extrabold text-[#1a3a6b]">{formatPrice(finalPence)}</p>
+          </div>
         </div>
 
         {!allChildrenComplete && (
@@ -370,7 +453,7 @@ export function PortalBasketPage() {
         </div>
 
         <Button size="lg" fullWidth disabled={!canPay || submitting} onClick={handlePay}>
-          {submitting ? 'Redirecting to payment…' : `Pay ${formatPrice(totalPence)} securely`}
+          {submitting ? 'Redirecting to payment…' : `Pay ${formatPrice(finalPence)} securely`}
         </Button>
       </div>
     </PortalLayout>
