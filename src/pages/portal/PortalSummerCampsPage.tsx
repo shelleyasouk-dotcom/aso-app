@@ -17,16 +17,6 @@ const CAMP_DATES = 'Tue 28 – Thu 30 July 2026'
 const CAMP_TIME  = '9:15am – 12:15pm daily'
 const CAMP_DAYS  = 3
 
-const INCLUDED = [
-  { emoji: '🤸', label: 'Gymnastics' },
-  { emoji: '💃', label: 'Dance' },
-  { emoji: '🥋', label: 'Martial Arts' },
-  { emoji: '⚽', label: 'Multi-sport' },
-  { emoji: '🏅', label: 'UKAG Awards' },
-  { emoji: '🏀', label: 'Basketball' },
-  { emoji: '🏃', label: 'Athletics' },
-  { emoji: '🎨', label: 'Creative fun' },
-]
 
 const WHY_CAMPS = [
   { emoji: '🌍', title: 'Open to everyone', desc: 'Our holiday camps are open to all children in the local area — not just pupils from ASO partner schools.' },
@@ -349,24 +339,6 @@ export function PortalSummerCampsPage() {
             ))}
           </div>
         )}
-      </section>
-
-      {/* What's included */}
-      <section className="bg-[#f5c518]/10 py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">What's In Each Session</h2>
-          <p className="text-gray-500 text-sm text-center mb-8">
-            Every camp morning is packed with structured sport, skill-building, and fun.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {INCLUDED.map(item => (
-              <div key={item.label} className="bg-white border border-[#f5c518]/40 rounded-2xl p-4 text-center">
-                <span className="text-3xl">{item.emoji}</span>
-                <p className="text-xs font-bold text-gray-700 mt-2 leading-tight">{item.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* UKAG callout */}
