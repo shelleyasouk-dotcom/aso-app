@@ -267,7 +267,16 @@ export function CoachProfilePage() {
 
   function applyProfile(p: Profile) {
     setSubject(p)
-    setPhotoUrl(p.photo_url)
+    // photo_url may be a bare storage path (photos/uuid/profile.jpg) or a full URL
+    const raw = p.photo_url ?? null
+    if (raw && !raw.startsWith('http')) {
+      // Path-style: generate a signed URL so it works regardless of bucket visibility
+      supabase.storage.from('coach-files')
+        .createSignedUrl(raw, 60 * 60 * 24 * 365)
+        .then(({ data }) => setPhotoUrl(data?.signedUrl ?? undefined))
+    } else {
+      setPhotoUrl(raw ?? undefined)
+    }
     setFields({
       phone: p.phone ?? '',
       dbs_number: p.dbs_number ?? '',
@@ -313,7 +322,7 @@ export function CoachProfilePage() {
       if (msg.includes('Bucket not found') || msg.includes('not found')) {
         setUploadError('Storage bucket missing. Run supabase/fix_photo_upload.sql in the Supabase SQL Editor.')
       } else if (msg.includes('row-level security') || msg.includes('policy') || msg.includes('Unauthorized') || msg.includes('403')) {
-        setUploadError('Permission denied — storage policies not set up. Run supabase/fix_photo_upload.sql in the Supabase SQL Editor.')
+        setUploadError('Permission denied — run supabase/fix_photo_upload.sql in the Supabase SQL Editor to set up storage policies.')
       } else {
         setUploadError(`Upload failed: ${msg}`)
       }
@@ -322,25 +331,24 @@ export function CoachProfilePage() {
       return
     }
 
-    setUploadStep('Verifying…')
-    const { data: urlData } = supabase.storage.from('coach-files').getPublicUrl(path)
-    const url = `${urlData.publicUrl}?t=${Date.now()}`
+    // Generate a signed URL (works regardless of whether the bucket is public)
+    setUploadStep('Generating link…')
+    const { data: signed, error: signErr } = await supabase.storage
+      .from('coach-files')
+      .createSignedUrl(path, 60 * 60 * 24 * 365) // 1-year expiry
 
-    // Verify the URL is actually accessible (bucket must be public)
-    try {
-      const probe = await fetch(url, { method: 'HEAD' })
-      if (!probe.ok) {
-        setUploadError(`File uploaded but not publicly accessible (HTTP ${probe.status}). The storage bucket is not set to public. Run supabase/fix_photo_upload.sql in the Supabase SQL Editor, then try again.`)
-        setUploadStep(null)
-        setUploadingPhoto(false)
-        return
-      }
-    } catch {
-      // CORS may block HEAD on some setups — continue anyway
+    if (signErr) {
+      setUploadError(`Photo uploaded but can't display it — storage read policies may be missing. Run supabase/fix_photo_upload.sql in the Supabase SQL Editor. (${signErr.message})`)
+      setUploadStep(null)
+      setUploadingPhoto(false)
+      return
     }
 
+    const displayUrl = signed.signedUrl
+
+    // Store just the path in DB so we can always generate a fresh signed URL on load
     setUploadStep('Saving…')
-    const { error: dbErr } = await supabase.from('profiles').update({ photo_url: url }).eq('id', targetId)
+    const { error: dbErr } = await supabase.from('profiles').update({ photo_url: path }).eq('id', targetId)
     if (dbErr) {
       setUploadError(`Could not save photo: ${dbErr.message}`)
       setUploadStep(null)
@@ -348,7 +356,7 @@ export function CoachProfilePage() {
       return
     }
 
-    setPhotoUrl(url)
+    setPhotoUrl(displayUrl)
     if (isOwnProfile && refreshProfile) await refreshProfile()
     setUploadStep(null)
     setUploadingPhoto(false)
