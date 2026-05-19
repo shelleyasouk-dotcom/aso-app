@@ -283,11 +283,12 @@ export function AbsencesPage() {
   // ── Load team absences ─────────────────────────────────────────────────────
   const loadTeam = useCallback(async () => {
     if (!profile || !canSeeTeam) return
-    if (profile.role !== 'director' && mySchoolIds === null) return
+    const isFullAccess = profile.role === 'director' || profile.role === 'area_lead'
+    if (!isFullAccess && mySchoolIds === null) return
 
     let staffIds: string[] = []
 
-    if (profile.role === 'director') {
+    if (isFullAccess) {
       const { data } = await supabase.from('profiles').select('id, full_name, role, email, created_at').order('full_name')
       setTeamStaff((data as Profile[]) ?? [])
       staffIds = (data ?? []).map((s: Profile) => s.id)
