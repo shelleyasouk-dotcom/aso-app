@@ -78,11 +78,6 @@ interface ChildRecord {
   profiles?: { full_name: string | null; email: string | null } | null
 }
 
-interface ChildCountRow {
-  parent_id: string
-  count: number
-}
-
 // ─── Section component ─────────────────────────────────────────────────────────
 
 interface ExportSectionProps {
@@ -275,7 +270,7 @@ export function DataExportsPage() {
 
     if (err) { setError(err.message); return }
 
-    const rows = (data as ChildRecord[]).map(c => {
+    const rows = (data as unknown as ChildRecord[]).map(c => {
       const parentProfile = c.profiles
       return {
         'Child Full Name': c.full_name ?? '',

@@ -339,13 +339,7 @@ export function CoachProfilePage() {
       return
     }
 
-    // Generate a signed URL (works regardless of whether the bucket is public)
-    setUploadStep('Generating link…')
-    const { data: signed, error: signErr } = await supabase.storage
-      .from('coach-files')
-      .createSignedUrl(path, 60 * 60 * 24 * 365) // 1-year expiry
-
-    // Store just the path in DB (signed URL or blob URL used only for display)
+    // Store just the path in DB (blob URL used only for display)
     setUploadStep('Saving…')
     const { error: dbErr } = await supabase.from('profiles').update({ photo_url: path }).eq('id', targetId)
     if (dbErr) {
