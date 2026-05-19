@@ -55,6 +55,7 @@ import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
 import { SessionsPage } from './pages/sessions/SessionsPage'
 import { AbsencesPage } from './pages/absences/AbsencesPage'
 import { MyAreaPage } from './pages/myarea/MyAreaPage'
+import { MyTimesheetPage } from './pages/clockin/MyTimesheetPage'
 import { SchoolPortalPage } from './pages/school/SchoolPortalPage'
 import { SchoolRegisterPage } from './pages/school/SchoolRegisterPage'
 import { SchoolClubInfoPage } from './pages/school/SchoolClubInfoPage'
@@ -89,6 +90,9 @@ export default function App() {
           } />
           <Route path="/clock-in" element={
             <ProtectedRoute><ClockInPage /></ProtectedRoute>
+          } />
+          <Route path="/my-timesheet" element={
+            <ProtectedRoute><MyTimesheetPage /></ProtectedRoute>
           } />
           <Route path="/awards" element={
             <ProtectedRoute><AwardsPage /></ProtectedRoute>

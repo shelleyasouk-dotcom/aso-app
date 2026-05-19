@@ -69,7 +69,7 @@ export function MyAreaPage() {
   const isOutreach = role === 'outreach_worker'
 
   const personalTiles: Tile[] = [
-    { label: 'My Timesheet', description: 'View your clock records', icon: Clock, path: '/clock-in', color: 'bg-blue-50 text-[#1a3a6b]' },
+    { label: 'My Timesheet', description: 'View your clock records', icon: Clock, path: '/my-timesheet', color: 'bg-blue-50 text-[#1a3a6b]' },
     { label: 'Expenses', description: 'Submit travel & mileage', icon: ReceiptText, path: '/expenses', color: 'bg-orange-50 text-orange-700' },
     { label: 'Absences', description: 'Log & manage requests', icon: CalendarOff, path: '/absences', color: 'bg-rose-50 text-rose-700' },
     { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-sky-50 text-sky-700' },
