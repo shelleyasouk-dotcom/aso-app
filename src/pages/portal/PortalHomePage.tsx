@@ -190,6 +190,30 @@ export function PortalHomePage() {
         </div>
       </section>
 
+      {/* Summer Camps teaser */}
+      <section className="max-w-5xl mx-auto px-4 pt-10 pb-2">
+        <div
+          onClick={() => navigate('/portal/summer-camps')}
+          className="cursor-pointer bg-gradient-to-r from-[#f5c518] to-[#f59e0b] rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-5 hover:shadow-lg transition-shadow"
+        >
+          <span className="text-5xl shrink-0">☀️</span>
+          <div className="flex-1 text-center sm:text-left">
+            <div className="inline-flex items-center gap-1.5 bg-[#1a3a6b]/10 text-[#1a3a6b] text-[10px] font-extrabold px-2.5 py-1 rounded-full mb-1.5 uppercase tracking-wide">
+              New · Summer 2026
+            </div>
+            <h3 className="font-extrabold text-[#1a3a6b] text-lg leading-tight mb-1">ASO Summer Holiday Camps</h3>
+            <p className="text-[#7c3c00] text-sm">
+              Three camps across different regions — <strong>open to all children</strong>, not just school pupils. Locations and booking coming soon.
+            </p>
+          </div>
+          <div className="shrink-0">
+            <span className="inline-flex items-center gap-1.5 bg-[#1a3a6b] text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#142f58] transition-colors">
+              Find Out More <ChevronRight size={15} />
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* Browse by region */}
       {regions.length > 0 && (
         <section className="max-w-5xl mx-auto px-4 py-12">

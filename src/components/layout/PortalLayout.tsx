@@ -8,6 +8,7 @@ import { useBasket } from '../../contexts/BasketContext'
 const NAV_LINKS = [
   { path: '/portal', label: 'Home', exact: true },
   { path: '/portal/clubs', label: 'Find Clubs' },
+  { path: '/portal/summer-camps', label: 'Summer Camps', badge: 'New' },
   { path: '/portal/sports', label: 'Sports' },
   { path: '/portal/about', label: 'About' },
   { path: '/portal/for-schools', label: 'For Schools' },
@@ -54,13 +55,18 @@ export function PortalLayout({ children }: PortalLayoutProps) {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
                   isActive(link.path, link.exact)
                     ? 'bg-white/20 text-white'
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
                 {link.label}
+                {link.badge && (
+                  <span className="text-[9px] font-extrabold bg-[#f5c518] text-[#1a3a6b] px-1.5 py-0.5 rounded-full leading-none uppercase tracking-wide">
+                    {link.badge}
+                  </span>
+                )}
               </Link>
             ))}
           </nav>
@@ -169,13 +175,18 @@ export function PortalLayout({ children }: PortalLayoutProps) {
               <button
                 key={link.path}
                 onClick={() => { navigate(link.path); setMenuOpen(false) }}
-                className={`text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                   isActive(link.path, link.exact)
                     ? 'bg-white/20 text-white'
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
                 {link.label}
+                {link.badge && (
+                  <span className="text-[9px] font-extrabold bg-[#f5c518] text-[#1a3a6b] px-1.5 py-0.5 rounded-full leading-none uppercase tracking-wide">
+                    {link.badge}
+                  </span>
+                )}
               </button>
             ))}
             {!profile && (
@@ -220,8 +231,13 @@ export function PortalLayout({ children }: PortalLayoutProps) {
               <p className="font-semibold mb-3 text-sm">Quick Links</p>
               <div className="flex flex-col gap-2">
                 {NAV_LINKS.slice(1).map(link => (
-                  <Link key={link.path} to={link.path} className="text-white/60 hover:text-white text-sm transition-colors">
+                  <Link key={link.path} to={link.path} className="text-white/60 hover:text-white text-sm transition-colors flex items-center gap-1.5">
                     {link.label}
+                    {link.badge && (
+                      <span className="text-[9px] font-extrabold bg-[#f5c518] text-[#1a3a6b] px-1.5 py-0.5 rounded-full leading-none uppercase">
+                        {link.badge}
+                      </span>
+                    )}
                   </Link>
                 ))}
               </div>

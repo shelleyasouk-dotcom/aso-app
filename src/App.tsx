@@ -16,6 +16,7 @@ import { PortalBookingPage } from './pages/portal/PortalBookingPage'
 import { PortalBookingConfirmedPage } from './pages/portal/PortalBookingConfirmedPage'
 import { PortalBasketPage } from './pages/portal/PortalBasketPage'
 import { PortalForSchoolsPage } from './pages/portal/PortalForSchoolsPage'
+import { PortalSummerCampsPage } from './pages/portal/PortalSummerCampsPage'
 import { PortalMyChildrenPage } from './pages/portal/PortalMyChildrenPage'
 import { BasketProvider } from './contexts/BasketContext'
 import { ClubTermsAdminPage } from './pages/admin/ClubTermsAdminPage'
@@ -281,6 +282,7 @@ export default function App() {
           <Route path="/portal/affiliations" element={<PortalAffiliationsPage />} />
           <Route path="/portal/about" element={<PortalAboutPage />} />
           <Route path="/portal/for-schools" element={<PortalForSchoolsPage />} />
+          <Route path="/portal/summer-camps" element={<PortalSummerCampsPage />} />
           <Route path="/portal/login" element={<PortalLoginPage />} />
           <Route path="/portal/register" element={<PortalRegisterPage />} />
           <Route path="/portal/terms" element={<PortalTermsPage />} />
