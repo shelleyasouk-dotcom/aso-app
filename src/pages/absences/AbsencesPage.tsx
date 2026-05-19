@@ -453,7 +453,7 @@ export function AbsencesPage() {
               </div>
               <ul className="text-xs text-amber-700 leading-relaxed space-y-1.5 pl-1">
                 <li>• <span className="font-semibold">All absences are unpaid.</span> ASO does not operate paid leave — any absence, including annual leave, will not be remunerated.</li>
-                <li>• <span className="font-semibold">No holiday during active term time.</span> Due to the volume of children in our sessions, holiday requests while classes are running will not be approved. Please plan holidays during school breaks only.</li>
+                <li>• <span className="font-semibold">Leave during term time is only approved in exceptional circumstances.</span> Due to the volume of children in our sessions, requests while classes are running will only be considered where there are genuine exceptional reasons. Please plan holidays during school breaks wherever possible.</li>
                 <li>• Classes run <span className="font-semibold">term time only</span> — school holidays are your available holiday window.</li>
               </ul>
               <div className="flex items-center gap-1.5 mt-1">
