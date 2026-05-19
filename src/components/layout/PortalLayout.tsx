@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { path: '/portal/clubs', label: 'Find Clubs' },
   { path: '/portal/sports', label: 'Sports' },
   { path: '/portal/about', label: 'About' },
+  { path: '/portal/for-schools', label: 'For Schools' },
   { path: '/portal/affiliations', label: 'Affiliations' },
 ]
 
@@ -203,7 +204,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
       {/* Footer */}
       <footer className="bg-[#1a3a6b] text-white mt-16">
         <div className="max-w-6xl mx-auto px-4 py-10">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <div className="bg-white rounded-lg p-0.5">
@@ -232,6 +233,15 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                 <Link to="/portal/register" className="text-white/60 hover:text-white text-sm transition-colors">Create Account</Link>
                 <Link to="/portal/clubs" className="text-white/60 hover:text-white text-sm transition-colors">Find a Club</Link>
                 <Link to="/portal/terms" className="text-white/60 hover:text-white text-sm transition-colors">Terms &amp; Conditions</Link>
+              </div>
+            </div>
+            <div>
+              <p className="font-semibold mb-3 text-sm">For Schools &amp; Partners</p>
+              <div className="flex flex-col gap-2">
+                <Link to="/portal/for-schools" className="text-white/60 hover:text-white text-sm transition-colors">Partner with ASO</Link>
+                <Link to="/portal/for-schools" className="text-white/60 hover:text-white text-sm transition-colors">Multi-Academy Trusts</Link>
+                <Link to="/portal/for-schools" className="text-white/60 hover:text-white text-sm transition-colors">Local Authorities</Link>
+                <Link to="/portal/affiliations" className="text-white/60 hover:text-white text-sm transition-colors">Affiliations</Link>
               </div>
             </div>
           </div>

@@ -401,17 +401,36 @@ export function PortalHomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-12 px-4 text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">Ready to get started?</h2>
-        <p className="text-gray-500 text-sm mb-6">Find a club near your school and book your child's first session.</p>
-        <button
-          onClick={() => navigate('/portal/clubs')}
-          className="inline-flex items-center gap-2 bg-[#1a3a6b] text-white font-bold px-8 py-3 rounded-xl hover:bg-[#142f58] transition-colors"
-        >
-          Find a Club Near You
-          <ChevronRight size={16} />
-        </button>
+      {/* Dual CTA */}
+      <section className="py-12 px-4">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Parents */}
+          <div className="bg-[#1a3a6b] text-white rounded-2xl p-7 flex flex-col items-start">
+            <span className="text-2xl mb-3">👨‍👩‍👧</span>
+            <h3 className="text-lg font-extrabold mb-2">For Parents</h3>
+            <p className="text-white/70 text-sm leading-relaxed mb-5">Find a club at your child's school, book online, and watch them thrive in expert-led after-school sessions.</p>
+            <button
+              onClick={() => navigate('/portal/clubs')}
+              className="mt-auto inline-flex items-center gap-2 bg-[#f5c518] text-[#1a3a6b] font-bold px-5 py-2.5 rounded-xl hover:bg-yellow-400 transition-colors text-sm"
+            >
+              Find a Club Near You
+              <ChevronRight size={15} />
+            </button>
+          </div>
+          {/* Schools & Partners */}
+          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-7 flex flex-col items-start">
+            <span className="text-2xl mb-3">🏫</span>
+            <h3 className="text-lg font-extrabold text-gray-900 mb-2">For Schools, Trusts &amp; LAs</h3>
+            <p className="text-gray-500 text-sm leading-relaxed mb-5">Bring ASO to your school or authority. We manage everything — coaching, registers, reporting, and parent bookings.</p>
+            <button
+              onClick={() => navigate('/portal/for-schools')}
+              className="mt-auto inline-flex items-center gap-2 bg-[#1a3a6b] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#142f58] transition-colors text-sm"
+            >
+              Partner with ASO
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>
       </section>
     </PortalLayout>
   )
