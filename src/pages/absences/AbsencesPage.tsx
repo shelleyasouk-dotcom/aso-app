@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Check, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Check, X, ChevronLeft, ChevronRight, AlertTriangle, BookOpen } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -445,6 +445,23 @@ export function AbsencesPage() {
         {/* ── MY ABSENCES ───────────────────────────────────────────────── */}
         {tab === 'mine' && (
           <>
+            {/* Absence policy notice */}
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={15} className="text-amber-600 shrink-0" />
+                <p className="text-sm font-bold text-amber-800">Absence Policy</p>
+              </div>
+              <ul className="text-xs text-amber-700 leading-relaxed space-y-1.5 pl-1">
+                <li>• <span className="font-semibold">All absences are unpaid.</span> ASO does not operate paid leave — any absence, including annual leave, will not be remunerated.</li>
+                <li>• <span className="font-semibold">No holiday during active term time.</span> Due to the volume of children in our sessions, holiday requests while classes are running will not be approved. Please plan holidays during school breaks only.</li>
+                <li>• Classes run <span className="font-semibold">term time only</span> — school holidays are your available holiday window.</li>
+              </ul>
+              <div className="flex items-center gap-1.5 mt-1">
+                <BookOpen size={12} className="text-amber-500" />
+                <p className="text-xs text-amber-600">Full details in your <span className="font-semibold">Staff Handbook</span>.</p>
+              </div>
+            </div>
+
             <Button fullWidth onClick={() => setShowForm(v => !v)}>
               <Plus size={18} /> Log Absence
             </Button>
