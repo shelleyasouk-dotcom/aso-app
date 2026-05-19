@@ -7,14 +7,23 @@
 }
 
 @theme {
-  --color-ukag-50: #faf5ff;
-  --color-ukag-100: #f3e8ff;
-  --color-ukag-200: #e9d5ff;
-  --color-ukag-300: #d8b4fe;
-  --color-ukag-400: #c084fc;
-  --color-ukag-500: #a855f7;
-  --color-ukag-600: #9333ea;
-  --color-ukag-700: #7e22ce;
-  --color-ukag-800: #6b21a8;
-  --color-ukag-900: #581c87;
+  /* Primary — UKAG Red */
+  --color-ukag-50:  #fff2ef;
+  --color-ukag-100: #ffd9d1;
+  --color-ukag-200: #ffb3a4;
+  --color-ukag-300: #f97c65;
+  --color-ukag-400: #f05030;
+  --color-ukag-500: #e8391c;
+  --color-ukag-600: #d42e12;
+  --color-ukag-700: #b2240e;
+  --color-ukag-800: #8c1b0b;
+  --color-ukag-900: #6a1408;
+
+  /* Brand Yellow (AG) */
+  --color-ukag-yellow: #f9c400;
+  --color-ukag-yellow-light: #fff6cc;
+
+  /* Brand Blue (dots / subtext) */
+  --color-ukag-blue: #2b4ead;
+  --color-ukag-blue-light: #dce4f7;
 }
