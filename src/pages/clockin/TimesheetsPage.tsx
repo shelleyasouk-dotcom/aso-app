@@ -38,7 +38,8 @@ function formatDuration(clockIn: string, clockOut: string | null) {
 const DT_CLASS = "w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
 
 export function TimesheetsPage() {
-  useAuth()
+  const { profile } = useAuth()
+  const isLeadCoach = profile?.role === 'lead_coach'
   const [records, setRecords] = useState<EnrichedRecord[]>([])
   const [staff, setStaff] = useState<Profile[]>([])
   const [schools, setSchools] = useState<School[]>([])
@@ -54,11 +55,15 @@ export function TimesheetsPage() {
   const [actionError, setActionError] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.from('profiles').select('*').order('full_name').then(({ data }) => setStaff(data ?? []))
+    if (!profile) return
+    let staffQ = supabase.from('profiles').select('*').order('full_name')
+    if (isLeadCoach && profile.area) staffQ = staffQ.eq('area', profile.area)
+    staffQ.then(({ data }) => setStaff(data ?? []))
     supabase.from('schools').select('*').order('name').then(({ data }) => setSchools(data ?? []))
-  }, [])
+  }, [profile, isLeadCoach])
 
   const loadRecords = useCallback(async () => {
+    if (!profile) return
     setLoading(true)
     let q = supabase
       .from('clock_records')
@@ -67,9 +72,14 @@ export function TimesheetsPage() {
       .limit(500)
     if (filterStaff) q = q.eq('staff_id', filterStaff)
     const { data } = await q
-    setRecords((data as EnrichedRecord[]) ?? [])
+    let rows = (data as EnrichedRecord[]) ?? []
+    // Scope lead coaches to their own area only
+    if (isLeadCoach && profile.area) {
+      rows = rows.filter(r => r.staff?.area === profile.area)
+    }
+    setRecords(rows)
     setLoading(false)
-  }, [filterStaff])
+  }, [filterStaff, profile, isLeadCoach])
 
   useEffect(() => { loadRecords() }, [loadRecords])
 
@@ -136,7 +146,8 @@ export function TimesheetsPage() {
 
         <div className="bg-[#1a3a6b]/8 rounded-2xl px-4 py-3">
           <p className="text-sm text-[#1a3a6b] font-medium">
-            Payroll reference — {totalStaff} staff · {records.filter(r => r.clock_out).length} completed sessions
+            {isLeadCoach ? `Your area — ` : 'Payroll reference — '}
+            {totalStaff} staff · {records.filter(r => r.clock_out).length} completed sessions
           </p>
         </div>
 
@@ -148,9 +159,11 @@ export function TimesheetsPage() {
           </div>
         )}
 
-        <Button variant="primary" size="lg" fullWidth onClick={() => setShowAdd(v => !v)}>
-          <Plus size={20} /> Add Missing Clock Record
-        </Button>
+        {!isLeadCoach && (
+          <Button variant="primary" size="lg" fullWidth onClick={() => setShowAdd(v => !v)}>
+            <Plus size={20} /> Add Missing Clock Record
+          </Button>
+        )}
 
         {showAdd && (
           <Card>
@@ -220,7 +233,7 @@ export function TimesheetsPage() {
                 <div className="flex flex-col gap-1">
                   {recs.map(rec => (
                     <div key={rec.id}>
-                      {editingId === rec.id ? (
+                      {!isLeadCoach && editingId === rec.id ? (
                         <div className="bg-[#f4f6f9] rounded-2xl p-3 flex flex-col gap-2 my-1">
                           <p className="text-xs font-bold text-[#1a3a6b] mb-1">Edit Record</p>
                           <div className="flex flex-col gap-1">
@@ -268,20 +281,24 @@ export function TimesheetsPage() {
                             <Badge color={rec.clock_out ? 'green' : 'yellow'}>
                               {formatDuration(rec.clock_in, rec.clock_out)}
                             </Badge>
-                            <button onClick={() => { startEdit(rec); setConfirmDeleteId(null) }}
-                              className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50">
-                              <Pencil size={14} />
-                            </button>
-                            {confirmDeleteId === rec.id ? (
-                              <button onClick={() => deleteRecord(rec.id)}
-                                className="px-2 py-1 rounded-lg bg-red-500 text-white text-xs font-semibold">
-                                Delete?
-                              </button>
-                            ) : (
-                              <button onClick={() => setConfirmDeleteId(rec.id)}
-                                className="p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50">
-                                <Trash2 size={14} />
-                              </button>
+                            {!isLeadCoach && (
+                              <>
+                                <button onClick={() => { startEdit(rec); setConfirmDeleteId(null) }}
+                                  className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50">
+                                  <Pencil size={14} />
+                                </button>
+                                {confirmDeleteId === rec.id ? (
+                                  <button onClick={() => deleteRecord(rec.id)}
+                                    className="px-2 py-1 rounded-lg bg-red-500 text-white text-xs font-semibold">
+                                    Delete?
+                                  </button>
+                                ) : (
+                                  <button onClick={() => setConfirmDeleteId(rec.id)}
+                                    className="p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50">
+                                    <Trash2 size={14} />
+                                  </button>
+                                )}
+                              </>
                             )}
                           </div>
                         </div>

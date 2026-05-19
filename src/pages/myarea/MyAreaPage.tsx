@@ -81,6 +81,7 @@ export function MyAreaPage() {
     { label: 'Registers', description: 'Session attendance', icon: ClipboardList, path: '/registers', color: 'bg-yellow-50 text-[#1a3a6b]' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
     { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
+    ...(role === 'lead_coach' ? [{ label: 'Staff Timesheets', description: 'View your team\'s hours', icon: Users, path: '/timesheets', color: 'bg-purple-50 text-purple-800' }] : []),
   ]
 
   const managementTiles: Tile[] = [
