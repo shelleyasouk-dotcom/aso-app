@@ -40,7 +40,7 @@ const DT_CLASS = "w-full px-3 py-2 rounded-xl border border-gray-200 text-sm foc
 export function TimesheetsPage() {
   const { profile } = useAuth()
   const isLeadCoach = profile?.role === 'lead_coach'
-  const isScopedToArea = profile?.role === 'lead_coach'
+  const isScopedToArea = profile?.role === 'lead_coach' || profile?.role === 'area_lead'
   const [records, setRecords] = useState<EnrichedRecord[]>([])
   const [staff, setStaff] = useState<Profile[]>([])
   const [schools, setSchools] = useState<School[]>([])

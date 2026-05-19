@@ -513,7 +513,11 @@ export function AbsencesPage() {
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Pending Authorisation</p>
                 <div className="flex flex-col gap-3">
                   {teamAbsences.filter(a => a.status === 'pending').map(a => (
-                    <AbsenceCard key={a.id} absence={a} canReview={isManager} showStaff
+                    <AbsenceCard key={a.id} absence={a} showStaff
+                      canReview={
+                        profile?.role === 'director' ||
+                        (profile?.role === 'area_lead' && a.staff?.area === profile?.area)
+                      }
                       onApprove={(id, note) => reviewAbsence(id, 'approved', note)}
                       onReject={(id, note) => reviewAbsence(id, 'rejected', note)} />
                   ))}
