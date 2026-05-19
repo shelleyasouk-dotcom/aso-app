@@ -40,6 +40,7 @@ const DT_CLASS = "w-full px-3 py-2 rounded-xl border border-gray-200 text-sm foc
 export function TimesheetsPage() {
   const { profile } = useAuth()
   const isLeadCoach = profile?.role === 'lead_coach'
+  const isScopedToArea = profile?.role === 'lead_coach' || profile?.role === 'area_lead'
   const [records, setRecords] = useState<EnrichedRecord[]>([])
   const [staff, setStaff] = useState<Profile[]>([])
   const [schools, setSchools] = useState<School[]>([])
@@ -57,10 +58,10 @@ export function TimesheetsPage() {
   useEffect(() => {
     if (!profile) return
     let staffQ = supabase.from('profiles').select('*').order('full_name')
-    if (isLeadCoach && profile.area) staffQ = staffQ.eq('area', profile.area)
+    if (isScopedToArea && profile.area) staffQ = staffQ.eq('area', profile.area)
     staffQ.then(({ data }) => setStaff(data ?? []))
     supabase.from('schools').select('*').order('name').then(({ data }) => setSchools(data ?? []))
-  }, [profile, isLeadCoach])
+  }, [profile, isScopedToArea])
 
   const loadRecords = useCallback(async () => {
     if (!profile) return
@@ -74,12 +75,12 @@ export function TimesheetsPage() {
     const { data } = await q
     let rows = (data as EnrichedRecord[]) ?? []
     // Scope lead coaches to their own area only
-    if (isLeadCoach && profile.area) {
+    if (isScopedToArea && profile.area) {
       rows = rows.filter(r => r.staff?.area === profile.area)
     }
     setRecords(rows)
     setLoading(false)
-  }, [filterStaff, profile, isLeadCoach])
+  }, [filterStaff, profile, isScopedToArea])
 
   useEffect(() => { loadRecords() }, [loadRecords])
 
@@ -146,7 +147,7 @@ export function TimesheetsPage() {
 
         <div className="bg-[#1a3a6b]/8 rounded-2xl px-4 py-3">
           <p className="text-sm text-[#1a3a6b] font-medium">
-            {isLeadCoach ? `Your area — ` : 'Payroll reference — '}
+            {isScopedToArea ? `Your area — ` : 'Payroll reference — '}
             {totalStaff} staff · {records.filter(r => r.clock_out).length} completed sessions
           </p>
         </div>
