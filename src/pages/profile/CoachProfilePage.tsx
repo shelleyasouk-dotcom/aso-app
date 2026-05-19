@@ -265,18 +265,26 @@ export function CoachProfilePage() {
     if (data) applyProfile(data)
   }
 
+  // Download photo via Supabase client and display as a blob URL.
+  // This bypasses Content-Security-Policy restrictions on external domains
+  // because the resulting blob: URL is treated as same-origin by the browser.
+  async function loadPhotoAsBlob(urlOrPath: string) {
+    let path = urlOrPath
+    if (urlOrPath.startsWith('http')) {
+      // Extract the storage path from a full Supabase URL
+      // e.g. .../object/public/coach-files/photos/uuid/profile.jpg
+      const m = urlOrPath.match(/\/coach-files\/([^?]+)/)
+      if (!m) return
+      path = m[1]
+    }
+    const { data } = await supabase.storage.from('coach-files').download(path)
+    if (data) setPhotoUrl(URL.createObjectURL(data))
+  }
+
   function applyProfile(p: Profile) {
     setSubject(p)
-    // photo_url may be a bare storage path (photos/uuid/profile.jpg) or a full URL
-    const raw = p.photo_url ?? null
-    if (raw && !raw.startsWith('http')) {
-      // Path-style: generate a signed URL so it works regardless of bucket visibility
-      supabase.storage.from('coach-files')
-        .createSignedUrl(raw, 60 * 60 * 24 * 365)
-        .then(({ data }) => setPhotoUrl(data?.signedUrl ?? undefined))
-    } else {
-      setPhotoUrl(raw ?? undefined)
-    }
+    if (p.photo_url) loadPhotoAsBlob(p.photo_url)
+    else setPhotoUrl(undefined)
     setFields({
       phone: p.phone ?? '',
       dbs_number: p.dbs_number ?? '',
@@ -337,16 +345,7 @@ export function CoachProfilePage() {
       .from('coach-files')
       .createSignedUrl(path, 60 * 60 * 24 * 365) // 1-year expiry
 
-    if (signErr) {
-      setUploadError(`Photo uploaded but can't display it — storage read policies may be missing. Run supabase/fix_photo_upload.sql in the Supabase SQL Editor. (${signErr.message})`)
-      setUploadStep(null)
-      setUploadingPhoto(false)
-      return
-    }
-
-    const displayUrl = signed.signedUrl
-
-    // Store just the path in DB so we can always generate a fresh signed URL on load
+    // Store just the path in DB (signed URL or blob URL used only for display)
     setUploadStep('Saving…')
     const { error: dbErr } = await supabase.from('profiles').update({ photo_url: path }).eq('id', targetId)
     if (dbErr) {
@@ -356,7 +355,8 @@ export function CoachProfilePage() {
       return
     }
 
-    setPhotoUrl(displayUrl)
+    // Show as blob URL — bypasses any CSP restrictions on external domains
+    setPhotoUrl(URL.createObjectURL(file))
     if (isOwnProfile && refreshProfile) await refreshProfile()
     setUploadStep(null)
     setUploadingPhoto(false)
