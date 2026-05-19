@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import type { Profile } from '../../types'
+import { ProfilePhoto } from '../../components/ui/ProfilePhoto'
 
 const VALUES = [
   { emoji: '🌟', title: 'Excellence', desc: 'We deliver high-quality coaching that challenges every child to be their best.' },
@@ -91,7 +92,7 @@ export function PortalAboutPage() {
               <div key={coach.id} className="bg-white border border-gray-200 rounded-2xl p-4 text-center">
                 <div className="w-16 h-16 rounded-full bg-[#1a3a6b] flex items-center justify-center mx-auto mb-3 overflow-hidden">
                   {coach.photo_url ? (
-                    <img src={coach.photo_url} alt={coach.full_name} className="w-full h-full object-cover" />
+                    <ProfilePhoto photoUrl={coach.photo_url} alt={coach.full_name} />
                   ) : (
                     <span className="text-white font-extrabold text-xl">{coach.full_name[0]}</span>
                   )}

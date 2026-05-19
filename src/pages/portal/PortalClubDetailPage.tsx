@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useBasket } from '../../contexts/BasketContext'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import type { School, Profile, ClubTerm, ParentChild } from '../../types'
+import { ProfilePhoto } from '../../components/ui/ProfilePhoto'
 
 interface ClubData {
   school: School
@@ -244,7 +245,7 @@ export function PortalClubDetailPage() {
           <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4 flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-[#1a3a6b] flex items-center justify-center overflow-hidden shrink-0">
               {leadCoach.photo_url ? (
-                <img src={leadCoach.photo_url} alt={leadCoach.full_name} className="w-full h-full object-cover" />
+                <ProfilePhoto photoUrl={leadCoach.photo_url} alt={leadCoach.full_name} />
               ) : (
                 <span className="text-white font-bold text-lg">{leadCoach.full_name[0]}</span>
               )}

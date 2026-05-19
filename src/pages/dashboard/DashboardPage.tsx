@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
+import { ProfilePhoto } from '../../components/ui/ProfilePhoto'
 import { ROLE_LABELS, canManageSchools, clocksInAnywhere } from '../../lib/roles'
 import type { Announcement } from '../../types'
 
@@ -34,9 +35,8 @@ export function DashboardPage() {
         {/* Profile tile */}
         <Card onClick={() => navigate('/profile')} className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-[#1a3a6b] flex items-center justify-center shrink-0 overflow-hidden">
-            {profile.photo_url ? (
-              <img src={profile.photo_url} alt={profile.full_name} className="w-full h-full object-cover" />
-            ) : (
+            <ProfilePhoto photoUrl={profile.photo_url} alt={profile.full_name} />
+            {!profile.photo_url && (
               <span className="text-white font-bold text-xl">
                 {profile.full_name.split(' ').map(n => n[0]).slice(0, 2).join('')}
               </span>
