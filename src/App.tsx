@@ -72,6 +72,16 @@ import { IncidentReportFormPage } from './pages/incidents/IncidentReportFormPage
 import { IncidentReportsPage } from './pages/incidents/IncidentReportsPage'
 import { IncidentReportDetailPage } from './pages/incidents/IncidentReportDetailPage'
 
+// Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
+// sent before /reset-password was added to the allowed redirect list).
+function RootRedirect() {
+  const hash = window.location.hash
+  if (hash.includes('type=recovery') || (hash.includes('access_token') && hash.includes('recovery'))) {
+    return <Navigate to={'/reset-password' + hash} replace />
+  }
+  return <Navigate to="/dashboard" replace />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -81,7 +91,8 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Root: intercept Supabase recovery tokens before redirecting */}
+          <Route path="/" element={<RootRedirect />} />
 
           {/* All authenticated staff */}
           <Route path="/dashboard" element={
