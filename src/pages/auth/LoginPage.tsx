@@ -46,7 +46,7 @@ export function LoginPage() {
     e.preventDefault()
     setResetSubmitting(true)
     await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/change-password`,
+      redirectTo: `${window.location.origin}/reset-password`,
     })
     setResetSent(true)
     setResetSubmitting(false)

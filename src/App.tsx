@@ -26,6 +26,7 @@ import { DataExportsPage } from './pages/admin/DataExportsPage'
 import { SchoolRosterPage } from './pages/school/SchoolRosterPage'
 
 import { LoginPage } from './pages/auth/LoginPage'
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { ClockInPage } from './pages/clockin/ClockInPage'
 import { TimesheetsPage } from './pages/clockin/TimesheetsPage'
@@ -79,6 +80,7 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* All authenticated staff */}
