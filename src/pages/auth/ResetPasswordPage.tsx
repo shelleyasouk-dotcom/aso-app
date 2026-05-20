@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { KeyRound, CheckCircle, AlertTriangle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Button } from '../../components/ui/Button'
@@ -7,55 +7,84 @@ import { Input } from '../../components/ui/Input'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
-  const [ready, setReady] = useState(false)
-  const [expired, setExpired] = useState(false)
+  const [searchParams] = useSearchParams()
+
+  const [status, setStatus] = useState<'verifying' | 'ready' | 'expired' | 'success' | 'error'>('verifying')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Supabase fires PASSWORD_RECOVERY when the reset hash is processed
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' && session) {
-        setReady(true)
-        setExpired(false)
+    let cancelled = false
+
+    async function init() {
+      // ── 1. PKCE flow: URL has ?code=... ──────────────────────────────────
+      const code = searchParams.get('code')
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        if (!cancelled) {
+          if (error) { setStatus('expired'); setErrorMsg(error.message) }
+          else setStatus('ready')
+        }
+        return
       }
-    })
 
-    // Also check for an existing session (in case the event already fired before mount)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true)
-    })
+      // ── 2. Implicit flow: hash has #access_token=...&type=recovery ────────
+      const hash = window.location.hash
+      if (hash.includes('type=recovery') || hash.includes('access_token')) {
+        // Supabase client processes the hash automatically via detectSessionInUrl.
+        // Wait briefly for onAuthStateChange to fire.
+        const timeout = setTimeout(() => {
+          if (!cancelled) setStatus('expired')
+        }, 8000)
 
-    // If nothing happens within 5 s the link is likely expired or malformed
-    const timer = setTimeout(() => {
-      setExpired(prev => {
-        if (!ready) return true
-        return prev
-      })
-    }, 5000)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (cancelled) return
+          if (event === 'PASSWORD_RECOVERY' && session) {
+            clearTimeout(timeout)
+            setStatus('ready')
+          }
+          if (event === 'SIGNED_IN' && session) {
+            clearTimeout(timeout)
+            setStatus('ready')
+          }
+        })
 
-    return () => {
-      subscription.unsubscribe()
-      clearTimeout(timer)
+        return () => {
+          cancelled = true
+          clearTimeout(timeout)
+          subscription.unsubscribe()
+        }
+      }
+
+      // ── 3. Already have a live session (user navigated back to the page) ──
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!cancelled) {
+        if (session) setStatus('ready')
+        else setStatus('expired')
+      }
     }
-  }, [ready])
+
+    init()
+    return () => { cancelled = true }
+  }, [searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
-    if (newPassword.length < 8) { setError('Password must be at least 8 characters'); return }
-    if (newPassword !== confirmPassword) { setError('Passwords do not match'); return }
+    setFormError(null)
+
+    if (newPassword.length < 8) { setFormError('Password must be at least 8 characters'); return }
+    if (newPassword !== confirmPassword) { setFormError('Passwords do not match'); return }
 
     setSaving(true)
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     if (error) {
-      setError(error.message)
+      setFormError(error.message)
       setSaving(false)
     } else {
-      setSuccess(true)
+      setStatus('success')
       setTimeout(() => navigate('/login'), 2500)
     }
   }
@@ -68,32 +97,43 @@ export function ResetPasswordPage() {
       </div>
 
       <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6">
-        {success ? (
+
+        {status === 'success' && (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <CheckCircle size={44} className="text-green-500" />
             <p className="font-bold text-gray-800 text-lg">Password updated!</p>
             <p className="text-sm text-gray-500">Redirecting you to sign in…</p>
           </div>
-        ) : expired && !ready ? (
+        )}
+
+        {(status === 'expired' || status === 'error') && (
           <div className="flex flex-col items-center gap-3 py-4 text-center">
             <AlertTriangle size={44} className="text-amber-500" />
             <p className="font-bold text-gray-800 text-lg">Link expired or invalid</p>
             <p className="text-sm text-gray-500 leading-relaxed">
-              This reset link has expired or already been used. Please request a new one.
+              This reset link has expired or already been used.
+              {errorMsg && <><br /><span className="text-xs text-gray-400 mt-1 block">{errorMsg}</span></>}
+            </p>
+            <p className="text-sm text-gray-500 leading-relaxed mt-1">
+              Please return to sign in and request a new reset link.
             </p>
             <button
               onClick={() => navigate('/login')}
-              className="mt-2 text-sm font-semibold text-[#1a3a6b] underline"
+              className="mt-2 bg-[#1a3a6b] text-white font-semibold px-6 py-2.5 rounded-xl text-sm"
             >
               Back to sign in
             </button>
           </div>
-        ) : !ready ? (
+        )}
+
+        {status === 'verifying' && (
           <div className="flex flex-col items-center gap-3 py-6">
             <div className="w-8 h-8 border-4 border-[#1a3a6b] border-t-transparent rounded-full animate-spin" />
             <p className="text-sm text-gray-500">Verifying reset link…</p>
           </div>
-        ) : (
+        )}
+
+        {status === 'ready' && (
           <>
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 bg-[#1a3a6b] rounded-xl flex items-center justify-center shrink-0">
@@ -125,9 +165,9 @@ export function ResetPasswordPage() {
                 autoComplete="new-password"
               />
 
-              {error && (
+              {formError && (
                 <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-700 text-sm">
-                  {error}
+                  {formError}
                 </div>
               )}
 
@@ -137,6 +177,7 @@ export function ResetPasswordPage() {
             </form>
           </>
         )}
+
       </div>
     </div>
   )
