@@ -44,6 +44,7 @@ export function TimesheetsPage() {
   const [records, setRecords] = useState<EnrichedRecord[]>([])
   const [staff, setStaff] = useState<Profile[]>([])
   const [schools, setSchools] = useState<School[]>([])
+  const [areaStaffIds, setAreaStaffIds] = useState<string[] | null>(null)
   const [filterStaff, setFilterStaff] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -57,9 +58,47 @@ export function TimesheetsPage() {
 
   useEffect(() => {
     if (!profile) return
-    let staffQ = supabase.from('profiles').select('*').order('full_name')
-    if (isScopedToArea && profile.area) staffQ = staffQ.eq('area', profile.area)
-    staffQ.then(({ data }) => setStaff(data ?? []))
+
+    async function loadStaff() {
+      if (!isScopedToArea) {
+        // Director: load all staff
+        const { data } = await supabase.from('profiles').select('*').order('full_name')
+        setStaff(data ?? [])
+        setAreaStaffIds(null)
+        return
+      }
+
+      // Area lead / lead coach: find staff via schools in their area
+      // Step 1: find schools in this area
+      let schoolIds: string[] = []
+      if (profile.area) {
+        const { data: areaSchools } = await supabase
+          .from('schools').select('id').eq('area', profile.area)
+        schoolIds = (areaSchools ?? []).map((s: { id: string }) => s.id)
+      }
+
+      // Step 2: find staff assigned to those schools
+      let staffIds: string[] = []
+      if (schoolIds.length > 0) {
+        const { data: assignments } = await supabase
+          .from('staff_school_assignments').select('staff_id').in('school_id', schoolIds)
+        staffIds = [...new Set((assignments ?? []).map((a: { staff_id: string }) => a.staff_id))]
+      }
+
+      // Always include the logged-in user themselves
+      if (!staffIds.includes(profile.id)) staffIds.push(profile.id)
+      setAreaStaffIds(staffIds)
+
+      if (staffIds.length > 0) {
+        const { data } = await supabase
+          .from('profiles').select('*').in('id', staffIds).order('full_name')
+        setStaff(data ?? [])
+      } else {
+        setStaff([])
+      }
+    }
+
+    loadStaff()
     supabase.from('schools').select('*').order('name').then(({ data }) => setSchools(data ?? []))
   }, [profile, isScopedToArea])
 
@@ -72,17 +111,21 @@ export function TimesheetsPage() {
       .order('clock_in', { ascending: false })
       .limit(500)
     if (filterStaff) q = q.eq('staff_id', filterStaff)
-    const { data } = await q
-    let rows = (data as EnrichedRecord[]) ?? []
-    // Scope lead coaches to their own area only
-    if (isScopedToArea && profile.area) {
-      rows = rows.filter(r => r.staff?.area === profile.area)
+    // Scope to area staff IDs if set (area_lead / lead_coach)
+    if (isScopedToArea && areaStaffIds !== null) {
+      if (areaStaffIds.length > 0) q = q.in('staff_id', areaStaffIds)
+      else { setRecords([]); setLoading(false); return }
     }
-    setRecords(rows)
+    const { data } = await q
+    setRecords((data as EnrichedRecord[]) ?? [])
     setLoading(false)
-  }, [filterStaff, profile, isScopedToArea])
+  }, [filterStaff, profile, isScopedToArea, areaStaffIds])
 
-  useEffect(() => { loadRecords() }, [loadRecords])
+  // Wait for areaStaffIds to be resolved before loading records for scoped roles
+  useEffect(() => {
+    if (isScopedToArea && areaStaffIds === null) return
+    loadRecords()
+  }, [loadRecords, isScopedToArea, areaStaffIds])
 
   function startEdit(rec: EnrichedRecord) {
     setEditingId(rec.id)
