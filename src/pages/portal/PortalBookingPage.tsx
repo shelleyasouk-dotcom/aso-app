@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, User, CheckCircle, Lock, AlertCircle } from 'lucide-react'
+import { ChevronLeft, User, CheckCircle, Lock, AlertCircle, Tag } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { PortalLayout } from '../../components/layout/PortalLayout'
@@ -82,6 +82,13 @@ export function PortalBookingPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Discount code
+  const [discountCode, setDiscountCode] = useState('')
+  const [checkingDiscount, setCheckingDiscount] = useState(false)
+  const [discountResult, setDiscountResult] = useState<'valid' | 'invalid' | null>(null)
+  const [discountAmountPence, setDiscountAmountPence] = useState(0)
+  const [discountLabel, setDiscountLabel] = useState('')
 
   // Selected child
   const [selectedChildId, setSelectedChildId] = useState<string | 'new'>('new')
@@ -217,6 +224,37 @@ export function PortalBookingPage() {
     signatureName.trim().length > 0
   )
 
+  async function applyDiscount() {
+    if (!term || !discountCode.trim()) return
+    setCheckingDiscount(true)
+    setDiscountResult(null)
+    const today = new Date().toISOString().split('T')[0]
+    const { data } = await supabase
+      .from('discount_codes')
+      .select('id,code,type,value,max_uses,uses,valid_from,valid_until,is_active')
+      .eq('code', discountCode.trim().toUpperCase())
+      .eq('is_active', true)
+      .single()
+    setCheckingDiscount(false)
+    if (
+      data &&
+      (!data.valid_from || data.valid_from <= today) &&
+      (!data.valid_until || data.valid_until >= today) &&
+      (data.max_uses === null || data.uses < data.max_uses)
+    ) {
+      const amt = data.type === 'percentage'
+        ? Math.round(term.price_pence * data.value / 100)
+        : Math.min(Math.round(data.value), term.price_pence)
+      setDiscountAmountPence(amt)
+      setDiscountLabel(data.type === 'percentage' ? `${data.value}% off` : `£${(data.value / 100).toFixed(2)} off`)
+      setDiscountResult('valid')
+    } else {
+      setDiscountAmountPence(0)
+      setDiscountLabel('')
+      setDiscountResult('invalid')
+    }
+  }
+
   async function handlePay() {
     if (!term || !user) return
     setError(null)
@@ -228,29 +266,32 @@ export function PortalBookingPage() {
 
     const { data, error: fnErr } = await supabase.functions.invoke('create-checkout-session', {
       body: {
-        club_term_id: term.id,
-        child: {
-          full_name: childName.trim(),
-          date_of_birth: childDob || null,
-          year_group: yearGroup.trim() || null,
-          class_name: className.trim() || null,
-          additional_needs: hasAdditionalNeeds ? additionalNeedsDetails.trim() : null,
-          parent_name: parentName.trim(),
-          parent_relationship: parentRelationship.trim(),
-          parent_phone: parentPhone.trim(),
-          address_line1: addressLine1.trim(),
-          address_city: addressCity.trim(),
-          address_postcode: addressPostcode.trim().toUpperCase(),
-          emergency_contact_name: emergencyName.trim(),
-          emergency_contact_relationship: emergencyRelationship.trim() || null,
-          emergency_contact_phone: emergencyPhone.trim(),
-          secondary_emergency_name: secondaryName.trim(),
-          secondary_emergency_phone: secondaryPhone.trim(),
-          secondary_emergency_email: secondaryEmail.trim(),
-          collection_person: collectionPerson.trim(),
-          walk_home_alone: walkHomeAlone,
-          photo_consent: photoConsent,
-        },
+        items: [{
+          club_term_id: term.id,
+          existing_child_id: selectedChildId !== 'new' ? selectedChildId : null,
+          child: {
+            full_name: childName.trim(),
+            date_of_birth: childDob || null,
+            year_group: yearGroup.trim() || null,
+            class_name: className.trim() || null,
+            additional_needs: hasAdditionalNeeds ? additionalNeedsDetails.trim() : null,
+            parent_name: parentName.trim(),
+            parent_relationship: parentRelationship.trim(),
+            parent_phone: parentPhone.trim(),
+            address_line1: addressLine1.trim(),
+            address_city: addressCity.trim(),
+            address_postcode: addressPostcode.trim().toUpperCase(),
+            emergency_contact_name: emergencyName.trim(),
+            emergency_contact_relationship: emergencyRelationship.trim() || null,
+            emergency_contact_phone: emergencyPhone.trim(),
+            secondary_emergency_name: secondaryName.trim(),
+            secondary_emergency_phone: secondaryPhone.trim(),
+            secondary_emergency_email: secondaryEmail.trim(),
+            collection_person: collectionPerson.trim(),
+            walk_home_alone: walkHomeAlone,
+            photo_consent: photoConsent,
+          },
+        }],
         consents: {
           medically_fit: medicallyFit,
           first_aid_permission: firstAidPermission,
@@ -258,6 +299,7 @@ export function PortalBookingPage() {
           policy_agreed: policyAgreed,
           signature_name: signatureName.trim(),
         },
+        discount_code: discountResult === 'valid' ? discountCode.trim().toUpperCase() : null,
       },
     })
 
@@ -523,8 +565,43 @@ export function PortalBookingPage() {
                   </div>
                   <div className="px-4 py-3 flex items-center justify-between">
                     <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Total</p>
-                    <p className="text-xl font-extrabold text-[#1a3a6b]">{formatPrice(term.price_pence)}</p>
+                    <div className="text-right">
+                      {discountAmountPence > 0 && (
+                        <p className="text-sm text-gray-400 line-through">{formatPrice(term.price_pence)}</p>
+                      )}
+                      <p className="text-xl font-extrabold text-[#1a3a6b]">{formatPrice(term.price_pence - discountAmountPence)}</p>
+                    </div>
                   </div>
+                </div>
+
+                {/* Discount code */}
+                <div className="bg-gray-50 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Tag size={14} className="text-gray-500" />
+                    <p className="text-sm font-semibold text-gray-700">Have a discount code?</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter code"
+                      value={discountCode}
+                      onChange={e => { setDiscountCode(e.target.value.toUpperCase()); setDiscountResult(null); setDiscountAmountPence(0) }}
+                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm uppercase tracking-wider bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
+                    />
+                    <button
+                      onClick={applyDiscount}
+                      disabled={!discountCode.trim() || checkingDiscount}
+                      className="px-4 py-2 rounded-xl border border-[#1a3a6b] text-[#1a3a6b] text-sm font-semibold hover:bg-[#1a3a6b]/5 disabled:opacity-40 transition-colors"
+                    >
+                      {checkingDiscount ? '…' : 'Apply'}
+                    </button>
+                  </div>
+                  {discountResult === 'valid' && (
+                    <p className="text-sm text-green-600 font-semibold mt-2">✓ {discountCode.toUpperCase()} — {discountLabel} applied</p>
+                  )}
+                  {discountResult === 'invalid' && (
+                    <p className="text-sm text-red-500 mt-2">Invalid or expired code</p>
+                  )}
                 </div>
 
                 {/* Consent questions */}
@@ -586,7 +663,7 @@ export function PortalBookingPage() {
                 </div>
 
                 <Button size="lg" fullWidth disabled={!step4Valid || submitting} onClick={handlePay}>
-                  {submitting ? 'Redirecting to payment…' : `Pay ${formatPrice(term.price_pence)} securely`}
+                  {submitting ? 'Redirecting to payment…' : `Pay ${formatPrice(term.price_pence - discountAmountPence)} securely`}
                 </Button>
               </div>
             )}
