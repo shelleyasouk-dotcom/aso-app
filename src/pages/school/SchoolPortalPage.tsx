@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   ChevronRight,
   ArrowLeftRight,
+  Briefcase,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -276,6 +277,35 @@ export function SchoolPortalPage() {
                 </Card>
               )
             })}
+          </div>
+        </div>
+
+        {/* Work With Us */}
+        <div className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] rounded-2xl p-5 text-white">
+          <div className="flex items-center gap-2 mb-2">
+            <Briefcase size={16} className="text-[#f5c518]" />
+            <p className="font-bold text-sm">Know someone who'd make a great coach?</p>
+          </div>
+          <p className="text-white/70 text-xs leading-relaxed mb-4">
+            We're always looking for passionate sports coaches in your area. Share our careers page with parents, staff, or anyone who loves working with young people.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <a
+              href="/portal/careers"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-[#f5c518] text-[#1a3a6b] font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-yellow-400 transition-colors"
+            >
+              View vacancies <ChevronRight size={12} />
+            </a>
+            <a
+              href="/portal/coach-pool"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-white/10 text-white font-semibold text-xs px-4 py-2.5 rounded-xl hover:bg-white/20 transition-colors border border-white/20"
+            >
+              Join the coach pool <ChevronRight size={12} />
+            </a>
           </div>
         </div>
 
