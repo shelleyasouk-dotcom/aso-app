@@ -456,6 +456,67 @@ export function PortalHomePage() {
           </div>
         </div>
       </section>
+
+      {/* Work With Us */}
+      <section className="bg-gradient-to-br from-[#1a3a6b] via-[#1e4a8c] to-[#142f58] py-14 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-2 bg-[#f5c518]/20 text-[#f5c518] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+              🏃 Join the Team
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Work With Us</h2>
+            <p className="text-white/70 text-sm max-w-lg mx-auto leading-relaxed">
+              Passionate about sport and young people? We're always looking for energetic coaches to join our growing team across the UK.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+            {/* Apply */}
+            <div className="bg-white rounded-2xl p-6 flex flex-col">
+              <span className="text-3xl mb-3">👟</span>
+              <h3 className="font-extrabold text-[#1a3a6b] text-lg mb-2">Apply for a Vacancy</h3>
+              <p className="text-gray-500 text-sm leading-relaxed flex-1 mb-5">
+                Browse our current openings for sports coaches, lead coaches and support staff across all areas.
+              </p>
+              <button
+                onClick={() => navigate('/portal/careers')}
+                className="inline-flex items-center gap-2 bg-[#1a3a6b] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#142f58] transition-colors text-sm self-start"
+              >
+                See open roles <ChevronRight size={14} />
+              </button>
+            </div>
+            {/* Coach pool */}
+            <div className="bg-white/10 border border-white/20 rounded-2xl p-6 flex flex-col">
+              <span className="text-3xl mb-3">📋</span>
+              <h3 className="font-extrabold text-white text-lg mb-2">Join the Coach Pool</h3>
+              <p className="text-white/70 text-sm leading-relaxed flex-1 mb-5">
+                No current vacancy near you? Register your interest and we'll get in touch when a suitable placement opens up in your area.
+              </p>
+              <button
+                onClick={() => navigate('/portal/coach-pool')}
+                className="inline-flex items-center gap-2 bg-[#f5c518] text-[#1a3a6b] font-bold px-5 py-2.5 rounded-xl hover:bg-yellow-400 transition-colors text-sm self-start"
+              >
+                Register interest <ChevronRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Perks strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { emoji: '🏅', label: 'Funded DBS check' },
+              { emoji: '📚', label: 'CPD & training support' },
+              { emoji: '📍', label: 'Local placements' },
+              { emoji: '💰', label: 'Competitive hourly pay' },
+            ].map(p => (
+              <div key={p.label} className="bg-white/10 rounded-xl px-3 py-3 text-center">
+                <div className="text-xl mb-1">{p.emoji}</div>
+                <p className="text-white/80 text-xs font-semibold leading-tight">{p.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </PortalLayout>
   )
 }
