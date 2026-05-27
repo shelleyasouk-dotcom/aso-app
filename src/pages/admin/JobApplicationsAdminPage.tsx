@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Mail, Phone, MapPin, ChevronDown, ChevronUp, X, Users } from 'lucide-react'
+import { Search, Mail, Phone, MapPin, ChevronDown, ChevronUp, Users } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -328,7 +328,7 @@ export function JobApplicationsAdminPage() {
             >
               <option value="">All vacancies</option>
               {jobs.map(([id, title]) => (
-                <option key={id} value={id}>{title}</option>
+                <option key={id ?? ''} value={id ?? ''}>{title}</option>
               ))}
             </select>
           )}

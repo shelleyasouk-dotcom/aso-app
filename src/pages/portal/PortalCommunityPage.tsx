@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import {
-  Heart, Users, Star, Briefcase, ChevronRight, MapPin, Clock, Globe, HandHeart
+  Heart, Users, Star, Briefcase, ChevronRight, Globe, HandHeart
 } from 'lucide-react'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 

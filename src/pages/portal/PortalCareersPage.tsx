@@ -303,10 +303,10 @@ export function PortalCareersPage() {
             {[
               { emoji: '🏅', title: 'Fully funded DBS', desc: 'We cover your DBS check so you can start straight away.' },
               { emoji: '📚', title: 'CPD & Training', desc: 'Regular training days and qualifications support.' },
-              { emoji: '📍', title: 'Local Placements', desc: 'Work near home — we'll match you to local schools.' },
+              { emoji: '📍', title: 'Local Placements', desc: "Work near home — we'll match you to local schools." },
               { emoji: '💰', title: 'Competitive Pay', desc: 'Hourly rates that reflect your experience and qualifications.' },
               { emoji: '🤝', title: 'Supportive Team', desc: 'Dedicated area leads and a friendly national team.' },
-              { emoji: '🏃', title: 'Make a Difference', desc: 'Directly impact children's health and wellbeing every day.' },
+              { emoji: '🏃', title: 'Make a Difference', desc: "Directly impact children's health and wellbeing every day." },
             ].map(item => (
               <div key={item.title} className="bg-white/10 rounded-2xl p-4 text-left">
                 <div className="text-2xl mb-2">{item.emoji}</div>

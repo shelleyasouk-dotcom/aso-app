@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Edit2, Eye, EyeOff, Trash2, X, Check, Globe, MapPin, Clock, Briefcase } from 'lucide-react'
+import { Plus, Edit2, EyeOff, Trash2, X, Check, Globe, MapPin, Clock, Briefcase } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
