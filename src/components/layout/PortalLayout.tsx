@@ -13,7 +13,7 @@ const NAV_LINKS = [
   { path: '/portal/about', label: 'About' },
   { path: '/portal/for-schools', label: 'For Schools' },
   { path: '/portal/affiliations', label: 'Affiliations' },
-  { path: '/portal/careers', label: 'Careers' },
+  { path: '/portal/community', label: 'Community' },
 ]
 
 interface PortalLayoutProps {
