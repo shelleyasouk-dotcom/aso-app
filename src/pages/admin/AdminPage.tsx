@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard, Tag, Download } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard, Tag, Download, Briefcase, ClipboardList } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -118,6 +118,20 @@ export function AdminPage() {
       icon: Download,
       path: '/admin/data-exports',
       color: 'bg-slate-50 text-slate-700',
+    },
+    {
+      label: 'Job Adverts',
+      description: 'Post and manage public job vacancies on the careers page',
+      icon: Briefcase,
+      path: '/admin/job-adverts',
+      color: 'bg-indigo-50 text-indigo-700',
+    },
+    {
+      label: 'Applications',
+      description: 'View and manage online job applications and coach pool entries',
+      icon: ClipboardList,
+      path: '/admin/job-applications',
+      color: 'bg-pink-50 text-pink-700',
     },
   ]
 

@@ -71,6 +71,12 @@ import { PupilImportPage } from './pages/admin/PupilImportPage'
 import { IncidentReportFormPage } from './pages/incidents/IncidentReportFormPage'
 import { IncidentReportsPage } from './pages/incidents/IncidentReportsPage'
 import { IncidentReportDetailPage } from './pages/incidents/IncidentReportDetailPage'
+import { PortalCareersPage } from './pages/portal/PortalCareersPage'
+import { PortalCareerDetailPage } from './pages/portal/PortalCareerDetailPage'
+import { PortalCareerApplyPage } from './pages/portal/PortalCareerApplyPage'
+import { PortalCoachPoolJoinPage } from './pages/portal/PortalCoachPoolJoinPage'
+import { JobAdvertsAdminPage } from './pages/admin/JobAdvertsAdminPage'
+import { JobApplicationsAdminPage } from './pages/admin/JobApplicationsAdminPage'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -330,6 +336,24 @@ export default function App() {
           {/* School portal — class roster */}
           <Route path="/school-portal/roster" element={
             <ProtectedRoute><SchoolRosterPage /></ProtectedRoute>
+          } />
+
+          {/* Recruitment — public */}
+          <Route path="/portal/careers" element={<PortalCareersPage />} />
+          <Route path="/portal/careers/:id" element={<PortalCareerDetailPage />} />
+          <Route path="/portal/careers/:id/apply" element={<PortalCareerApplyPage />} />
+          <Route path="/portal/coach-pool" element={<PortalCoachPoolJoinPage />} />
+
+          {/* Recruitment — admin */}
+          <Route path="/admin/job-adverts" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <JobAdvertsAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/job-applications" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <JobApplicationsAdminPage />
+            </ProtectedRoute>
           } />
 
           {/* Admin — bookings & club terms */}
