@@ -366,6 +366,7 @@ export interface ClubTerm {
   open_booking_opens: string | null
   is_active: boolean
   notes: string | null
+  excluded_dates?: string[] | null
   created_at: string
   school?: School
 }

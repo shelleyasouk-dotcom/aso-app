@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, ChevronDown, ChevronUp, Trash2, Users, Pencil } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, Trash2, Users, Pencil, CalendarDays, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -11,13 +11,43 @@ interface TermWithCount extends ClubTerm { confirmedCount: number }
 
 const CAPACITIES = [8, 16, 24, 32]
 
+const DAY_TO_DOW: Record<string, number> = {
+  Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3,
+  Thursday: 4, Friday: 5, Saturday: 6,
+}
+
+function parseLocalDate(str: string): Date {
+  const [y, m, d] = str.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function getSessionDates(startDate: string, endDate: string, sessionDay: string): string[] {
+  const targetDow = DAY_TO_DOW[sessionDay]
+  if (targetDow === undefined) return []
+  const dates: string[] = []
+  const end = parseLocalDate(endDate)
+  const d = parseLocalDate(startDate)
+  while (d <= end) {
+    if (d.getDay() === targetDow) dates.push(toDateStr(d))
+    d.setDate(d.getDate() + 1)
+  }
+  return dates
+}
+
 export function ClubTermsAdminPage() {
   const [schools, setSchools] = useState<School[]>([])
   const [terms, setTerms] = useState<TermWithCount[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedSchool, setExpandedSchool] = useState<string | null>(null)
-  const [showForm, setShowForm] = useState<string | null>(null) // school id
+  const [showForm, setShowForm] = useState<string | null>(null)
   const [editingTermId, setEditingTermId] = useState<string | null>(null)
+  const [editingDatesTermId, setEditingDatesTermId] = useState<string | null>(null)
+  const [localExcluded, setLocalExcluded] = useState<string[]>([])
+  const [savingDates, setSavingDates] = useState(false)
 
   // Form state
   const [termName, setTermName] = useState('')
@@ -30,9 +60,7 @@ export function ClubTermsAdminPage() {
   const [openDate, setOpenDate] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    loadAll()
-  }, [])
+  useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
     const [schoolsRes, termsRes] = await Promise.all([
@@ -41,7 +69,6 @@ export function ClubTermsAdminPage() {
     ])
     const termList = (termsRes.data ?? []) as ClubTerm[]
 
-    // Fetch confirmed booking counts for each term
     const counts: Record<string, number> = {}
     if (termList.length > 0) {
       const { data: bookings } = await supabase
@@ -49,7 +76,7 @@ export function ClubTermsAdminPage() {
         .select('club_term_id')
         .in('club_term_id', termList.map(t => t.id))
         .eq('status', 'confirmed')
-      ;(bookings ?? []).forEach((b: any) => {
+      ;(bookings ?? []).forEach((b: { club_term_id: string }) => {
         counts[b.club_term_id] = (counts[b.club_term_id] ?? 0) + 1
       })
     }
@@ -67,6 +94,7 @@ export function ClubTermsAdminPage() {
 
   function startEditing(term: TermWithCount) {
     setEditingTermId(term.id)
+    setEditingDatesTermId(null)
     setTermName(term.term_name)
     setStartDate(term.start_date)
     setEndDate(term.end_date)
@@ -76,6 +104,40 @@ export function ClubTermsAdminPage() {
     setPriorityDate(term.priority_booking_opens ?? '')
     setOpenDate(term.open_booking_opens ?? '')
     setShowForm(null)
+  }
+
+  function startEditingDates(term: TermWithCount) {
+    setEditingDatesTermId(term.id)
+    setEditingTermId(null)
+    setLocalExcluded(term.excluded_dates ?? [])
+    resetForm()
+  }
+
+  function toggleExcluded(date: string) {
+    setLocalExcluded(prev =>
+      prev.includes(date) ? prev.filter(d => d !== date) : [...prev, date]
+    )
+  }
+
+  async function saveDates() {
+    if (!editingDatesTermId) return
+    setSavingDates(true)
+    const term = terms.find(t => t.id === editingDatesTermId)!
+    const school = schools.find(s => s.id === term.school_id)!
+    const allDates = getSessionDates(term.start_date, term.end_date, school.session_day)
+    const newNumSessions = allDates.length - localExcluded.length
+    const pricePerSession = term.num_sessions > 0 ? term.price_pence / term.num_sessions : 0
+    const newPricePence = Math.round(pricePerSession * newNumSessions)
+
+    await supabase.from('club_terms').update({
+      excluded_dates: localExcluded,
+      num_sessions: newNumSessions,
+      price_pence: newPricePence,
+    }).eq('id', editingDatesTermId)
+
+    setEditingDatesTermId(null)
+    await loadAll()
+    setSavingDates(false)
   }
 
   async function handleUpdate() {
@@ -160,9 +222,10 @@ export function ClubTermsAdminPage() {
 
               {isExpanded && (
                 <div className="mt-4 flex flex-col gap-3">
-                  {/* Existing terms */}
                   {schoolTerms.map(term => (
                     <div key={term.id} className={`border rounded-xl p-3 ${term.is_active ? 'border-[#1a3a6b]/30 bg-[#1a3a6b]/3' : 'border-gray-200 bg-gray-50'}`}>
+
+                      {/* ── Edit term details form ── */}
                       {editingTermId === term.id ? (
                         <div className="flex flex-col gap-3">
                           <p className="text-sm font-bold text-[#1a3a6b]">Edit Term</p>
@@ -192,6 +255,60 @@ export function ClubTermsAdminPage() {
                             </Button>
                           </div>
                         </div>
+
+                      /* ── Edit session dates form ── */
+                      ) : editingDatesTermId === term.id ? (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-bold text-[#1a3a6b]">Edit Session Dates</p>
+                            <button onClick={() => setEditingDatesTermId(null)}>
+                              <X size={16} className="text-gray-400 hover:text-gray-700" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Click a date to mark it as cancelled (e.g. teacher training day). Greyed-out dates are excluded from the count and price.
+                          </p>
+                          {school.session_day ? (
+                            <>
+                              <div className="flex flex-wrap gap-2">
+                                {getSessionDates(term.start_date, term.end_date, school.session_day).map(date => {
+                                  const excluded = localExcluded.includes(date)
+                                  const d = parseLocalDate(date)
+                                  const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                                  return (
+                                    <button
+                                      key={date}
+                                      onClick={() => toggleExcluded(date)}
+                                      title={excluded ? 'Click to restore' : 'Click to exclude'}
+                                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+                                        excluded
+                                          ? 'bg-red-50 border-red-200 text-red-400 line-through'
+                                          : 'bg-green-50 border-green-200 text-green-700 hover:bg-red-50 hover:border-red-200 hover:text-red-500'
+                                      }`}
+                                    >
+                                      {label}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                              <p className="text-xs text-gray-400">
+                                {getSessionDates(term.start_date, term.end_date, school.session_day).length - localExcluded.length} sessions · price auto-adjusts on save
+                              </p>
+                              <div className="flex gap-2">
+                                <Button size="sm" disabled={savingDates} onClick={saveDates}>
+                                  {savingDates ? 'Saving…' : 'Save Dates'}
+                                </Button>
+                                <Button size="sm" variant="secondary" onClick={() => setEditingDatesTermId(null)}>
+                                  Cancel
+                                </Button>
+                              </div>
+                            </>
+                          ) : (
+                            <p className="text-xs text-amber-600">No session day set for this school. Set it in Schools admin first.</p>
+                          )}
+                        </div>
+
+                      /* ── Normal term display ── */
                       ) : (
                         <div className="flex items-start justify-between gap-2">
                           <div>
@@ -201,6 +318,9 @@ export function ClubTermsAdminPage() {
                               {' – '}
                               {new Date(term.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                               {' · '}{term.num_sessions} sessions
+                              {(term.excluded_dates ?? []).length > 0 && (
+                                <span className="ml-1 text-amber-600">({term.excluded_dates!.length} excluded)</span>
+                              )}
                             </p>
                             <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                               <span className="text-xs font-semibold text-[#1a3a6b]">
@@ -233,7 +353,13 @@ export function ClubTermsAdminPage() {
                             >
                               {term.is_active ? 'Active' : 'Draft'}
                             </button>
-                            <button onClick={() => startEditing(term)} title="Edit term">
+                            <button
+                              onClick={() => startEditingDates(term)}
+                              title="Edit session dates"
+                            >
+                              <CalendarDays size={14} className="text-gray-400 hover:text-[#1a3a6b]" />
+                            </button>
+                            <button onClick={() => startEditing(term)} title="Edit term details">
                               <Pencil size={14} className="text-gray-400 hover:text-[#1a3a6b]" />
                             </button>
                             {term.confirmedCount === 0 && (
