@@ -1,20 +1,105 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { Menu, X, LogOut, User, ChevronDown, ShoppingCart } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useBasket } from '../../contexts/BasketContext'
 
-const NAV_LINKS = [
-  { path: '/portal', label: 'Home', exact: true },
-  { path: '/portal/clubs', label: 'Find Clubs' },
-  { path: '/portal/summer-camps', label: 'Summer Camps', badge: 'New' },
-  { path: '/portal/sports', label: 'Sports' },
-  { path: '/portal/about', label: 'About' },
-  { path: '/portal/for-schools', label: 'For Schools' },
-  { path: '/portal/affiliations', label: 'Affiliations' },
-  { path: '/portal/careers', label: 'Work With Us' },
+// ─── Nav structure ────────────────────────────────────────────────────────────
+
+type NavItem =
+  | { type: 'link';     path: string; label: string; exact?: boolean; badge?: string }
+  | { type: 'dropdown'; label: string; items: { path: string; label: string; badge?: string; desc?: string }[] }
+
+const NAV: NavItem[] = [
+  { type: 'link', path: '/portal', label: 'Home', exact: true },
+  { type: 'link', path: '/portal/clubs', label: 'Find Clubs' },
+  {
+    type: 'dropdown',
+    label: 'Activities',
+    items: [
+      { path: '/portal/summer-camps', label: 'Summer Camps', badge: 'New', desc: 'Holiday camps open to all children' },
+      { path: '/portal/sports',       label: 'Sports',                     desc: 'All the sports we coach' },
+    ],
+  },
+  {
+    type: 'dropdown',
+    label: 'About',
+    items: [
+      { path: '/portal/about',        label: 'About ASO',    desc: 'Our story, values & team' },
+      { path: '/portal/for-schools',  label: 'For Schools',  desc: 'Partner with us' },
+      { path: '/portal/affiliations', label: 'Affiliations', desc: 'Our governing bodies' },
+    ],
+  },
+  { type: 'link', path: '/portal/careers', label: 'Work With Us' },
 ]
+
+// Flat list for footer / mobile
+const ALL_LINKS = NAV.flatMap(item =>
+  item.type === 'link' ? [item] : item.items.map(i => ({ ...i, type: 'link' as const }))
+)
+
+// ─── Dropdown component ───────────────────────────────────────────────────────
+
+function NavDropdown({
+  label,
+  items,
+  isAnyActive,
+}: {
+  label: string
+  items: { path: string; label: string; badge?: string; desc?: string }[]
+  isAnyActive: boolean
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+          isAnyActive || open ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'
+        }`}
+      >
+        {label}
+        <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full mt-1.5 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 min-w-[200px] z-50">
+          {items.map(item => (
+            <button
+              key={item.path}
+              onClick={() => { navigate(item.path); setOpen(false) }}
+              className="w-full text-left px-4 py-2.5 hover:bg-gray-50 transition-colors group"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-800 group-hover:text-[#1a3a6b]">{item.label}</span>
+                {item.badge && (
+                  <span className="text-[9px] font-extrabold bg-[#f5c518] text-[#1a3a6b] px-1.5 py-0.5 rounded-full leading-none uppercase tracking-wide">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              {item.desc && <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Layout ───────────────────────────────────────────────────────────────────
 
 interface PortalLayoutProps {
   children: ReactNode
@@ -39,11 +124,9 @@ export function PortalLayout({ children }: PortalLayoutProps) {
       {/* Header */}
       <header className="bg-[#1a3a6b] text-white sticky top-0 z-30 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
+
           {/* Logo */}
-          <button
-            onClick={() => navigate('/portal')}
-            className="flex items-center gap-2 shrink-0"
-          >
+          <button onClick={() => navigate('/portal')} className="flex items-center gap-2 shrink-0">
             <div className="bg-white rounded-xl p-1 shrink-0">
               <img src="/Untitled-2 (1).png" alt="Active School" className="h-8 w-8 object-contain" />
             </div>
@@ -52,29 +135,42 @@ export function PortalLayout({ children }: PortalLayoutProps) {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 ml-4 flex-1">
-            {NAV_LINKS.map(link => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  isActive(link.path, link.exact)
-                    ? 'bg-white/20 text-white'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {link.label}
-                {link.badge && (
-                  <span className="text-[9px] font-extrabold bg-[#f5c518] text-[#1a3a6b] px-1.5 py-0.5 rounded-full leading-none uppercase tracking-wide">
-                    {link.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
+            {NAV.map(item => {
+              if (item.type === 'link') {
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                      isActive(item.path, item.exact)
+                        ? 'bg-white/20 text-white'
+                        : 'text-white/70 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {item.label}
+                    {item.badge && (
+                      <span className="text-[9px] font-extrabold bg-[#f5c518] text-[#1a3a6b] px-1.5 py-0.5 rounded-full leading-none uppercase tracking-wide">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                )
+              }
+              const isAnyActive = item.items.some(i => isActive(i.path))
+              return (
+                <NavDropdown
+                  key={item.label}
+                  label={item.label}
+                  items={item.items}
+                  isAnyActive={isAnyActive}
+                />
+              )
+            })}
           </nav>
 
           {/* Auth area */}
           <div className="ml-auto flex items-center gap-2">
-            {/* Basket icon */}
+            {/* Basket */}
             {items.length > 0 && (
               <button
                 onClick={() => navigate('/portal/basket')}
@@ -86,6 +182,8 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                 </span>
               </button>
             )}
+
+            {/* User menu */}
             {profile ? (
               <div className="relative">
                 <button
@@ -169,15 +267,15 @@ export function PortalLayout({ children }: PortalLayoutProps) {
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile menu — flat list of all links */}
         {menuOpen && (
           <div className="md:hidden border-t border-white/10 bg-[#142f58] px-4 py-3 flex flex-col gap-1">
-            {NAV_LINKS.map(link => (
+            {ALL_LINKS.map(link => (
               <button
                 key={link.path}
                 onClick={() => { navigate(link.path); setMenuOpen(false) }}
                 className={`text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                  isActive(link.path, link.exact)
+                  isActive(link.path)
                     ? 'bg-white/20 text-white'
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
@@ -231,7 +329,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
             <div>
               <p className="font-semibold mb-3 text-sm">Quick Links</p>
               <div className="flex flex-col gap-2">
-                {NAV_LINKS.slice(1).map(link => (
+                {ALL_LINKS.filter(l => l.path !== '/portal').map(link => (
                   <Link key={link.path} to={link.path} className="text-white/60 hover:text-white text-sm transition-colors flex items-center gap-1.5">
                     {link.label}
                     {link.badge && (
@@ -246,18 +344,18 @@ export function PortalLayout({ children }: PortalLayoutProps) {
             <div>
               <p className="font-semibold mb-3 text-sm">For Parents</p>
               <div className="flex flex-col gap-2">
-                <Link to="/portal/login" className="text-white/60 hover:text-white text-sm transition-colors">Parent Login</Link>
+                <Link to="/portal/login"    className="text-white/60 hover:text-white text-sm transition-colors">Parent Login</Link>
                 <Link to="/portal/register" className="text-white/60 hover:text-white text-sm transition-colors">Create Account</Link>
-                <Link to="/portal/clubs" className="text-white/60 hover:text-white text-sm transition-colors">Find a Club</Link>
-                <Link to="/portal/terms" className="text-white/60 hover:text-white text-sm transition-colors">Terms &amp; Conditions</Link>
+                <Link to="/portal/clubs"    className="text-white/60 hover:text-white text-sm transition-colors">Find a Club</Link>
+                <Link to="/portal/terms"    className="text-white/60 hover:text-white text-sm transition-colors">Terms &amp; Conditions</Link>
               </div>
             </div>
             <div>
               <p className="font-semibold mb-3 text-sm">For Schools &amp; Partners</p>
               <div className="flex flex-col gap-2">
-                <Link to="/portal/for-schools" className="text-white/60 hover:text-white text-sm transition-colors">Partner with ASO</Link>
-                <Link to="/portal/for-schools" className="text-white/60 hover:text-white text-sm transition-colors">Multi-Academy Trusts</Link>
-                <Link to="/portal/for-schools" className="text-white/60 hover:text-white text-sm transition-colors">Local Authorities</Link>
+                <Link to="/portal/for-schools"  className="text-white/60 hover:text-white text-sm transition-colors">Partner with ASO</Link>
+                <Link to="/portal/for-schools"  className="text-white/60 hover:text-white text-sm transition-colors">Multi-Academy Trusts</Link>
+                <Link to="/portal/for-schools"  className="text-white/60 hover:text-white text-sm transition-colors">Local Authorities</Link>
                 <Link to="/portal/affiliations" className="text-white/60 hover:text-white text-sm transition-colors">Affiliations</Link>
               </div>
             </div>
