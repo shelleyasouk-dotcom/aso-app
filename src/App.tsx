@@ -79,6 +79,7 @@ import { PortalCareerApplyPage } from './pages/portal/PortalCareerApplyPage'
 import { PortalCoachPoolJoinPage } from './pages/portal/PortalCoachPoolJoinPage'
 import { JobAdvertsAdminPage } from './pages/admin/JobAdvertsAdminPage'
 import { JobApplicationsAdminPage } from './pages/admin/JobApplicationsAdminPage'
+import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -357,6 +358,11 @@ export default function App() {
           <Route path="/admin/job-applications" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <JobApplicationsAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/holiday-camps" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <HolidayCampsAdminPage />
             </ProtectedRoute>
           } />
 

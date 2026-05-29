@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard, Tag, Download, Briefcase, ClipboardList } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard, Tag, Download, Briefcase, ClipboardList, Tent } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -132,6 +132,13 @@ export function AdminPage() {
       icon: ClipboardList,
       path: '/admin/job-applications',
       color: 'bg-pink-50 text-pink-700',
+    },
+    {
+      label: 'Holiday Camps',
+      description: 'Add and manage summer, Easter & holiday club listings',
+      icon: Tent,
+      path: '/admin/holiday-camps',
+      color: 'bg-amber-50 text-amber-700',
     },
   ]
 

@@ -465,6 +465,29 @@ export interface IncidentReport {
   reviewer?: Profile
 }
 
+export interface HolidayCamp {
+  id: string
+  title: string
+  camp_type: string
+  venue_name: string
+  city: string | null
+  region: string | null
+  emoji: string | null
+  start_date: string
+  end_date: string
+  session_start_time: string | null
+  session_end_time: string | null
+  price_pence: number
+  capacity: number
+  is_full: boolean
+  booking_url: string | null
+  is_published: boolean
+  age_range: string | null
+  notes: string | null
+  display_order: number
+  created_at: string
+}
+
 export interface SchoolInfoForm {
   id: string
   school_id: string
