@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, Clock, Users, ChevronLeft, CheckCircle, ShoppingCart, User, Plus } from 'lucide-react'
+import { MapPin, Calendar, Clock, Users, ChevronLeft, CheckCircle, ExternalLink } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../contexts/AuthContext'
-import { useBasket } from '../../contexts/BasketContext'
 import { PortalLayout } from '../../components/layout/PortalLayout'
-import type { School, Profile, ClubTerm, ParentChild } from '../../types'
+import type { School, Profile, ClubTerm } from '../../types'
 import { ProfilePhoto } from '../../components/ui/ProfilePhoto'
 
 interface ClubData {
@@ -33,14 +31,9 @@ function termWindowLabel(term: ClubTerm): { label: string; colour: string; open:
 export function PortalClubDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const { items, addItem } = useBasket()
 
   const [data, setData] = useState<ClubData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [savedChildren, setSavedChildren] = useState<ParentChild[]>([])
-  const [showChildPicker, setShowChildPicker] = useState(false)
-  const [justAdded, setJustAdded] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -87,12 +80,6 @@ export function PortalClubDetailPage() {
     load()
   }, [id, navigate])
 
-  useEffect(() => {
-    if (!showChildPicker || !user) return
-    supabase.from('parent_children').select('*').eq('parent_id', user.id).order('full_name')
-      .then(({ data: kids }) => setSavedChildren((kids ?? []) as ParentChild[]))
-  }, [showChildPicker, user])
-
   if (loading) {
     return (
       <PortalLayout>
@@ -108,59 +95,8 @@ export function PortalClubDetailPage() {
   const { school, leadCoach, activeTerm, confirmedCount } = data
   const spotsLeft = activeTerm ? activeTerm.capacity - confirmedCount : 0
   const termWindow = activeTerm ? termWindowLabel(activeTerm) : null
-  const alreadyInBasket = activeTerm
-    ? items.filter(i => i.clubTermId === activeTerm.id).map(i => i.child.existingChildId)
-    : []
-
-  function addSavedChildToBasket(child: ParentChild) {
-    if (!activeTerm) return
-    addItem({
-      clubTermId: activeTerm.id,
-      schoolId: school.id,
-      schoolName: school.name,
-      sessionDay: school.session_day ?? '',
-      sessionTime: school.session_time ?? '',
-      termName: activeTerm.term_name,
-      startDate: activeTerm.start_date,
-      endDate: activeTerm.end_date,
-      numSessions: activeTerm.num_sessions,
-      pricePence: activeTerm.price_pence,
-      child: {
-        existingChildId: child.id,
-        childName: child.full_name,
-        childDob: child.date_of_birth ?? '',
-        yearGroup: child.year_group ?? '',
-        className: child.class_name ?? '',
-        hasAdditionalNeeds: child.additional_needs ? true : (child.additional_needs === '' ? false : null),
-        additionalNeedsDetails: child.additional_needs ?? '',
-        photoConsent: child.photo_consent ?? null,
-      },
-    })
-    setJustAdded(true)
-    setShowChildPicker(false)
-  }
-
-  function addNewChildToBasket() {
-    if (!activeTerm) return
-    addItem({
-      clubTermId: activeTerm.id,
-      schoolId: school.id,
-      schoolName: school.name,
-      sessionDay: school.session_day ?? '',
-      sessionTime: school.session_time ?? '',
-      termName: activeTerm.term_name,
-      startDate: activeTerm.start_date,
-      endDate: activeTerm.end_date,
-      numSessions: activeTerm.num_sessions,
-      pricePence: activeTerm.price_pence,
-      child: {
-        existingChildId: null,
-        childName: '', childDob: '', yearGroup: '', className: '',
-        hasAdditionalNeeds: null, additionalNeedsDetails: '', photoConsent: null,
-      },
-    })
-    navigate('/portal/basket')
-  }
+  const FALLBACK_BOOKING_URL = 'https://www.activeschool.org.uk/classes'
+  const bookingUrl = school.wix_booking_url || FALLBACK_BOOKING_URL
 
   return (
     <PortalLayout>
@@ -282,119 +218,20 @@ export function PortalClubDetailPage() {
         </div>
 
         {/* Booking CTA */}
-        {activeTerm && termWindow && (
-          <div className="bg-[#f5c518]/10 border border-[#f5c518] rounded-xl p-5">
-            <h2 className="font-bold text-[#1a3a6b] mb-1">Book a place</h2>
-            <p className={`text-sm font-medium mb-1 ${termWindow.colour}`}>{termWindow.label}</p>
-            {spotsLeft > 0 ? (
-              <p className="text-xs text-gray-500 mb-4">{spotsLeft} of {activeTerm.capacity} spaces remaining</p>
-            ) : (
-              <p className="text-xs text-red-600 mb-4 font-semibold">No spaces available</p>
-            )}
-
-            {!user && (
-              <div className="flex gap-2">
-                <button onClick={() => navigate('/portal/login')} className="flex-1 bg-[#1a3a6b] text-white font-bold py-3 rounded-xl text-sm">
-                  Sign in to book
-                </button>
-                <button onClick={() => navigate('/portal/register')} className="flex-1 border border-[#1a3a6b] text-[#1a3a6b] font-bold py-3 rounded-xl text-sm">
-                  Register
-                </button>
-              </div>
-            )}
-
-            {user && termWindow.open && spotsLeft > 0 && (
-              <div className="flex flex-col gap-2">
-                {/* Just added confirmation */}
-                {justAdded && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
-                    <CheckCircle size={15} className="text-green-600 shrink-0" />
-                    <p className="text-sm text-green-800 font-medium">Added to basket!</p>
-                    <button onClick={() => navigate('/portal/basket')}
-                      className="ml-auto text-sm font-bold text-[#1a3a6b] underline whitespace-nowrap">
-                      View basket →
-                    </button>
-                  </div>
-                )}
-
-                {!showChildPicker && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { setShowChildPicker(true); setJustAdded(false) }}
-                      className="flex-1 bg-[#1a3a6b] text-white font-bold px-6 py-3 rounded-xl hover:bg-[#142f58] transition-colors flex items-center justify-center gap-2"
-                    >
-                      <ShoppingCart size={16} /> {justAdded ? 'Add another child' : 'Add to Basket'}
-                    </button>
-                    {items.length > 0 && (
-                      <button
-                        onClick={() => navigate('/portal/basket')}
-                        className="border border-[#1a3a6b] text-[#1a3a6b] font-bold px-4 py-3 rounded-xl hover:bg-[#1a3a6b]/5 transition-colors flex items-center gap-1.5 text-sm"
-                      >
-                        <ShoppingCart size={14} />
-                        <span className="bg-[#1a3a6b] text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
-                          {items.length}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Child picker */}
-                {showChildPicker && (
-                  <div className="flex flex-col gap-2">
-                    <p className="text-sm font-semibold text-gray-700">Which child would you like to book?</p>
-
-                    {savedChildren.map(child => {
-                      const inBasket = alreadyInBasket.includes(child.id)
-                      return (
-                        <button
-                          key={child.id}
-                          disabled={inBasket}
-                          onClick={() => addSavedChildToBasket(child)}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors ${
-                            inBasket
-                              ? 'border-green-200 bg-green-50 opacity-70 cursor-default'
-                              : 'border-gray-200 bg-white hover:border-[#1a3a6b] hover:bg-[#1a3a6b]/5'
-                          }`}
-                        >
-                          <div className="w-8 h-8 rounded-full bg-[#1a3a6b] flex items-center justify-center shrink-0">
-                            <User size={14} className="text-white" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-sm text-gray-800">{child.full_name}</p>
-                            <p className="text-xs text-gray-400">{[child.year_group, child.class_name].filter(Boolean).join(' · ')}</p>
-                          </div>
-                          {inBasket
-                            ? <CheckCircle size={14} className="text-green-500 shrink-0" />
-                            : <span className="text-xs text-[#1a3a6b] font-semibold shrink-0">Add →</span>
-                          }
-                        </button>
-                      )
-                    })}
-
-                    <button
-                      onClick={addNewChildToBasket}
-                      className="flex items-center gap-2 px-4 py-3 rounded-xl border border-dashed border-gray-300 text-sm font-medium text-gray-500 hover:border-[#1a3a6b] hover:text-[#1a3a6b] transition-colors"
-                    >
-                      <Plus size={14} /> Book for a new child
-                    </button>
-
-                    <button onClick={() => setShowChildPicker(false)} className="text-xs text-gray-400 text-center hover:text-gray-600 mt-1">
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {user && !termWindow.open && (
-              <p className={`text-sm font-semibold text-center ${termWindow.colour}`}>{termWindow.label}</p>
-            )}
-            {user && termWindow.open && spotsLeft <= 0 && (
-              <p className="text-sm font-semibold text-center text-red-500">Club Full</p>
-            )}
-          </div>
-        )}
+        <div className="bg-[#f5c518]/10 border border-[#f5c518] rounded-xl p-5">
+          <h2 className="font-bold text-[#1a3a6b] mb-1">Book a place</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Book online via our website — quick and easy, no account required.
+          </p>
+          <a
+            href={bookingUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full bg-[#1a3a6b] text-white font-bold py-3 rounded-xl hover:bg-[#142f58] transition-colors text-sm"
+          >
+            Book Now <ExternalLink size={15} />
+          </a>
+        </div>
       </div>
     </PortalLayout>
   )

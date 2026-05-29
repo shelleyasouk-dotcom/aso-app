@@ -18,8 +18,8 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
 const SELECT_CLASS = "w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 focus:border-[#1a3a6b]"
 
-type SchoolForm = { name: string; address: string; area: string; session_day: string; session_time: string }
-const emptyForm: SchoolForm = { name: '', address: '', area: 'Hampshire', session_day: 'Monday', session_time: '' }
+type SchoolForm = { name: string; address: string; area: string; session_day: string; session_time: string; wix_booking_url: string }
+const emptyForm: SchoolForm = { name: '', address: '', area: 'Hampshire', session_day: 'Monday', session_time: '', wix_booking_url: '' }
 
 function sortByDay(schools: School[]): School[] {
   return [...schools].sort((a, b) => DAYS.indexOf(a.session_day) - DAYS.indexOf(b.session_day))
@@ -75,6 +75,12 @@ function SchoolFormFields({ form, set }: { form: SchoolForm; set: (f: SchoolForm
         placeholder="e.g. 15:30 – 16:30"
         value={form.session_time}
         onChange={e => set({ ...form, session_time: e.target.value })}
+      />
+      <Input
+        label="Wix Booking URL"
+        placeholder="https://www.activeschool.org.uk/classes?category=..."
+        value={form.wix_booking_url}
+        onChange={e => set({ ...form, wix_booking_url: e.target.value })}
       />
     </>
   )
@@ -169,6 +175,7 @@ export function SchoolsAdminPage() {
       area: school.area || 'Hampshire',
       session_day: school.session_day,
       session_time: school.session_time,
+      wix_booking_url: school.wix_booking_url ?? '',
     })
   }
 

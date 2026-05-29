@@ -66,6 +66,7 @@ export interface School {
   area_lead_id?: string | null
   facility_form_completed?: boolean
   updated_at?: string
+  wix_booking_url?: string | null
 }
 
 export interface StaffSchoolAssignment {
