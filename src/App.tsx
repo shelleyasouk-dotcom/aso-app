@@ -72,6 +72,7 @@ import { IncidentReportFormPage } from './pages/incidents/IncidentReportFormPage
 import { IncidentReportsPage } from './pages/incidents/IncidentReportsPage'
 import { IncidentReportDetailPage } from './pages/incidents/IncidentReportDetailPage'
 import { PortalCommunityPage } from './pages/portal/PortalCommunityPage'
+import { PortalContactPage } from './pages/portal/PortalContactPage'
 import { PortalCareersPage } from './pages/portal/PortalCareersPage'
 import { PortalCareerDetailPage } from './pages/portal/PortalCareerDetailPage'
 import { PortalCareerApplyPage } from './pages/portal/PortalCareerApplyPage'
@@ -341,6 +342,7 @@ export default function App() {
 
           {/* Community + recruitment — public */}
           <Route path="/portal/community" element={<PortalCommunityPage />} />
+          <Route path="/portal/contact" element={<PortalContactPage />} />
           <Route path="/portal/careers" element={<PortalCareersPage />} />
           <Route path="/portal/careers/:id" element={<PortalCareerDetailPage />} />
           <Route path="/portal/careers/:id/apply" element={<PortalCareerApplyPage />} />
