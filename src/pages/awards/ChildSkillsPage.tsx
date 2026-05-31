@@ -7,7 +7,7 @@ import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
-import type { Child } from '../../types'
+import type { ClassChild } from '../../types'
 import { SKILLS, APPARATUS_LIST, APPARATUS_LABELS } from '../../lib/skills'
 import type { Apparatus } from '../../lib/skills'
 import { canManageAwards } from '../../lib/roles'
@@ -24,7 +24,7 @@ interface Certificate {
   id: string
   apparatus: Apparatus
   level: number
-  completed_at: string
+  awarded_at: string
   coach_name: string
   certificate_handed_out: boolean
 }
@@ -32,7 +32,7 @@ interface Certificate {
 export function ChildSkillsPage() {
   const { id } = useParams<{ id: string }>()
   const { profile } = useAuth()
-  const [child, setChild] = useState<Child & { school?: { name: string } } | null>(null)
+  const [child, setChild] = useState<ClassChild & { school?: { name: string } } | null>(null)
   const [activeApparatus, setActiveApparatus] = useState<Apparatus>('floor')
   const [openLevel, setOpenLevel] = useState<number>(1)
   const [completions, setCompletions] = useState<SkillCompletion[]>([])
@@ -51,7 +51,7 @@ export function ChildSkillsPage() {
 
   async function loadChild(childId: string) {
     const { data } = await supabase
-      .from('children')
+      .from('class_children')
       .select('*, school:schools(name)')
       .eq('id', childId)
       .single()
@@ -60,7 +60,7 @@ export function ChildSkillsPage() {
 
   async function loadCompletions(childId: string) {
     const { data } = await supabase
-      .from('child_skill_completions')
+      .from('class_skill_completions')
       .select('apparatus, level, skill_index, completed_by_name, completed_at')
       .eq('child_id', childId)
     if (data) setCompletions(data)
@@ -68,7 +68,7 @@ export function ChildSkillsPage() {
 
   async function loadCertificates(childId: string) {
     const { data } = await supabase
-      .from('child_certificates')
+      .from('class_certificates')
       .select('*')
       .eq('child_id', childId)
       .order('level')
@@ -105,14 +105,14 @@ export function ChildSkillsPage() {
 
     if (already) {
       await supabase
-        .from('child_skill_completions')
+        .from('class_skill_completions')
         .delete()
         .eq('child_id', id)
         .eq('apparatus', apparatus)
         .eq('level', level)
         .eq('skill_index', skillIndex)
     } else {
-      await supabase.from('child_skill_completions').insert({
+      await supabase.from('class_skill_completions').insert({
         child_id: id,
         apparatus,
         level,
@@ -129,7 +129,7 @@ export function ChildSkillsPage() {
   async function awardCertificate(apparatus: Apparatus, level: number) {
     if (!canEdit || !id || saving) return
     setSaving(true)
-    await supabase.from('child_certificates').insert({
+    await supabase.from('class_certificates').insert({
       child_id: id,
       apparatus,
       level,
@@ -145,7 +145,7 @@ export function ChildSkillsPage() {
     if (!canEdit || saving) return
     setSaving(true)
     await supabase
-      .from('child_certificates')
+      .from('class_certificates')
       .update({ certificate_handed_out: !current })
       .eq('id', certId)
     if (id) await loadCertificates(id)
@@ -154,8 +154,10 @@ export function ChildSkillsPage() {
 
   if (!child) return <Layout title="Skills" showBack><div className="p-8 text-center text-gray-400">Loading…</div></Layout>
 
+  const fullName = `${child.first_name} ${child.last_name}`
+
   return (
-    <Layout title={child.full_name} showBack>
+    <Layout title={fullName} showBack>
       <div className="px-4 pt-4 flex flex-col gap-4">
 
         {/* Child header */}
@@ -163,11 +165,11 @@ export function ChildSkillsPage() {
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-[#1a3a6b] rounded-2xl flex items-center justify-center shrink-0">
               <span className="text-white font-black text-base">
-                {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                {`${child.first_name[0]}${child.last_name[0]}`.toUpperCase()}
               </span>
             </div>
             <div>
-              <p className="font-bold text-[#1a3a6b] text-lg">{child.full_name}</p>
+              <p className="font-bold text-[#1a3a6b] text-lg">{fullName}</p>
               <p className="text-gray-500 text-sm">{(child as any).school?.name}</p>
             </div>
           </div>
@@ -263,7 +265,7 @@ export function ChildSkillsPage() {
                             <div>
                               <p className="text-xs font-semibold text-[#1a3a6b]">Certificate Awarded</p>
                               <p className="text-xs text-gray-500">
-                                {new Date(cert.completed_at).toLocaleDateString('en-GB')} · {cert.coach_name}
+                                {new Date(cert.awarded_at).toLocaleDateString('en-GB')} · {cert.coach_name}
                               </p>
                             </div>
                             <Award size={20} className="text-[#f5c518]" />

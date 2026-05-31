@@ -494,6 +494,18 @@ export interface AcademicSemester {
   created_at: string
 }
 
+export interface ClassChild {
+  id: string
+  first_name: string
+  last_name: string
+  school_id: string
+  academic_year: string
+  semester_number: number
+  added_by: string
+  created_at: string
+  added_by_profile?: { id: string; full_name: string }
+}
+
 export interface SessionFeedback {
   id: string
   semester_number: number
