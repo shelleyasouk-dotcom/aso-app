@@ -9,6 +9,7 @@ const LEVEL_COLORS: Record<number, { bg: string; text: string; border: string; p
   3: { bg: 'bg-violet-50',    text: 'text-violet-800',  border: 'border-violet-200',    pill: 'bg-violet-700 text-white' },
   4: { bg: 'bg-amber-50',     text: 'text-amber-800',   border: 'border-amber-200',     pill: 'bg-amber-600 text-white' },
   5: { bg: 'bg-red-50',       text: 'text-red-800',     border: 'border-red-200',       pill: 'bg-red-600 text-white' },
+  6: { bg: 'bg-cyan-50',      text: 'text-cyan-800',    border: 'border-cyan-200',      pill: 'bg-cyan-700 text-white' },
 }
 
 export function UKAGLibraryPage() {
@@ -51,9 +52,6 @@ export function UKAGLibraryPage() {
           )
         })}
 
-        <p className="text-xs text-gray-400 text-center pt-2">
-          Level 6 plans coming soon.
-        </p>
       </div>
     </Layout>
   )

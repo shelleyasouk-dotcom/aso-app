@@ -13,6 +13,7 @@ const LEVEL_THEME: Record<number, { header: string; accent: string; skillBg: str
   3: { header: 'from-violet-700 to-violet-600', accent: 'text-violet-200', skillBg: 'bg-violet-50', skillBorder: 'border-violet-200', skillText: 'text-violet-800' },
   4: { header: 'from-amber-600 to-amber-500', accent: 'text-amber-100', skillBg: 'bg-amber-50', skillBorder: 'border-amber-200', skillText: 'text-amber-800' },
   5: { header: 'from-red-700 to-red-600', accent: 'text-red-200', skillBg: 'bg-red-50', skillBorder: 'border-red-200', skillText: 'text-red-800' },
+  6: { header: 'from-cyan-700 to-cyan-600', accent: 'text-cyan-200', skillBg: 'bg-cyan-50', skillBorder: 'border-cyan-200', skillText: 'text-cyan-800' },
 }
 
 function CollapsibleSection({
