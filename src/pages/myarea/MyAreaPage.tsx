@@ -71,17 +71,17 @@ export function MyAreaPage() {
   const isOutreach = role === 'outreach_worker'
 
   const personalTiles: Tile[] = [
+    { label: 'My Profile', description: 'Digital ID & certificates', icon: UserCircle, path: '/profile', color: 'bg-indigo-50 text-indigo-700' },
     { label: 'My Timesheet', description: 'View your clock records', icon: Clock, path: '/my-timesheet', color: 'bg-blue-50 text-[#1a3a6b]' },
+    { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-sky-50 text-sky-700' },
     { label: 'Expenses', description: 'Submit travel & mileage', icon: ReceiptText, path: '/expenses', color: 'bg-orange-50 text-orange-700' },
     { label: 'Absences', description: 'Log & manage requests', icon: CalendarOff, path: '/absences', color: 'bg-rose-50 text-rose-700' },
-    { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-sky-50 text-sky-700' },
-    { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
-    { label: 'My Profile', description: 'Digital ID & certificates', icon: UserCircle, path: '/profile', color: 'bg-indigo-50 text-indigo-700' },
   ]
 
   const coachingTiles: Tile[] = [
-    { label: 'Lesson Plans', description: 'Weekly plans & session feedback', icon: BookOpen, path: '/lesson-plans', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
-    { label: 'UKAG Library', description: 'Level 1–5 coaching plans', icon: GraduationCap, path: '/ukag', color: 'bg-violet-50 text-violet-800' },
+    { label: 'Semester Plans', description: 'Plans & feedback by week', icon: BookOpen, path: '/lesson-plans', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
+    { label: 'UKAG Library', description: 'Level 1–6 coaching plans', icon: GraduationCap, path: '/ukag', color: 'bg-violet-50 text-violet-800' },
+    { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
     { label: 'Registers', description: 'Session attendance', icon: ClipboardList, path: '/registers', color: 'bg-yellow-50 text-[#1a3a6b]' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
     { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
@@ -104,10 +104,10 @@ export function MyAreaPage() {
   ]
 
   return (
-    <Layout title="My Area">
+    <Layout title="Coach Zone">
       <div className="px-4 pt-6 pb-6 flex flex-col gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-[#1a3a6b]">My Area</h2>
+          <h2 className="text-2xl font-bold text-[#1a3a6b]">Coach Zone</h2>
           <p className="text-sm text-gray-500 mt-0.5">{ROLE_LABELS[role]}</p>
         </div>
 

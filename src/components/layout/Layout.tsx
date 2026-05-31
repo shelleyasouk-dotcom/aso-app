@@ -51,7 +51,7 @@ export function Layout({ children, title, showBack }: LayoutProps) {
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-    { path: '/my-area', icon: LayoutGrid, label: 'My Area' },
+    { path: '/my-area', icon: LayoutGrid, label: 'Coach Zone' },
   ]
 
   return (
@@ -66,11 +66,9 @@ export function Layout({ children, title, showBack }: LayoutProps) {
             <ChevronLeft size={24} />
           </button>
         ) : (
-          <div className="w-8 h-8 bg-[#f5c518] rounded-lg flex items-center justify-center">
-            <span className="text-[#1a3a6b] font-black text-xs">ASO</span>
-          </div>
+          <img src="/logo white.png" alt="ASO" className="h-8 w-auto object-contain" />
         )}
-        <h1 className="flex-1 font-bold text-lg">{title || 'ASO Coaching'}</h1>
+        <h1 className="flex-1 font-bold text-lg">{title || 'Active Schools'}</h1>
         <button
           onClick={() => setShowNotifs(v => !v)}
           className="relative p-2 rounded-lg hover:bg-white/10 active:bg-white/20 transition-colors"
