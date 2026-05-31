@@ -10,9 +10,19 @@ export interface AssistantRole {
   responsibility: string
 }
 
+export interface AbilityTier {
+  label: string
+  ukagLevels: string
+  ukagLevelNums: number[]
+  indicators: string[]
+}
+
 export interface ApparatusSection {
   apparatus: string
   skills: string[]
+  beginner?: string[]
+  intermediate?: string[]
+  advanced?: string[]
   progression?: string
   coachingCues?: string
   awardLink?: string
@@ -55,6 +65,7 @@ export interface WeeklyLessonPlan {
   assessmentTip?: string
   wallFrameGuidance?: WallFrameGuidance
   celebrations?: string[]
+  abilityGuide?: AbilityTier[]
 }
 
 export const LESSON_PLANS: WeeklyLessonPlan[] = [
@@ -173,27 +184,131 @@ export const LESSON_PLANS: WeeklyLessonPlan[] = [
     skillProgressions: [
       {
         apparatus: 'Floor',
-        skills: ['Dish', 'Arch', 'Pike', 'Straddle', 'Tuck'],
-        progression: 'Shapes → Supports → Controlled Rolls → Jump Sequence',
+        skills: [],
+        beginner: [
+          'Dish hold (5 sec) — flat back, tight tummy',
+          'Arch hold (5 sec) — squeeze bottom, reach arms',
+          'Tuck, Pike & Straddle shape holds',
+          'Straight jump + stick landing (Block & Present)',
+          'Front & Back support holds (10 sec)',
+        ],
+        intermediate: [
+          'Forward roll — tucked, controlled, chin to chest',
+          'Cartwheel (any form) — kick, kick, land',
+          'Handstand kick to wall (guided)',
+          'Straight jump → tuck jump combo',
+          'V-sit hold (3 sec)',
+        ],
+        advanced: [
+          'Forward roll to straddle stand',
+          'Cartwheel (clean, both directions)',
+          'Handstand (freestanding or wall, 5 sec hold)',
+          'Back bend hold (bridge)',
+          'Round-off preparation drill',
+        ],
         coachingCues: 'Tight tummy – long body – stretch to finish.',
       },
       {
         apparatus: 'Beam / Balance Line',
-        skills: ['Tiptoe Walk', 'Diddy Walk', 'T-Balance', 'Straight Jump off'],
-        progression: 'Floor line → low beam → supported tiptoe → jump landing',
+        skills: [],
+        beginner: [
+          'Tiptoe walk along floor line',
+          'Diddy walk (slow, deliberate steps)',
+          'T-balance hold (2 sec)',
+          'Straight jump off low platform',
+        ],
+        intermediate: [
+          'Tiptoe walk along low beam',
+          'T-balance (5 sec, steady)',
+          'Simple straight jump dismount',
+          'Star jump off beam/box',
+        ],
+        advanced: [
+          'Beam travel with ½ pivot turn',
+          'Arabesque balance (3 sec)',
+          'Leap onto beam line (controlled)',
+          'Jump dismount with shape (tuck/straddle)',
+        ],
         coachingCues: 'Arms out – eyes forward – soft knees.',
       },
       {
         apparatus: 'Vault / Rebound',
-        skills: ['Run → Hurdle → Jump → Land (B&P)', 'Star Jump off'],
-        progression: 'Floor run → springboard → low box jump → soft landing + present',
+        skills: [],
+        beginner: [
+          'Run → 2-foot jump → land (Block & Present)',
+          'Star jump off low box or mat stack',
+          'Springboard: stand on, step off (confidence building)',
+        ],
+        intermediate: [
+          'Springboard punch jump (height + control)',
+          'Straddle jump off box',
+          'Run → springboard → tuck jump → land',
+        ],
+        advanced: [
+          'Springboard → handspring (flat-back landing onto crash mat)',
+          'Squat-on → straight jump off box',
+          'Round-off entry onto springboard (prep drill)',
+        ],
         coachingCues: 'Run – Hop – Jump – Land – Present.',
       },
       {
         apparatus: 'Bar',
-        skills: ['Support hold', 'Forward circles (supported)', 'Safe landing'],
-        progression: 'Floor bar → low bar → support hold → forward circle prep',
+        skills: [],
+        beginner: [
+          'Support hold (3 sec — straight arms, hollow body)',
+          'Hang and drop safely (feet first)',
+          'Forward circle (guided by coach)',
+        ],
+        intermediate: [
+          '5 swings with dish/arch rhythm',
+          'Tuck hang (3 sec)',
+          'Forward circle (solo with spot)',
+        ],
+        advanced: [
+          '10 swings with clear rhythm and extension',
+          'Cast to front support',
+          'Hip circle prep / Clear hip progression',
+        ],
         coachingCues: 'Squeeze bar – straight arms – land and freeze.',
+      },
+    ],
+
+    abilityGuide: [
+      {
+        label: 'Beginner',
+        ukagLevels: 'UKAG Levels 1–2',
+        ukagLevelNums: [1, 2],
+        indicators: [
+          'New to gymnastics or less than one term of experience',
+          'Unsure of basic shapes — dish, arch, tuck, pike',
+          'Needs hands-on guidance and spotting for most skills',
+          'Cannot perform a forward roll independently',
+          'Lacks body tension — floppy limbs, bent knees on jumps',
+        ],
+      },
+      {
+        label: 'Intermediate',
+        ukagLevels: 'UKAG Levels 3–4',
+        ukagLevelNums: [3, 4],
+        indicators: [
+          'Some gymnastics experience — 1 or more terms',
+          'Can perform a forward roll and rough cartwheel independently',
+          'Comfortable on beam with basic balances',
+          'Can swing on bars with some dish/arch rhythm',
+          'Aware of body shape and can self-correct with verbal prompt',
+        ],
+      },
+      {
+        label: 'Advanced',
+        ukagLevels: 'UKAG Levels 5–6',
+        ukagLevelNums: [5, 6],
+        indicators: [
+          'Regular gymnastics training — 1 or more years, or strong natural ability',
+          'Can perform handstand, round-off, or walkover independently',
+          'Confident on all apparatus without constant spotting',
+          'Shows body tension, pointed toes, and awareness of presentation',
+          'Self-corrects, gives quality attempts, and supports peers',
+        ],
       },
     ],
   },
@@ -303,26 +418,126 @@ export const LESSON_PLANS: WeeklyLessonPlan[] = [
     skillProgressions: [
       {
         apparatus: 'Floor',
-        skills: [
-          'Dish & Arch (5 sec)',
-          'Front/Back Support',
-          'Forward Roll (supported)',
-          'Straight Jump + Present',
+        skills: [],
+        beginner: [
+          'Dish & Arch holds (10 sec each) — improve from Week 1',
+          'Forward roll (tucked, controlled) — chin to chest',
+          'Straight + tuck jump combo',
+          'Front/Back support (hold and shift weight)',
+        ],
+        intermediate: [
+          'Forward roll (linked × 2, smooth transition)',
+          'Cartwheel (both sides)',
+          'Handstand (wall, 5 sec hold)',
+          'Round-off preparation drill',
+        ],
+        advanced: [
+          'Forward roll to straddle stand (fluent)',
+          'Cartwheel to 1-leg landing (controlled)',
+          'Handstand (freestanding, 3 sec)',
+          'Round-off (full)',
         ],
         progression: 'Shapes → Supports → Controlled Rolls → Jump Sequence',
         coachingCues: 'Tight tummy – long body – stretch to finish.',
       },
       {
         apparatus: 'Beam / Balance Line',
-        skills: ['Tiptoe Walk', 'Diddy Walk', 'T-Balance', 'Straight Jump off'],
+        skills: [],
+        beginner: [
+          'Floor line → low beam tiptoe walk',
+          'T-balance × 3 (hold, walk, hold)',
+          'Straight jump + Block & Present',
+        ],
+        intermediate: [
+          '½ pivot turn (in place)',
+          'Cat leap step along beam',
+          'Star jump dismount',
+        ],
+        advanced: [
+          'Full pivot turn (360°)',
+          'Arabesque hold (3 sec)',
+          'V-sit on beam',
+        ],
         progression: 'Floor line → low beam → supported tiptoe → jump landing',
         coachingCues: 'Arms out – eyes forward – soft knees.',
       },
       {
         apparatus: 'Vault / Rebound',
-        skills: ['Run → Hurdle → Jump → Land (B&P)', 'Star Jump off'],
+        skills: [],
+        beginner: [
+          'Run → springboard → straight jump → land',
+          'Star or tuck jump off box',
+        ],
+        intermediate: [
+          'Handspring flat-back onto crash mat (guided)',
+          'Straddle over low box (controlled)',
+        ],
+        advanced: [
+          'Handspring (to feet, landing mat)',
+          'Round-off entry prep onto springboard',
+        ],
         progression: 'Floor run → springboard → low box jump → soft landing + present',
         coachingCues: 'Run – Hop – Jump – Land – Present.',
+      },
+      {
+        apparatus: 'Bar',
+        skills: [],
+        beginner: [
+          'Support hold → gentle forward lean',
+          '3 swings (guided) — dish/arch intro',
+          'Forward circle (supported by coach)',
+        ],
+        intermediate: [
+          '5 swings + re-grasp',
+          'Tuck / Straddle hold (5 sec)',
+          'Forward circle (semi-independent, light spot)',
+        ],
+        advanced: [
+          'Cast to front support',
+          '10 swings with rhythm and shape',
+          'Clear hip circle progression',
+        ],
+        progression: 'Floor bar → low bar → support hold → forward circle prep',
+        coachingCues: 'Squeeze bar – straight arms – land and freeze.',
+      },
+    ],
+
+    abilityGuide: [
+      {
+        label: 'Beginner',
+        ukagLevels: 'UKAG Levels 1–2',
+        ukagLevelNums: [1, 2],
+        indicators: [
+          'New to gymnastics or less than one term of experience',
+          'Unsure of basic shapes — dish, arch, tuck, pike',
+          'Needs hands-on guidance and spotting for most skills',
+          'Cannot perform a forward roll independently',
+          'Lacks body tension — floppy limbs, bent knees on jumps',
+        ],
+      },
+      {
+        label: 'Intermediate',
+        ukagLevels: 'UKAG Levels 3–4',
+        ukagLevelNums: [3, 4],
+        indicators: [
+          'Some gymnastics experience — 1 or more terms',
+          'Can perform a forward roll and rough cartwheel independently',
+          'Comfortable on beam with basic balances',
+          'Can swing on bars with some dish/arch rhythm',
+          'Aware of body shape and can self-correct with verbal prompt',
+        ],
+      },
+      {
+        label: 'Advanced',
+        ukagLevels: 'UKAG Levels 5–6',
+        ukagLevelNums: [5, 6],
+        indicators: [
+          'Regular gymnastics training — 1 or more years, or strong natural ability',
+          'Can perform handstand, round-off, or walkover independently',
+          'Confident on all apparatus without constant spotting',
+          'Shows body tension, pointed toes, and awareness of presentation',
+          'Self-corrects, gives quality attempts, and supports peers',
+        ],
       },
     ],
   },
@@ -442,39 +657,72 @@ export const LESSON_PLANS: WeeklyLessonPlan[] = [
     skillProgressions: [
       {
         apparatus: 'Floor',
-        skills: [
-          'Forward Roll',
-          'Dish / Arch Hold',
-          'Straight Jump & Present',
-          'Handstand (supported)',
+        skills: [],
+        beginner: [
+          'UKAG Level 1–2: Dish/Arch hold, Forward Roll, Straight Jump & Present',
+          'Tuck, Pike & Straddle shape holds',
+          'Front/Back support (10 sec)',
         ],
-        progression: 'Clean transitions and pointed toes',
-        awardLink: 'Levels 1–3 Floor',
+        intermediate: [
+          'UKAG Level 3–4: Forward Roll, Cartwheel, Handstand (supported)',
+          'V-sit hold, Round-off preparation',
+          'Linked roll sequence',
+        ],
+        advanced: [
+          'UKAG Level 5–6: Round-off, Walkover (supported), Handspring prep',
+          'Aerial cartwheel prep, back walkover',
+          'Linked tumbling sequence (2–3 skills)',
+        ],
+        awardLink: 'See UKAG Library for full Level criteria',
+        coachingCues: 'Clean transitions and pointed toes.',
       },
       {
         apparatus: 'Beam',
-        skills: ['Tiptoe Walk', 'T-Balance', 'Straight Jump Dismount', '½ Pivot Turn'],
-        progression: 'Posture, arms out, control',
-        awardLink: 'Levels 1–3 Beam',
+        skills: [],
+        beginner: [
+          'UKAG Level 1–2: Tiptoe Walk, T-Balance, Straight Jump dismount',
+          'Diddy walk, shape hold on beam',
+        ],
+        intermediate: [
+          'UKAG Level 3–4: ½ Pivot Turn, Cat Leap, Star Jump dismount',
+          'Tiptoe travel with pause and hold',
+        ],
+        advanced: [
+          'UKAG Level 5–6: Full Pivot Turn, Arabesque, leap sequence',
+          'Split dismount prep, back walkover on beam',
+        ],
+        awardLink: 'See UKAG Library for full Level criteria',
+        coachingCues: 'Posture, arms out, control each transition.',
       },
       {
         apparatus: 'Bars',
-        skills: [
-          'Tuck / Straddle / Pike Hold',
-          '5 Swings',
-          'Forward Circle (supported)',
+        skills: [],
+        beginner: [
+          'UKAG Level 1–2: Tuck/Straddle/Pike hold, 5 Swings, Forward Circle (supported)',
         ],
-        progression: 'Strong grip, shoulder swing, dish–arch rhythm',
-        awardLink: 'Levels 1–3 Bars',
+        intermediate: [
+          'UKAG Level 3–4: 5+ Swings with dish/arch rhythm, Forward Circle (solo), Cast to front support',
+        ],
+        advanced: [
+          'UKAG Level 5–6: Clear Hip Circle, Upstart, Swing + release skills',
+        ],
+        awardLink: 'See UKAG Library for full Level criteria',
+        coachingCues: 'Strong grip, shoulder swing, dish–arch rhythm.',
       },
       {
         apparatus: 'Vault / Rebound',
-        skills: [
-          'Run → Hurdle → Jump → Safe Landing',
-          'Star Jump off Box',
+        skills: [],
+        beginner: [
+          'UKAG Level 1–2: Run → Hurdle → Jump → Safe Landing, Star Jump off box',
         ],
-        progression: 'Power + control; land softly in Block & Present',
-        awardLink: 'Levels 1–3 Rebound/Vault',
+        intermediate: [
+          'UKAG Level 3–4: Handspring (flat-back), Straddle Jump off box',
+        ],
+        advanced: [
+          'UKAG Level 5–6: Handspring (to feet), Round-off entry, Tuck/Straddle front somersault prep',
+        ],
+        awardLink: 'See UKAG Library for full Level criteria',
+        coachingCues: 'Power + control; land softly in Block & Present.',
       },
     ],
 
@@ -606,44 +854,67 @@ export const LESSON_PLANS: WeeklyLessonPlan[] = [
     skillProgressions: [
       {
         apparatus: 'Floor',
-        skills: [
-          'Forward Roll',
-          'Dish/Arch Hold',
-          'Handstand (supported)',
-          'Cartwheel or V-Sit',
+        skills: [],
+        beginner: [
+          'Complete / re-assess UKAG Level 1–2: Forward Roll, Dish/Arch Hold, Straight Jump & Present',
+          'Handstand (supported) — first attempt if not done Week 3',
+          'Smooth entry and exit for each skill',
         ],
-        progression: 'Accuracy and smooth transition between skills',
-        awardLink: 'Levels 1–3 Floor',
+        intermediate: [
+          'Complete / re-assess UKAG Level 3–4: Cartwheel (both sides), V-Sit, Round-off',
+          'Focus on accuracy and smooth transitions',
+        ],
+        advanced: [
+          'Complete / re-assess UKAG Level 5–6: Round-off, Aerial Cartwheel prep, back walkover',
+          'Linked tumbling sequence — 3 skills presented cleanly',
+        ],
+        awardLink: 'Finalise Award records — see UKAG Library for criteria',
+        coachingCues: 'Accuracy and smooth transition between skills.',
       },
       {
         apparatus: 'Beam',
-        skills: [
-          'Tiptoe Walk',
-          '½ Pivot Turn',
-          'Star Jump Dismount',
-          'T-Balance',
+        skills: [],
+        beginner: [
+          'Complete / re-assess UKAG Level 1–2: Tiptoe Walk, T-Balance, Straight Jump dismount',
         ],
-        progression: 'Controlled travel and safe dismount presentation',
-        awardLink: 'Levels 1–3 Beam',
+        intermediate: [
+          'Complete / re-assess UKAG Level 3–4: ½ Pivot Turn, Star Jump dismount',
+        ],
+        advanced: [
+          'Complete / re-assess UKAG Level 5–6: Full Pivot Turn, Arabesque, Leap sequence',
+        ],
+        awardLink: 'Finalise Award records — see UKAG Library for criteria',
+        coachingCues: 'Controlled travel and safe dismount presentation.',
       },
       {
         apparatus: 'Bars',
-        skills: [
-          'Tuck/Straddle/Pike Hold',
-          '5 Swings',
-          'Forward Circle (supported)',
+        skills: [],
+        beginner: [
+          'Complete / re-assess UKAG Level 1–2: 5 Swings, Tuck/Straddle hold, Forward Circle',
         ],
-        progression: 'Grip strength and consistent rhythm',
-        awardLink: 'Levels 1–3 Bars',
+        intermediate: [
+          'Complete / re-assess UKAG Level 3–4: Forward Circle (solo), Cast, Clear Hip prep',
+        ],
+        advanced: [
+          'Complete / re-assess UKAG Level 5–6: Upstart, Clear Hip, Swing + release',
+        ],
+        awardLink: 'Finalise Award records — see UKAG Library for criteria',
+        coachingCues: 'Grip strength and consistent rhythm.',
       },
       {
         apparatus: 'Vault / Rebound',
-        skills: [
-          'Run → Springboard Jump → Safe Landing',
-          'Straddle Jump off Box',
+        skills: [],
+        beginner: [
+          'Complete / re-assess UKAG Level 1–2: Run → Springboard Jump → Safe Landing',
         ],
-        progression: 'Confidence in approach and soft, stable landing',
-        awardLink: 'Levels 1–3 Rebound/Vault',
+        intermediate: [
+          'Complete / re-assess UKAG Level 3–4: Handspring flat-back, Straddle jump off box',
+        ],
+        advanced: [
+          'Complete / re-assess UKAG Level 5–6: Handspring to feet, Tuck jump (trampette)',
+        ],
+        awardLink: 'Finalise Award records — see UKAG Library for criteria',
+        coachingCues: 'Confidence in approach and soft, stable landing.',
       },
     ],
 

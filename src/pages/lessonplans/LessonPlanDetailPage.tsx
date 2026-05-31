@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import {
   Target, Lightbulb, Users, Shield, BookMarked, ChevronDown, ChevronUp,
   Clock, CheckCircle, Dumbbell, Star, PartyPopper, TriangleAlert,
-  Camera, X, Send, Edit2, Lock,
+  Camera, X, Send, Edit2, Lock, GraduationCap,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -42,6 +42,7 @@ export function LessonPlanDetailPage() {
   const semId = searchParams.get('semId')
   const plan = LESSON_PLANS.find(p => p.week === weekNum)
 
+  const navigate = useNavigate()
   const isLead = profile?.role === 'lead_coach' || profile?.role === 'area_lead' || profile?.role === 'director'
 
   const [semester, setSemester] = useState<AcademicSemester | null>(null)
@@ -277,32 +278,102 @@ export function LessonPlanDetailPage() {
               </div>
             </Section>
 
+            {plan.abilityGuide && plan.abilityGuide.length > 0 && (
+              <Section icon={GraduationCap} title="Ability Assessment Guide" defaultOpen>
+                <div className="flex flex-col gap-3">
+                  <p className="text-xs text-gray-500 leading-relaxed">
+                    Use these indicators to place children into the right ability group. Tap a level badge to open the UKAG Library.
+                  </p>
+                  {plan.abilityGuide.map(tier => {
+                    const c = tier.label === 'Beginner'
+                      ? { dot: 'bg-green-500', title: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-800' }
+                      : tier.label === 'Intermediate'
+                      ? { dot: 'bg-amber-500', title: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-800' }
+                      : { dot: 'bg-violet-500', title: 'text-violet-700', bg: 'bg-violet-50', border: 'border-violet-200', badge: 'bg-violet-100 text-violet-800' }
+                    return (
+                      <div key={tier.label} className={`${c.bg} border ${c.border} rounded-xl p-3`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2.5 h-2.5 rounded-full ${c.dot} shrink-0`} />
+                            <span className={`font-extrabold text-sm ${c.title}`}>{tier.label}</span>
+                          </div>
+                          <button
+                            onClick={() => navigate(`/ukag/${tier.ukagLevelNums[0]}`)}
+                            className={`text-[10px] font-bold ${c.badge} px-2 py-1 rounded-full`}
+                          >
+                            {tier.ukagLevels} →
+                          </button>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {tier.indicators.map((ind, i) => (
+                            <div key={i} className="flex items-start gap-2">
+                              <span className="text-gray-400 text-xs mt-0.5 shrink-0">•</span>
+                              <p className="text-xs text-gray-700 leading-snug">{ind}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </Section>
+            )}
+
             {plan.skillProgressions && plan.skillProgressions.length > 0 && (
               <Section icon={Dumbbell} title="Skill Progressions" defaultOpen>
                 <div className="flex flex-col gap-4">
-                  {plan.skillProgressions.map(prog => (
-                    <div key={prog.apparatus} className={`${plan.cardBg} border ${plan.cardBorder} rounded-xl p-3`}>
-                      <p className={`font-extrabold text-sm ${plan.cardText} mb-2`}>{prog.apparatus}</p>
-                      <div className="flex flex-col gap-1.5 mb-2">
-                        {prog.skills.map((skill, i) => (
-                          <div key={i} className="flex items-start gap-2">
-                            <span className="w-4 h-4 rounded-full bg-white border border-gray-200 text-[9px] font-bold text-gray-500 flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                            <p className="text-xs text-gray-700 leading-snug">{skill}</p>
+                  {plan.skillProgressions.map(prog => {
+                    const hasTiers = (prog.beginner && prog.beginner.length > 0) || (prog.intermediate && prog.intermediate.length > 0) || (prog.advanced && prog.advanced.length > 0)
+                    const tiers = [
+                      { key: 'beginner', label: 'Beginner', items: prog.beginner ?? [], dot: 'bg-green-500', title: 'text-green-700', divider: 'border-green-200/60' },
+                      { key: 'intermediate', label: 'Intermediate', items: prog.intermediate ?? [], dot: 'bg-amber-500', title: 'text-amber-700', divider: 'border-amber-200/60' },
+                      { key: 'advanced', label: 'Advanced', items: prog.advanced ?? [], dot: 'bg-violet-500', title: 'text-violet-700', divider: 'border-violet-200/60' },
+                    ]
+                    return (
+                      <div key={prog.apparatus} className={`${plan.cardBg} border ${plan.cardBorder} rounded-xl p-3`}>
+                        <p className={`font-extrabold text-sm ${plan.cardText} mb-2`}>{prog.apparatus}</p>
+                        {hasTiers ? (
+                          <div className="flex flex-col gap-2.5">
+                            {tiers.filter(t => t.items.length > 0).map((t, ti, arr) => (
+                              <div key={t.key} className={ti < arr.length - 1 ? `pb-2.5 border-b ${t.divider}` : ''}>
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                  <span className={`w-2 h-2 rounded-full ${t.dot} shrink-0`} />
+                                  <span className={`text-[10px] font-extrabold uppercase tracking-wider ${t.title}`}>{t.label}</span>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                  {t.items.map((skill, i) => (
+                                    <div key={i} className="flex items-start gap-2">
+                                      <span className="text-gray-400 text-xs mt-0.5 shrink-0">•</span>
+                                      <p className="text-xs text-gray-700 leading-snug">{skill}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        ) : (
+                          <div className="flex flex-col gap-1.5 mb-2">
+                            {prog.skills.map((skill, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <span className="w-4 h-4 rounded-full bg-white border border-gray-200 text-[9px] font-bold text-gray-500 flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                                <p className="text-xs text-gray-700 leading-snug">{skill}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {(prog.progression || prog.coachingCues || prog.awardLink) && (
+                          <div className="border-t border-white/60 pt-2 flex flex-col gap-1 mt-2">
+                            {prog.progression && <>
+                              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Pathway</p>
+                              <p className="text-xs text-gray-600">{prog.progression}</p>
+                            </>}
+                            {prog.coachingCues && <p className={`text-xs font-semibold italic mt-1 ${plan.cardText}`}>{prog.coachingCues}</p>}
+                            {prog.awardLink && <p className="text-[10px] font-bold text-gray-400 mt-1">🏅 {prog.awardLink}</p>}
+                          </div>
+                        )}
                       </div>
-                      {(prog.progression || prog.coachingCues || prog.awardLink) && (
-                        <div className="border-t border-white/60 pt-2 flex flex-col gap-1">
-                          {prog.progression && <>
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Pathway</p>
-                            <p className="text-xs text-gray-600">{prog.progression}</p>
-                          </>}
-                          {prog.coachingCues && <p className={`text-xs font-semibold italic mt-1 ${plan.cardText}`}>{prog.coachingCues}</p>}
-                          {prog.awardLink && <p className="text-[10px] font-bold text-gray-400 mt-1">🏅 {prog.awardLink}</p>}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </Section>
             )}
