@@ -465,6 +465,39 @@ export interface IncidentReport {
   reviewer?: Profile
 }
 
+export interface LessonPlan {
+  id: string
+  semester: string
+  week_number: number
+  title: string
+  objectives: string | null
+  warm_up: string | null
+  activities: string[]
+  cool_down: string | null
+  coaching_points: string | null
+  equipment_needed: string | null
+  resource_url: string | null
+  is_published: boolean
+  created_at: string
+}
+
+export interface SessionFeedback {
+  id: string
+  lesson_plan_id: string | null
+  school_id: string
+  coach_id: string
+  session_date: string | null
+  overall_notes: string | null
+  activities_completed: string[]
+  highlights: string | null
+  challenges: string | null
+  photos: string[]
+  submitted_at: string
+  school?: School
+  coach?: Profile
+  lesson_plan?: LessonPlan
+}
+
 export interface HolidayCamp {
   id: string
   title: string

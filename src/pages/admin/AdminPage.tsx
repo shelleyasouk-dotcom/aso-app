@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard, Tag, Download, Briefcase, ClipboardList, Tent } from 'lucide-react'
+import { School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard, Tag, Download, Briefcase, ClipboardList, Tent, GraduationCap } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
@@ -139,6 +139,13 @@ export function AdminPage() {
       icon: Tent,
       path: '/admin/holiday-camps',
       color: 'bg-amber-50 text-amber-700',
+    },
+    {
+      label: 'Lesson Plans',
+      description: 'Create weekly plans and view coach session feedback',
+      icon: GraduationCap,
+      path: '/admin/lesson-plans',
+      color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]',
     },
   ]
 

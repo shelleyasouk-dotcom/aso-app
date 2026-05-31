@@ -80,6 +80,9 @@ import { PortalCoachPoolJoinPage } from './pages/portal/PortalCoachPoolJoinPage'
 import { JobAdvertsAdminPage } from './pages/admin/JobAdvertsAdminPage'
 import { JobApplicationsAdminPage } from './pages/admin/JobApplicationsAdminPage'
 import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
+import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
+import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
+import { LessonPlansAdminPage } from './pages/admin/LessonPlansAdminPage'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -150,6 +153,12 @@ export default function App() {
             <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
               <SessionsPage />
             </ProtectedRoute>
+          } />
+          <Route path="/lesson-plans" element={
+            <ProtectedRoute><LessonPlansPage /></ProtectedRoute>
+          } />
+          <Route path="/lesson-plans/:id" element={
+            <ProtectedRoute><LessonPlanDetailPage /></ProtectedRoute>
           } />
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
@@ -358,6 +367,11 @@ export default function App() {
           <Route path="/admin/job-applications" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <JobApplicationsAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/lesson-plans" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <LessonPlansAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/holiday-camps" element={
