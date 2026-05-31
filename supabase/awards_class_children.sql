@@ -55,7 +55,7 @@ CREATE POLICY "class_children_select" ON public.class_children
     OR (
       my_role() = 'lead_coach'
       AND school_id IN (
-        SELECT school_id FROM public.school_coach_assignments WHERE coach_id = auth.uid()
+        SELECT school_id FROM public.staff_school_assignments WHERE staff_id = auth.uid()
       )
     )
   );
@@ -80,7 +80,7 @@ CREATE POLICY "class_skill_comps_select" ON public.class_skill_completions
         OR (
           my_role() = 'lead_coach'
           AND cc.school_id IN (
-            SELECT school_id FROM public.school_coach_assignments WHERE coach_id = auth.uid()
+            SELECT school_id FROM public.staff_school_assignments WHERE staff_id = auth.uid()
           )
         )
       )
@@ -116,7 +116,7 @@ CREATE POLICY "class_certs_select" ON public.class_certificates
         OR (
           my_role() = 'lead_coach'
           AND cc.school_id IN (
-            SELECT school_id FROM public.school_coach_assignments WHERE coach_id = auth.uid()
+            SELECT school_id FROM public.staff_school_assignments WHERE staff_id = auth.uid()
           )
         )
       )

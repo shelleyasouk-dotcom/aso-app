@@ -54,9 +54,9 @@ export function AwardsPage() {
           if (s.length === 1) setSelectedSchoolId(s[0].id)
         })
     } else {
-      supabase.from('school_coach_assignments')
+      supabase.from('staff_school_assignments')
         .select('school_id, schools(*)')
-        .eq('coach_id', profile.id)
+        .eq('staff_id', profile.id)
         .then(({ data }) => {
           const s = (data ?? []).map((a: any) => a.schools).filter(Boolean) as School[]
           setSchools(s)
