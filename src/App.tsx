@@ -83,6 +83,8 @@ import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
 import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
 import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
 import { LessonPlansAdminPage } from './pages/admin/LessonPlansAdminPage'
+import { UKAGLibraryPage } from './pages/ukag/UKAGLibraryPage'
+import { UKAGLevelPage } from './pages/ukag/UKAGLevelPage'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -159,6 +161,12 @@ export default function App() {
           } />
           <Route path="/lesson-plans/:id" element={
             <ProtectedRoute><LessonPlanDetailPage /></ProtectedRoute>
+          } />
+          <Route path="/ukag" element={
+            <ProtectedRoute><UKAGLibraryPage /></ProtectedRoute>
+          } />
+          <Route path="/ukag/:level" element={
+            <ProtectedRoute><UKAGLevelPage /></ProtectedRoute>
           } />
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>

@@ -18,6 +18,7 @@ import {
   HelpCircle,
   ShieldAlert,
   BookOpen,
+  GraduationCap,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -80,6 +81,7 @@ export function MyAreaPage() {
 
   const coachingTiles: Tile[] = [
     { label: 'Lesson Plans', description: 'Weekly plans & session feedback', icon: BookOpen, path: '/lesson-plans', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
+    { label: 'UKAG Library', description: 'Level 1–5 coaching plans', icon: GraduationCap, path: '/ukag', color: 'bg-violet-50 text-violet-800' },
     { label: 'Registers', description: 'Session attendance', icon: ClipboardList, path: '/registers', color: 'bg-yellow-50 text-[#1a3a6b]' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
     { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
