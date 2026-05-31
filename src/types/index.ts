@@ -481,10 +481,24 @@ export interface LessonPlan {
   created_at: string
 }
 
+export interface AcademicSemester {
+  id: string
+  academic_year: string
+  semester_number: number
+  label: string | null
+  start_date: string | null
+  end_date: string | null
+  is_current: boolean
+  is_archived: boolean
+  archived_at: string | null
+  created_at: string
+}
+
 export interface SessionFeedback {
   id: string
   semester_number: number
   week_number: number
+  academic_year: string
   school_id: string
   coach_id: string
   feedback_type: 'lead' | 'coach'

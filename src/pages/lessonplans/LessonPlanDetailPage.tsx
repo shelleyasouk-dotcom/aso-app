@@ -3,13 +3,13 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import {
   Target, Lightbulb, Users, Shield, BookMarked, ChevronDown, ChevronUp,
   Clock, CheckCircle, Dumbbell, Star, PartyPopper, TriangleAlert,
-  Camera, X, Send, Edit2,
+  Camera, X, Send, Edit2, Lock,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { LESSON_PLANS } from '../../data/lessonPlans'
-import type { SessionFeedback, School } from '../../types'
+import type { SessionFeedback, School, AcademicSemester } from '../../types'
 
 function Section({
   icon: Icon, title, children, defaultOpen = false,
@@ -39,11 +39,12 @@ export function LessonPlanDetailPage() {
   const { profile } = useAuth()
 
   const weekNum = parseInt(weekParam ?? '1')
-  const semesterNum = parseInt(searchParams.get('semester') ?? '1')
+  const semId = searchParams.get('semId')
   const plan = LESSON_PLANS.find(p => p.week === weekNum)
 
   const isLead = profile?.role === 'lead_coach' || profile?.role === 'area_lead' || profile?.role === 'director'
 
+  const [semester, setSemester] = useState<AcademicSemester | null>(null)
   const [mySchools, setMySchools] = useState<School[]>([])
   const [existingCoachNote, setExistingCoachNote] = useState<SessionFeedback | null>(null)
   const [existingLeadReport, setExistingLeadReport] = useState<SessionFeedback | null>(null)
@@ -71,6 +72,19 @@ export function LessonPlanDetailPage() {
   useEffect(() => {
     if (!profile) return
     async function load() {
+      // Load semester
+      let sem: AcademicSemester | null = null
+      if (semId) {
+        const { data } = await supabase.from('academic_semesters').select('*').eq('id', semId).single()
+        sem = data as AcademicSemester
+      } else {
+        // Fallback: load current semester
+        const { data } = await supabase.from('academic_semesters').select('*').eq('is_current', true).single()
+        sem = data as AcademicSemester
+      }
+      setSemester(sem)
+
+      // Load coach's schools
       const { data: assignments } = await supabase
         .from('school_coach_assignments')
         .select('school_id, schools(*)')
@@ -79,30 +93,33 @@ export function LessonPlanDetailPage() {
       setMySchools(schools)
       if (schools.length === 1) { setNoteSchoolId(schools[0].id); setReportSchoolId(schools[0].id) }
 
-      const { data: feedback } = await supabase
-        .from('session_feedback').select('*')
-        .eq('coach_id', profile!.id)
-        .eq('semester_number', semesterNum)
-        .eq('week_number', weekNum)
-
-      for (const row of feedback ?? []) {
-        if (row.feedback_type === 'lead') setExistingLeadReport(row as SessionFeedback)
-        else setExistingCoachNote(row as SessionFeedback)
+      if (sem) {
+        const { data: feedback } = await supabase
+          .from('session_feedback').select('*')
+          .eq('coach_id', profile!.id)
+          .eq('semester_number', sem.semester_number)
+          .eq('academic_year', sem.academic_year)
+          .eq('week_number', weekNum)
+        for (const row of feedback ?? []) {
+          if (row.feedback_type === 'lead') setExistingLeadReport(row as SessionFeedback)
+          else setExistingCoachNote(row as SessionFeedback)
+        }
       }
     }
     load()
-  }, [profile, semesterNum, weekNum])
+  }, [profile, semId, weekNum])
 
   function toggleDay(day: string) {
     setDaysWorked(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
   }
 
   async function submitNote() {
-    if (!profile || !noteSchoolId) return
+    if (!profile || !noteSchoolId || !semester) return
     setSavingNote(true)
     try {
       const payload = {
-        semester_number: semesterNum, week_number: weekNum,
+        semester_number: semester.semester_number, week_number: weekNum,
+        academic_year: semester.academic_year,
         school_id: noteSchoolId, coach_id: profile.id,
         feedback_type: 'coach',
         overall_notes: noteText || null, highlights: noteHighlights || null, challenges: noteChallenges || null,
@@ -114,7 +131,8 @@ export function LessonPlanDetailPage() {
         await supabase.from('session_feedback').insert(payload)
       }
       const { data } = await supabase.from('session_feedback').select('*')
-        .eq('coach_id', profile.id).eq('semester_number', semesterNum)
+        .eq('coach_id', profile.id).eq('semester_number', semester.semester_number)
+        .eq('academic_year', semester.academic_year)
         .eq('week_number', weekNum).eq('feedback_type', 'coach').single()
       setExistingCoachNote(data as SessionFeedback)
       setEditingNote(false)
@@ -123,11 +141,12 @@ export function LessonPlanDetailPage() {
   }
 
   async function submitReport() {
-    if (!profile || !reportSchoolId) return
+    if (!profile || !reportSchoolId || !semester) return
     setSavingReport(true)
     try {
       const payload = {
-        semester_number: semesterNum, week_number: weekNum,
+        semester_number: semester.semester_number, week_number: weekNum,
+        academic_year: semester.academic_year,
         school_id: reportSchoolId, coach_id: profile.id,
         feedback_type: 'lead',
         days_worked: daysWorked,
@@ -168,8 +187,9 @@ export function LessonPlanDetailPage() {
     return <Layout title="Not Found" showBack><p className="text-center text-gray-400 py-16">Week not found.</p></Layout>
   }
 
-  const showNoteForm = activeTab === 'note' && (!existingCoachNote || editingNote)
-  const showReportForm = activeTab === 'report' && (!existingLeadReport || editingReport)
+  const isArchived = semester?.is_archived ?? false
+  const showNoteForm = activeTab === 'note' && !isArchived && (!existingCoachNote || editingNote)
+  const showReportForm = activeTab === 'report' && !isArchived && (!existingLeadReport || editingReport)
 
   return (
     <Layout title={`Week ${plan.week}`} showBack>
@@ -180,7 +200,7 @@ export function LessonPlanDetailPage() {
           <div className="flex items-start justify-between gap-4 mb-2">
             <div>
               <p className={`text-xs font-extrabold uppercase tracking-widest ${plan.accentText} mb-1`}>
-                Semester {semesterNum} · Week {plan.week}
+                {semester ? `${semester.label ?? `Semester ${semester.semester_number}`} · ${semester.academic_year}` : ''} · Week {plan.week}
               </p>
               <h1 className="text-2xl font-extrabold leading-tight">{plan.theme}</h1>
               <p className="text-white/70 text-sm mt-1">{plan.focus}</p>
@@ -191,6 +211,19 @@ export function LessonPlanDetailPage() {
             <Clock size={11} /> {plan.duration}
           </span>
         </div>
+
+        {/* Archived notice */}
+        {isArchived && (
+          <div className="px-4">
+            <div className="flex items-center gap-2.5 bg-gray-100 border border-gray-200 rounded-xl px-4 py-3">
+              <Lock size={15} className="text-gray-400 shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-gray-600">Archived semester</p>
+                <p className="text-xs text-gray-400">This semester is read-only. You can view submitted feedback but cannot add new entries.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tab bar */}
         <div className="px-4">
