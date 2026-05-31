@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   Target, Dumbbell, Lightbulb, Users, Shield, BookMarked,
   ChevronDown, ChevronUp, Clock, CheckCircle,
+  Wrench, Eye, TrendingUp, Zap, HeartHandshake,
 } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import { UKAG_LEVELS } from '../../data/ukagLevels'
@@ -49,6 +50,7 @@ export function UKAGLevelPage() {
   const levelNum = parseInt(levelParam ?? '1')
   const level = UKAG_LEVELS.find(l => l.level === levelNum)
   const theme = LEVEL_THEME[levelNum] ?? LEVEL_THEME[1]
+  const [activeTab, setActiveTab] = useState<'level' | 'guide'>('level')
 
   if (!level) {
     return (
@@ -95,6 +97,25 @@ export function UKAGLevelPage() {
           </div>
         </div>
 
+        {/* Tab bar */}
+        <div className="px-4">
+          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+            {([
+              { id: 'level', label: 'Level Content' },
+              { id: 'guide', label: '🎯 Coaching Guide' },
+            ] as { id: 'level' | 'guide'; label: string }[]).map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${activeTab === tab.id ? 'bg-white text-[#1a3a6b] shadow-sm' : 'text-gray-500'}`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {activeTab === 'level' && (
         <div className="px-4 flex flex-col gap-3">
 
           {/* Session Overview */}
@@ -207,6 +228,88 @@ export function UKAGLevelPage() {
           </CollapsibleSection>
 
         </div>
+        )}
+
+        {/* ── COACHING GUIDE TAB ── */}
+        {activeTab === 'guide' && level.coachingGuide && (
+          <div className="px-4 flex flex-col gap-3">
+
+            {/* Intro */}
+            <div className={`${theme.skillBg} border ${theme.skillBorder} rounded-2xl px-4 py-3`}>
+              <p className={`text-sm leading-relaxed ${theme.skillText}`}>{level.coachingGuide.intro}</p>
+            </div>
+
+            <CollapsibleSection icon={Lightbulb} title="Coaching Techniques" defaultOpen>
+              <div className="flex flex-col gap-3">
+                {level.coachingGuide.techniques.map((t, i) => (
+                  <div key={i} className="flex gap-3">
+                    <div className="w-1 rounded-full bg-gray-200 shrink-0 mt-1" />
+                    <div>
+                      <p className="font-bold text-gray-800 text-sm leading-tight">{t.title}</p>
+                      <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{t.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection icon={HeartHandshake} title="Support Ideas" defaultOpen>
+              <div className="flex flex-col gap-2">
+                {level.coachingGuide.supportIdeas.map((idea, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0 mt-2" />
+                    <p className="text-sm text-gray-700 leading-snug">{idea}</p>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection icon={Wrench} title="Coaching Aids & Equipment">
+              <div className="flex flex-col gap-3">
+                {level.coachingGuide.coachingAids.map((aid, i) => (
+                  <div key={i} className={`${theme.skillBg} border ${theme.skillBorder} rounded-xl p-3`}>
+                    <p className={`font-extrabold text-sm ${theme.skillText} mb-1`}>{aid.name}</p>
+                    <p className="text-xs text-gray-600 leading-snug">{aid.purpose}</p>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection icon={Eye} title="What to Watch For">
+              <div className="flex flex-col gap-2">
+                {level.coachingGuide.whatToWatch.map((item, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="text-amber-500 text-base leading-none shrink-0">⚠️</span>
+                    <p className="text-sm text-gray-700 leading-snug">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection icon={TrendingUp} title="How to Develop Gymnasts">
+              <div className="flex flex-col gap-2">
+                {level.coachingGuide.howToDevelop.map((step, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-green-100 text-green-700 text-[10px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                    <p className="text-sm text-gray-700 leading-snug">{step}</p>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+
+            <CollapsibleSection icon={Zap} title="Motivation & Encouragement Tips">
+              <div className="flex flex-col gap-2">
+                {level.coachingGuide.motivationTips.map((tip, i) => (
+                  <div key={i} className="flex items-start gap-2.5">
+                    <span className="text-[#f5c518] text-base leading-none shrink-0">💬</span>
+                    <p className="text-sm text-gray-700 leading-snug italic">{tip}</p>
+                  </div>
+                ))}
+              </div>
+            </CollapsibleSection>
+
+          </div>
+        )}
       </div>
     </Layout>
   )
