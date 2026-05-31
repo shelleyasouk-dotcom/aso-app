@@ -483,19 +483,25 @@ export interface LessonPlan {
 
 export interface SessionFeedback {
   id: string
-  lesson_plan_id: string | null
+  semester_number: number
+  week_number: number
   school_id: string
   coach_id: string
-  session_date: string | null
+  feedback_type: 'lead' | 'coach'
+  // Lead coach weekly report fields
+  days_worked: string[]
+  session_dates: string[]
+  skills_covered: string[]
+  award_sign_offs: string | null
+  // Common note fields
   overall_notes: string | null
-  activities_completed: string[]
   highlights: string | null
   challenges: string | null
   photos: string[]
   submitted_at: string
+  // Relations
   school?: School
   coach?: Profile
-  lesson_plan?: LessonPlan
 }
 
 export interface HolidayCamp {

@@ -159,7 +159,7 @@ export default function App() {
           <Route path="/lesson-plans" element={
             <ProtectedRoute><LessonPlansPage /></ProtectedRoute>
           } />
-          <Route path="/lesson-plans/:id" element={
+          <Route path="/lesson-plans/week/:week" element={
             <ProtectedRoute><LessonPlanDetailPage /></ProtectedRoute>
           } />
           <Route path="/ukag" element={
