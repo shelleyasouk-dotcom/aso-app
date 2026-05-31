@@ -1,3 +1,23 @@
+export interface CoachingTechnique {
+  title: string
+  detail: string
+}
+
+export interface CoachingAid {
+  name: string
+  purpose: string
+}
+
+export interface CoachingGuide {
+  intro: string
+  techniques: CoachingTechnique[]
+  supportIdeas: string[]
+  coachingAids: CoachingAid[]
+  whatToWatch: string[]
+  howToDevelop: string[]
+  motivationTips: string[]
+}
+
 export interface SessionStage {
   stage: string
   time: string
@@ -36,6 +56,7 @@ export interface UKAGLevel {
   assistantRoles: AssistantRole[]
   safetyChecklist: string[]
   coachingReminders: string[]
+  coachingGuide: CoachingGuide
 }
 
 export const UKAG_LEVELS: UKAGLevel[] = [
@@ -153,6 +174,53 @@ export const UKAG_LEVELS: UKAGLevel[] = [
       'Ensure every child finishes each activity in "Block & Present" position.',
       'Praise small wins and visible progress each week.',
     ],
+    coachingGuide: {
+      intro: 'Level 1 is about building trust, confidence, and the foundations of gymnastics movement. Many children will never have done gymnastics before. Your role is to create a safe, enjoyable environment where every child feels successful from the very first session.',
+      techniques: [
+        { title: 'Show Before You Tell', detail: 'Always demonstrate skills visually before explaining. Children at this age learn by watching and mimicking — exaggerate your shapes so they are easy to copy.' },
+        { title: 'Use Shape Names as Triggers', detail: 'Teach "Dish", "Arch", "Tuck", "Pike", "Straddle" as vocabulary triggers. Call out a shape name and see who can make it fastest — instant engagement.' },
+        { title: 'Count Together', detail: 'Use counting (1–5 or 1–10) for holds. This gives children a clear endpoint and builds body tension naturally: "Hold it… 1, 2, 3, 4, 5 — brilliant!"' },
+        { title: 'One Instruction at a Time', detail: 'Give one cue, watch, correct, then move on. Overloading children causes confusion. Simple, visual, specific — then repeat.' },
+        { title: 'Pair Demonstrations With a Child', detail: 'Ask a child to demonstrate while you describe what they are doing well. This builds confidence in the demonstrator and attention in the group.' },
+      ],
+      supportIdeas: [
+        'Support rolls from the side — one hand under the shoulder, one at the hip. Never push from behind.',
+        'For beam balances, hover hands close without touching to build confidence without creating dependency.',
+        'On bars, support the hips in forward circles with both hands from the side.',
+        'Use "magic hands" language — "I am just here in case — you are doing all the work."',
+        'Gradually remove contact: count holds and step back one small step each time.',
+        'For floor shapes, sit in front of the child and model the shape while they copy you.',
+      ],
+      coachingAids: [
+        { name: 'Foam Wedge Mat', purpose: 'Use to assist forward rolls — reduces fear and builds rolling confidence through a gentle incline.' },
+        { name: 'Coloured Tape on Floor', purpose: 'Mark beam lines, take-off zones, and landing targets to give clear spatial guidance.' },
+        { name: 'Bean Bags on Feet', purpose: 'Place a bean bag on each foot during dish/arch holds — encourages pointed toes and body tension through a simple tactile goal.' },
+        { name: 'Hula Hoops', purpose: 'Use as landing targets for jumps — "land in the hoop" creates a clear visual goal for two-foot landings.' },
+        { name: 'Wall or Mirror', purpose: 'If available, let children check their own shapes — builds body awareness without verbal correction.' },
+      ],
+      whatToWatch: [
+        'Floppy arms and legs in shapes — cue "squeeze like a robot" to switch on body tension.',
+        'Children who rush — speed before control creates unsafe landings. Slow everything down.',
+        'Fear or reluctance on apparatus — never force. Use floor-level alternatives and build up slowly.',
+        'Collapsed knees on jump landings — reinforce "soft knees — not locked straight, not sitting down."',
+        'Eyes wandering rather than focused forward — "eyes up, look where you are going."',
+        'Thumbs on top of the bar rather than full grip — always correct to thumb-around grip from day one.',
+      ],
+      howToDevelop: [
+        'Progress shapes to rolls: Dish → rock to dish → forward rock → guided forward roll → independent forward roll.',
+        'Progress jumps: standing jump → half-turn jump → tuck jump → star jump → land and present every time.',
+        'Progress beam: floor line → chalk line → 10 cm mat strip → low beam (supported) → low beam (independent).',
+        'Progress bars: floor bar shapes → hang and drop → 3 swings → 5 swings → forward circle (supported).',
+        'Once a child holds a shape for 5 seconds, increase to 10 — then introduce moving into and out of the shape.',
+      ],
+      motivationTips: [
+        '"You got it — now can you make it even stronger?"',
+        'Give each child a "skill of the day" shout-out at the end of the session.',
+        'Use team challenges: "Can the whole group hold dish for 5 seconds together?"',
+        '"I love how still you held that — let\'s try 3 more seconds."',
+        'Celebrate small wins loudly — every child should hear specific praise at least once per session.',
+      ],
+    },
   },
 
   {
@@ -271,6 +339,53 @@ export const UKAG_LEVELS: UKAGLevel[] = [
       'Ensure every child finishes each activity in "Block & Present" position.',
       'Praise small wins and visible progress each week.',
     ],
+    coachingGuide: {
+      intro: 'Level 2 gymnasts have some gymnastics experience and are building on their foundational shapes. The focus shifts from exploration to repetition with purpose — more control, cleaner shapes, and the first real movement sequences. Precision and confidence grow together at this level.',
+      techniques: [
+        { title: 'Precision Over Repetition', detail: 'Rather than 10 sloppy rolls, do 3 excellent ones. Set a quality standard and hold to it: "That was good — let\'s do one more exactly like that."' },
+        { title: 'Before and After Coaching', detail: 'Help children plan the skill: "What position are you starting in? What shape do you land in?" This builds spatial and body awareness.' },
+        { title: 'Mirror and Match', detail: 'Have children mirror your shapes in real time — particularly useful for stretching and arm placements. It trains accuracy without verbal correction.' },
+        { title: 'Name the Specific Fix', detail: 'Instead of "nearly right," name exactly what needs to change: "legs straight" or "chin tucked" or "arms by your ears." Be specific every time.' },
+        { title: 'Countdown to Independence', detail: 'Use a decreasing support system: full support → one finger → hover → no contact. Announce each step so the child understands you are reducing help intentionally.' },
+      ],
+      supportIdeas: [
+        'For backward rolls: guide hands to the floor from behind the head — never push the hips over.',
+        'For beam turns: hold the wrist (not the hand) to guide the pivot without transferring your weight to them.',
+        'For bar swings: stand to the side with one hand lightly on the lower back to initiate the first dish position.',
+        'Never pull a child through a skill — guide the movement and let them feel the weight shift themselves.',
+        'Spot from the side on vault approaches so you can react to both contact and landing.',
+        'Use a "hover hand" — close enough to catch but not touching — to build confidence through presence alone.',
+      ],
+      coachingAids: [
+        { name: 'Wedge Mat', purpose: 'Essential for backward rolls — position behind the child so they roll down a gentle slope naturally.' },
+        { name: 'Low Beam (10–15 cm)', purpose: 'Step up from floor lines for turn and balance work without significant fall risk.' },
+        { name: 'Springboard Blocks (2–3 stacked)', purpose: 'Reduce vault height for controlled squat-on/squat-off work before full height.' },
+        { name: 'Floor Bar', purpose: 'Use a floor-level bar for front support and grip drills before children move to height.' },
+        { name: 'Spot Belt', purpose: 'Optional for early jump progressions on rebound — gives coach full control of rotation.' },
+      ],
+      whatToWatch: [
+        'Rounded back in forward rolls — chin should tuck, not push forward.',
+        '"Banana back" in dish holds — lower back off the floor means core is not engaged.',
+        'Arms collapsing in front support — shoulder shrug is the sign; locked elbows and pressed shoulders is the goal.',
+        'No control in tuck/straddle jumps — feet together and arms in position before every take-off.',
+        'Gripping beam with thighs — encourage light touch on toes, not a pinch grip.',
+        'Rushing the landing — every skill must finish in Block and Present before the next one begins.',
+      ],
+      howToDevelop: [
+        'Progress rolls: forward roll → forward roll to standing → forward roll to straddle stand → dive roll.',
+        'Progress beam: tiptoe walk → step-turn → half pivot → star jump dismount (with control).',
+        'Progress bars: 5 swings → 10 swings → re-grasp → first static half turn.',
+        'Progress vault: squat-on from floor → springboard approach → squat on 2 blocks → add tuck dismount.',
+        'When a child does a skill 3 times in a row with control, reduce support and increase the challenge.',
+      ],
+      motivationTips: [
+        '"Remember when you could not do that? Look at you now."',
+        '"Three more perfect ones and you have really got it."',
+        'Set a personal challenge: "Last week was 5 swings — can you do 7 today?"',
+        '"Show me your very best version of that."',
+        'End sessions with a group skills count: how many things did we work on today?',
+      ],
+    },
   },
 
   {
@@ -389,6 +504,53 @@ export const UKAG_LEVELS: UKAGLevel[] = [
       'Always encourage safe exploration but controlled risk-taking.',
       'Reinforce "Block & Present" at every dismount.',
     ],
+    coachingGuide: {
+      intro: 'Level 3 gymnasts are gaining real confidence and are ready for inversions, independence, and more complex movements. Your coaching shifts toward quality and technique — helping gymnasts understand WHY a skill looks right, not just WHAT to do. Self-awareness begins here.',
+      techniques: [
+        { title: 'Teach Skills as Three Phases', detail: 'Break every skill into entry, action, and exit: "What shape are you in before the cartwheel? During? After?" This builds understanding and trains self-correction.' },
+        { title: 'Use Drill Sequences', detail: 'Rather than repeating a full skill, isolate its components. Kick-to-wall drills before a freestanding handstand. Cartwheel entry drills before the full movement.' },
+        { title: 'Give Gymnasts Ownership', detail: 'Ask: "How did that feel? What would you change?" This reduces coach dependency and trains the gymnast to observe and correct themselves.' },
+        { title: 'Visual Reference Points', detail: 'Use marks, cones, or tape as targets: "Land between these two marks." Removes guesswork and creates measurable progress.' },
+        { title: 'Graduated Challenge', detail: 'Once a skill is achieved, extend it immediately: "Can you do two in a row? Can you do it on the other side?" Keeps motivated gymnasts moving forward.' },
+      ],
+      supportIdeas: [
+        'Handstand support: stand to the side, one hand on the hip, one at the knee — guide alignment, do not carry weight.',
+        'Cartwheel support: hold the waist lightly and step alongside the gymnast through the movement. Release before the landing phase.',
+        'Hip circle on bars: both hands on hips from behind, guide the rotation — never push from the back or shoulders.',
+        'Backward roll: guide the head down after hands push — never push hips over.',
+        'For turns on beam: hold one wrist loosely as an anchor, let the child transfer the weight themselves.',
+        'Use a crash mat as a confidence ladder: start it flat, then raise it so the gymnast safely feels the sensation of a new skill.',
+      ],
+      coachingAids: [
+        { name: 'Wall for Handstands', purpose: 'A wall gives gymnasts a safe, predictable landing surface and helps them feel the correct vertical line of the body.' },
+        { name: 'Wedge Mat', purpose: 'For backward roll assistance and cartwheel entry practice — the angled surface helps gymnasts feel the correct weight transfer.' },
+        { name: 'Incline / Cheese Mat', purpose: 'For bridge and back bend work — reduces shoulder and spine loading while building the flexibility and confidence needed for walkovers.' },
+        { name: 'Coloured Spot Marks', purpose: 'Place hand and foot targets for cartwheel and handstand work — removes spatial guessing and creates clear feedback.' },
+        { name: 'Low Crash Mat Stack', purpose: 'Build a landing zone at the end of bars for dismounts — raising the floor gives gymnasts confidence to commit fully.' },
+      ],
+      whatToWatch: [
+        'Bent arms in handstands — "lock out your elbows and push the floor away from you."',
+        'Dropping hips in cartwheels — look for a smooth arc; a collapse in the middle means the kick was too low.',
+        'Head back in backward rolls — chin should tuck to chest first, every time.',
+        'Twisting on vault landings — block with both hands, land on two feet together before adding any shape.',
+        'Over-gripping on bars — tight knuckles waste energy; "relax the hands, squeeze only as you pass the bar."',
+        'Fear at height on beam — never hurry a nervous gymnast. Build confidence with lower apparatus before progressing.',
+      ],
+      howToDevelop: [
+        'Progress handstands: kick to wall → hold 3 sec → hold 5 sec → lower to floor under control → free balance.',
+        'Progress cartwheels: side cartwheel → both sides → kick through → round-off preparation.',
+        'Progress bars: 10 swings → up-hip circle (supported) → cast to front support → half turn.',
+        'Progress beam: floor routine → low beam → full beam with turns and dismount.',
+        'Once inversions are stable, start linking: cartwheel → straight jump → Block and Present.',
+      ],
+      motivationTips: [
+        '"That is a Level 3 skill — you just did it."',
+        '"I need you to trust your arms — they are stronger than you think."',
+        'Use peer learning: "Watch how [name] keeps her arms straight — that is exactly it."',
+        '"Let\'s see if you can do it with no support this time."',
+        'At Level 3 celebrate the attempt as much as the success — courage earns praise too.',
+      ],
+    },
   },
 
   {
