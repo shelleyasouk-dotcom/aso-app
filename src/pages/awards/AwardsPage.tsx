@@ -134,7 +134,6 @@ export function AwardsPage() {
   }
 
   const myCount = children.filter(c => c.added_by === profile?.id).length
-  const selectedSchool = schools.find(s => s.id === selectedSchoolId)
 
   return (
     <Layout title="Awards" showBack>
@@ -329,7 +328,6 @@ function ChildCard({
 }) {
   const initials = `${child.first_name[0]}${child.last_name[0]}`.toUpperCase()
   const fullName = `${child.first_name} ${child.last_name}`
-  const anyProgress = APPARATUS_LIST.some(a => child.progress[a] > 0)
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-sm">

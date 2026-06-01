@@ -88,8 +88,8 @@ export function CourseModulePage() {
   }
 
   function resetQuiz() {
-    setAnswers(new Array(mod.quiz.length).fill(null))
-    setRevealed(new Array(mod.quiz.length).fill(false))
+    setAnswers(new Array(mod!.quiz.length).fill(null))
+    setRevealed(new Array(mod!.quiz.length).fill(false))
     setPhase('quiz')
   }
 
