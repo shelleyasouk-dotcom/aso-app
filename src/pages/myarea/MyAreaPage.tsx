@@ -19,6 +19,7 @@ import {
   ShieldAlert,
   BookOpen,
   GraduationCap,
+  Medal,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -82,6 +83,7 @@ export function MyAreaPage() {
     { label: 'Semester Plans', description: 'Plans & feedback by week', icon: BookOpen, path: '/lesson-plans', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
     { label: 'UKAG Library', description: 'Level 1–6 coaching plans', icon: GraduationCap, path: '/ukag', color: 'bg-violet-50 text-violet-800' },
     { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
+    { label: 'Leadership Course', description: 'Lead Coach certification', icon: Medal, path: '/course/leadership', color: 'bg-yellow-50 text-yellow-700' },
     { label: 'Registers', description: 'Session attendance', icon: ClipboardList, path: '/registers', color: 'bg-yellow-50 text-[#1a3a6b]' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
     { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },

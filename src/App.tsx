@@ -85,6 +85,8 @@ import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
 import { LessonPlansAdminPage } from './pages/admin/LessonPlansAdminPage'
 import { UKAGLibraryPage } from './pages/ukag/UKAGLibraryPage'
 import { UKAGLevelPage } from './pages/ukag/UKAGLevelPage'
+import { LeadershipCoursePage } from './pages/course/LeadershipCoursePage'
+import { CourseModulePage } from './pages/course/CourseModulePage'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -399,6 +401,10 @@ export default function App() {
               <BookingsAdminPage />
             </ProtectedRoute>
           } />
+
+          {/* Leadership course */}
+          <Route path="/course/leadership" element={<ProtectedRoute><LeadershipCoursePage /></ProtectedRoute>} />
+          <Route path="/course/leadership/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

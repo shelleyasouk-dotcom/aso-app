@@ -236,6 +236,7 @@ export function CoachProfilePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadStep, setUploadStep] = useState<string | null>(null)
+  const [leadershipCert, setLeadershipCert] = useState<{ course_title: string; completed_at: string } | null>(null)
 
   // Whether the current viewer can edit this profile
   const [canEdit, setCanEdit] = useState(false)
@@ -282,6 +283,12 @@ export function CoachProfilePage() {
     loadSubject(targetId)
     loadCerts(targetId)
     loadDocs(targetId)
+    supabase.from('course_certificates')
+      .select('course_title, completed_at')
+      .eq('user_id', targetId)
+      .eq('course_id', 'leadership_v1')
+      .maybeSingle()
+      .then(({ data }) => setLeadershipCert(data))
   }, [targetId])
 
   async function loadSubject(id: string) {
@@ -626,6 +633,29 @@ export function CoachProfilePage() {
           <IdCard size={18} />
           Show Full ID Card
         </button>
+
+        {/* Leadership course certificate */}
+        {leadershipCert && (
+          <div className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] rounded-2xl p-4 text-white">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#f5c518] mb-1">Certificate of Completion</p>
+                <p className="font-extrabold text-sm leading-tight">ASO Lead Coach Leadership Programme</p>
+                <p className="text-white/70 text-xs mt-1">
+                  {subject?.full_name}
+                </p>
+                <p className="text-white/50 text-xs mt-2">
+                  Awarded {new Date(leadershipCert.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+              <div className="text-3xl shrink-0">🏅</div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
+              <p className="text-[10px] text-white/50 font-semibold">Active Schools Organisation</p>
+              <p className="text-[10px] text-white/50">Verified ✓</p>
+            </div>
+          </div>
+        )}
 
         {/* Photo */}
         {canEdit && (
