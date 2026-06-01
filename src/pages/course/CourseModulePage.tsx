@@ -81,6 +81,22 @@ export function CourseModulePage() {
         course_id: course.id,
         course_title: course.certificateTitle,
       }, { onConflict: 'user_id,course_id' })
+
+      const { data: leaders } = await supabase
+        .from('profiles').select('id')
+        .in('role', ['area_lead', 'director'])
+        .neq('id', profile.id)
+      if ((leaders ?? []).length > 0) {
+        await supabase.from('notifications').insert(
+          (leaders ?? []).map((l: { id: string }) => ({
+            user_id: l.id,
+            title: `${profile.full_name} completed the Leadership Programme`,
+            body: 'All 7 modules completed — certificate awarded.',
+            type: 'course_completed',
+            related_id: profile.id,
+          }))
+        )
+      }
     }
 
     setSaving(false)

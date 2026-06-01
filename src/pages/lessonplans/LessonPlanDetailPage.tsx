@@ -181,6 +181,26 @@ export function LessonPlanDetailPage() {
       const { data } = await supabase.from('session_feedback').select('*').eq('id', reportId).single()
       setExistingLeadReport(data as SessionFeedback)
       setEditingReport(false); setReportPhotos([]); setActiveTab('plan')
+
+      // Notify area leads and directors on new submissions only (not edits)
+      if (!existingLeadReport) {
+        const schoolName = mySchools.find(s => s.id === reportSchoolId)?.name ?? 'school'
+        const { data: leaders } = await supabase
+          .from('profiles').select('id')
+          .in('role', ['area_lead', 'director'])
+          .neq('id', profile.id)
+        if ((leaders ?? []).length > 0) {
+          await supabase.from('notifications').insert(
+            (leaders ?? []).map((l: { id: string }) => ({
+              user_id: l.id,
+              title: `Week ${weekNum} report from ${profile.full_name}`,
+              body: `${schoolName} · ${semester.label ?? `Semester ${semester.semester_number}`}`,
+              type: 'week_report',
+              related_id: reportId,
+            }))
+          )
+        }
+      }
     } finally { setSavingReport(false) }
   }
 
