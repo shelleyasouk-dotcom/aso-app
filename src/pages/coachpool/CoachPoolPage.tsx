@@ -49,13 +49,32 @@ const ALL_STATUSES: PoolStatus[] = ['available', 'placed', 'inactive']
 
 // ─── Add / Edit form ──────────────────────────────────────────────────────────
 
+const AVAIL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const AVAIL_TIMES = ['Mornings', 'Afternoons', 'Evenings', 'Flexible']
+
+function parseAvailability(str: string | null): { days: string[]; time: string } {
+  if (!str) return { days: [], time: '' }
+  const parts = str.split('—').map(s => s.trim())
+  const days = AVAIL_DAYS.filter(d => parts[0]?.includes(d))
+  const time = AVAIL_TIMES.find(t => parts[1]?.includes(t)) ?? ''
+  return { days, time }
+}
+
+function serializeAvailability(days: string[], time: string): string {
+  const parts: string[] = []
+  if (days.length) parts.push(days.join(', '))
+  if (time) parts.push(time)
+  return parts.join(' — ')
+}
+
 interface FormData {
   full_name: string
   email: string
   phone: string
   preferred_locations: string
   travel_distance_miles: string
-  availability: string
+  availability_days: string[]
+  availability_time: string
   notes: string
   status: PoolStatus
 }
@@ -66,7 +85,8 @@ const EMPTY_FORM: FormData = {
   phone: '',
   preferred_locations: '',
   travel_distance_miles: '',
-  availability: '',
+  availability_days: [],
+  availability_time: '',
   notes: '',
   status: 'available',
 }
@@ -78,20 +98,21 @@ interface EntryFormProps {
 }
 
 function EntryForm({ initial, onSave, onCancel }: EntryFormProps) {
-  const [form, setForm] = useState<FormData>(
-    initial
-      ? {
-          full_name: initial.full_name,
-          email: initial.email ?? '',
-          phone: initial.phone ?? '',
-          preferred_locations: initial.preferred_locations ?? '',
-          travel_distance_miles: initial.travel_distance_miles?.toString() ?? '',
-          availability: initial.availability ?? '',
-          notes: initial.notes ?? '',
-          status: initial.status,
-        }
-      : EMPTY_FORM
-  )
+  const [form, setForm] = useState<FormData>(() => {
+    if (!initial) return EMPTY_FORM
+    const { days, time } = parseAvailability(initial.availability)
+    return {
+      full_name: initial.full_name,
+      email: initial.email ?? '',
+      phone: initial.phone ?? '',
+      preferred_locations: initial.preferred_locations ?? '',
+      travel_distance_miles: initial.travel_distance_miles?.toString() ?? '',
+      availability_days: days,
+      availability_time: time,
+      notes: initial.notes ?? '',
+      status: initial.status,
+    }
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -110,7 +131,7 @@ function EntryForm({ initial, onSave, onCancel }: EntryFormProps) {
       phone: form.phone.trim() || null,
       preferred_locations: form.preferred_locations.trim() || null,
       travel_distance_miles: form.travel_distance_miles ? parseInt(form.travel_distance_miles) : null,
-      availability: form.availability.trim() || null,
+      availability: serializeAvailability(form.availability_days, form.availability_time) || null,
       notes: form.notes.trim() || null,
       status: form.status,
     }
@@ -180,12 +201,55 @@ function EntryForm({ initial, onSave, onCancel }: EntryFormProps) {
             placeholder="e.g. 15"
           />
 
-          <Input
-            label="Availability"
-            value={form.availability}
-            onChange={e => set('availability', e.target.value)}
-            placeholder="e.g. Weekday afternoons, Mon–Fri"
-          />
+          {/* Availability — days */}
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-2">Available Days</p>
+            <div className="flex gap-2 flex-wrap">
+              {AVAIL_DAYS.map(day => {
+                const selected = form.availability_days.includes(day)
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => {
+                      const next = selected
+                        ? form.availability_days.filter(d => d !== day)
+                        : [...form.availability_days, day]
+                      setForm(f => ({ ...f, availability_days: next }))
+                    }}
+                    className={`px-3.5 py-1.5 rounded-xl text-sm font-semibold border transition-colors ${
+                      selected
+                        ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                    }`}
+                  >
+                    {day}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Availability — time of day */}
+          <div>
+            <p className="text-sm font-semibold text-gray-700 mb-2">Time of Day</p>
+            <div className="flex gap-2 flex-wrap">
+              {AVAIL_TIMES.map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, availability_time: f.availability_time === t ? '' : t }))}
+                  className={`px-3.5 py-1.5 rounded-xl text-sm font-semibold border transition-colors ${
+                    form.availability_time === t
+                      ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
+                      : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Status */}
           <div>
@@ -352,7 +416,7 @@ export function CoachPoolPage() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<CoachPoolEntry | null>(null)
 
-  const canEdit = profile?.role === 'director' || profile?.role === 'area_lead'
+  const canEdit = profile?.role === 'director' || profile?.role === 'area_lead' || profile?.role === 'outreach_worker'
 
   const load = useCallback(async () => {
     setLoading(true)
