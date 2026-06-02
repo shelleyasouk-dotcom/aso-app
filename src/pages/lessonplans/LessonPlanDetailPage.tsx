@@ -85,12 +85,21 @@ export function LessonPlanDetailPage() {
       }
       setSemester(sem)
 
-      // Load coach's schools
-      const { data: assignments } = await supabase
-        .from('school_coach_assignments')
-        .select('school_id, schools(*)')
-        .eq('coach_id', profile!.id)
-      const schools = (assignments ?? []).map((a: any) => a.schools).filter(Boolean) as School[]
+      // Load schools — area leads/directors get all schools in their area
+      let schools: School[] = []
+      if (profile!.role === 'director') {
+        const { data } = await supabase.from('schools').select('*').order('name')
+        schools = (data ?? []) as School[]
+      } else if (profile!.role === 'area_lead') {
+        const { data } = await supabase.from('schools').select('*').eq('area', profile!.area).order('name')
+        schools = (data ?? []) as School[]
+      } else {
+        const { data: assignments } = await supabase
+          .from('school_coach_assignments')
+          .select('school_id, schools(*)')
+          .eq('coach_id', profile!.id)
+        schools = (assignments ?? []).map((a: any) => a.schools).filter(Boolean) as School[]
+      }
       setMySchools(schools)
       if (schools.length === 1) { setNoteSchoolId(schools[0].id); setReportSchoolId(schools[0].id) }
 
