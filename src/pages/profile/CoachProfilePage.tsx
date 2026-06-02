@@ -237,6 +237,7 @@ export function CoachProfilePage() {
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadStep, setUploadStep] = useState<string | null>(null)
   const [leadershipCert, setLeadershipCert] = useState<{ course_title: string; completed_at: string } | null>(null)
+  const [apparatusCerts, setApparatusCerts] = useState<{ course_id: string; course_title: string; completed_at: string }[]>([])
 
   // Whether the current viewer can edit this profile
   const [canEdit, setCanEdit] = useState(false)
@@ -289,6 +290,11 @@ export function CoachProfilePage() {
       .eq('course_id', 'leadership_v1')
       .maybeSingle()
       .then(({ data }) => setLeadershipCert(data))
+    supabase.from('course_certificates')
+      .select('course_id, course_title, completed_at')
+      .eq('user_id', targetId)
+      .in('course_id', ['floor', 'bars', 'beam', 'vault'])
+      .then(({ data }) => setApparatusCerts(data ?? []))
   }, [targetId])
 
   async function loadSubject(id: string) {
@@ -656,6 +662,36 @@ export function CoachProfilePage() {
             </div>
           </div>
         )}
+
+        {/* Apparatus CPD certificates */}
+        {apparatusCerts.length > 0 && (() => {
+          const APPARATUS_META: Record<string, { emoji: string; label: string; gradient: string }> = {
+            floor: { emoji: '🤸', label: 'Floor Coaching CPD', gradient: 'from-rose-600 to-pink-700' },
+            bars:  { emoji: '🏋️', label: 'Bars Coaching CPD',  gradient: 'from-blue-700 to-indigo-700' },
+            beam:  { emoji: '⚖️', label: 'Beam Coaching CPD',  gradient: 'from-amber-500 to-orange-600' },
+            vault: { emoji: '🏃', label: 'Vault Coaching CPD', gradient: 'from-green-600 to-teal-700' },
+          }
+          return (
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">Apparatus CPD</p>
+              <div className="grid grid-cols-2 gap-2">
+                {apparatusCerts.map(cert => {
+                  const meta = APPARATUS_META[cert.course_id] ?? { emoji: '📋', label: cert.course_title, gradient: 'from-gray-600 to-gray-700' }
+                  return (
+                    <div key={cert.course_id} className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-3 text-white`}>
+                      <div className="text-2xl mb-1">{meta.emoji}</div>
+                      <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/60 mb-0.5">Certificate</p>
+                      <p className="font-bold text-xs leading-tight">{meta.label}</p>
+                      <p className="text-white/50 text-[10px] mt-1">
+                        {new Date(cert.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Photo */}
         {canEdit && (
