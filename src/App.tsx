@@ -87,6 +87,8 @@ import { UKAGLibraryPage } from './pages/ukag/UKAGLibraryPage'
 import { UKAGLevelPage } from './pages/ukag/UKAGLevelPage'
 import { LeadershipCoursePage } from './pages/course/LeadershipCoursePage'
 import { CourseModulePage } from './pages/course/CourseModulePage'
+import { ApparatusCpdHubPage } from './pages/course/ApparatusCpdHubPage'
+import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailPage'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -403,6 +405,11 @@ export default function App() {
           {/* Leadership course */}
           <Route path="/course/leadership" element={<ProtectedRoute><LeadershipCoursePage /></ProtectedRoute>} />
           <Route path="/course/leadership/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
+
+          {/* Apparatus CPD courses */}
+          <Route path="/course/apparatus" element={<ProtectedRoute><ApparatusCpdHubPage /></ProtectedRoute>} />
+          <Route path="/course/apparatus/:courseSlug" element={<ProtectedRoute><ApparatusCourseDetailPage /></ProtectedRoute>} />
+          <Route path="/course/apparatus/:courseSlug/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

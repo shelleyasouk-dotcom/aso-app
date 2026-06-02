@@ -7,14 +7,17 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { LEADERSHIP_COURSE } from '../../data/leadershipCourse'
+import { APPARATUS_CPD_COURSES } from '../../data/apparatusCpd'
 
 export function CourseModulePage() {
-  const { moduleId } = useParams<{ moduleId: string }>()
+  const { moduleId, courseSlug } = useParams<{ moduleId: string; courseSlug?: string }>()
   const { profile } = useAuth()
   const navigate = useNavigate()
 
-  const course = LEADERSHIP_COURSE
-  const mod = course.modules.find(m => m.id === moduleId)
+  const course = courseSlug
+    ? APPARATUS_CPD_COURSES.find(c => c.slug === courseSlug) ?? null
+    : LEADERSHIP_COURSE
+  const mod = course ? course.modules.find(m => m.id === moduleId) : undefined
 
   const [phase, setPhase] = useState<'reading' | 'quiz' | 'result'>('reading')
   const [openSection, setOpenSection] = useState<number>(0)
@@ -24,7 +27,7 @@ export function CourseModulePage() {
   const [alreadyDone, setAlreadyDone] = useState(false)
 
   useEffect(() => {
-    if (!profile || !mod) return
+    if (!profile || !mod || !course) return
     supabase.from('course_progress')
       .select('id')
       .eq('user_id', profile.id)
@@ -32,7 +35,7 @@ export function CourseModulePage() {
       .eq('module_id', mod.id)
       .maybeSingle()
       .then(({ data }) => { if (data) setAlreadyDone(true) })
-  }, [profile, mod])
+  }, [profile, mod, course])
 
   useEffect(() => {
     if (mod) {
@@ -40,6 +43,10 @@ export function CourseModulePage() {
       setRevealed(new Array(mod.quiz.length).fill(false))
     }
   }, [mod])
+
+  if (!course) {
+    return <Layout title="Not Found" showBack><p className="text-center text-gray-400 py-16">Course not found.</p></Layout>
+  }
 
   if (!mod) {
     return <Layout title="Not Found" showBack><p className="text-center text-gray-400 py-16">Module not found.</p></Layout>
@@ -56,7 +63,7 @@ export function CourseModulePage() {
   const allAnswered = answers.every(a => a !== null)
 
   async function completeModule() {
-    if (!profile || saving) return
+    if (!profile || saving || !course) return
     setSaving(true)
     await supabase.from('course_progress').upsert({
       user_id: profile.id,
@@ -86,12 +93,18 @@ export function CourseModulePage() {
         .from('profiles').select('id')
         .in('role', ['area_lead', 'director'])
         .neq('id', profile.id)
+      const notifTitle = courseSlug
+        ? `${profile.full_name} completed ${course.title}`
+        : `${profile.full_name} completed the Leadership Programme`
+      const notifBody = courseSlug
+        ? `All ${course.modules.length} modules completed — certificate awarded.`
+        : 'All 7 modules completed — certificate awarded.'
       if ((leaders ?? []).length > 0) {
         await supabase.from('notifications').insert(
           (leaders ?? []).map((l: { id: string }) => ({
             user_id: l.id,
-            title: `${profile.full_name} completed the Leadership Programme`,
-            body: 'All 7 modules completed — certificate awarded.',
+            title: notifTitle,
+            body: notifBody,
             type: 'course_completed',
             related_id: profile.id,
           }))
@@ -100,7 +113,7 @@ export function CourseModulePage() {
     }
 
     setSaving(false)
-    navigate('/course/leadership')
+    navigate(courseSlug ? `/course/apparatus/${courseSlug}` : '/course/leadership')
   }
 
   function resetQuiz() {
