@@ -6,14 +6,14 @@ const PROGRAMMES = [
   {
     emoji: '🤸',
     name: 'Gymnastics',
-    audience: 'Primary Schools',
-    tagline: 'UKAG Award Pathway · KS1 & KS2',
-    description: 'ASO gymnastics sessions are fully aligned with the UK Academy of Gymnastics Award Pathway, providing primary school children with a structured, progressive journey from their very first vault to advanced floor and apparatus work. Every session is age-appropriate, inclusive, and led by UKAG-affiliated coaches.',
-    ageRange: '4–11',
+    audience: 'Primary Schools & Secondary (KS3)',
+    tagline: 'UKAG Award Pathway · KS1, KS2 & KS3',
+    description: 'ASO gymnastics sessions are fully aligned with the UK Academy of Gymnastics Award Pathway, providing a structured, progressive journey from first floor skills through to advanced apparatus work. Delivered in primary schools (KS1 & KS2) and secondary schools (KS3, ages 11–14). Every session is age-appropriate, inclusive, and led by UKAG-affiliated coaches.',
+    ageRange: '4–14',
     levels: [
       { title: 'KS1 (Yr 1 & 2)', desc: 'Fundamental movement, body shape, balance, and introductory floor skills. Big focus on confidence and enjoyment.' },
-      { title: 'KS2 (Yr 3 & 4)', desc: 'Developing floor sequences, introductory apparatus work, and controlled jumps and landings.' },
-      { title: 'KS2 (Yr 5 & 6)', desc: 'Progressive apparatus skills, sequencing routines, and working towards UKAG Levels 3–4.' },
+      { title: 'KS2 (Yr 3–6)', desc: 'Developing floor sequences, apparatus work, and controlled jumps and landings. Working towards UKAG Levels 2–4.' },
+      { title: 'KS3 (Yr 7–9)', desc: 'Secondary gymnastics enrichment and curriculum delivery for ages 11–14. Progressive UKAG Level 3–5 skills.' },
     ],
     benefits: ['Core strength & flexibility', 'Coordination & spatial awareness', 'Confidence & discipline', 'UKAG Level 1–6 progression'],
     color: 'bg-pink-50 border-pink-200',
@@ -136,21 +136,21 @@ export function PortalSportsPage() {
         </div>
       </section>
 
-      {/* Secondary gymnastics note */}
+      {/* Secondary combination note */}
       <section className="max-w-5xl mx-auto px-4 py-10">
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-5">
-          <span className="text-4xl shrink-0">🤸</span>
+        <div className="bg-[#1a3a6b]/5 border border-[#1a3a6b]/15 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-5">
+          <span className="text-4xl shrink-0">🏫</span>
           <div className="flex-1 text-center sm:text-left">
-            <h3 className="font-extrabold text-gray-900 text-base mb-1">Gymnastics in Secondary Schools</h3>
+            <h3 className="font-extrabold text-gray-900 text-base mb-1">Both programmes in one secondary school</h3>
             <p className="text-sm text-gray-500 leading-relaxed">
-              ASO can also deliver gymnastics enrichment and curriculum gymnastics in secondary schools. Contact us to discuss how we can support your secondary PE programme alongside trampolining.
+              Many secondary schools run both gymnastics (KS3, ages 11–14) and trampolining (KS3/KS4, enrichment &amp; GCSE) through ASO. We can combine both into a single programme proposal tailored to your timetable and facilities.
             </p>
           </div>
           <a
             href="mailto:info@activeschoolorganisation.co.uk"
             className="shrink-0 inline-flex items-center gap-2 bg-[#1a3a6b] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#142f58] transition-colors text-sm"
           >
-            Enquire <ChevronRight size={14} />
+            Get in touch <ChevronRight size={14} />
           </a>
         </div>
       </section>

@@ -8,17 +8,17 @@ const PROGRAMMES = [
   {
     emoji: '🤸',
     title: 'Gymnastics',
-    subtitle: 'Primary Schools · KS1 & KS2',
-    description: 'Curriculum-aligned gymnastics enrichment for primary schools. KS1 fundamentals through to KS2 floor and apparatus work — all progressing through the UKAG Award Pathway.',
+    subtitle: 'Primary & Secondary · KS1, KS2 & KS3',
+    description: 'Curriculum-aligned gymnastics enrichment for primary schools (KS1 & KS2) and secondary schools (KS3, ages 11–14). From foundation floor skills through to progressive apparatus work — all through the UKAG Award Pathway.',
     highlights: [
-      'After-school & lunchtime enrichment clubs',
+      'Primary after-school & lunchtime clubs',
+      'Secondary KS3 curriculum & enrichment',
       'UKAG Level 1–6 structured progression',
-      'KS1 & KS2 age-appropriate content',
       'All equipment supplied and managed',
     ],
     color: 'bg-pink-50 border-pink-200',
     badgeColor: 'bg-pink-100 text-pink-700',
-    ageLabel: 'Primary · Age 4–11',
+    ageLabel: 'Primary & KS3 · Age 4–14',
   },
   {
     emoji: '🤾',

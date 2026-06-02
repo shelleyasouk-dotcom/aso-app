@@ -48,10 +48,10 @@ const AUDIENCES = [
     color: 'bg-indigo-50 border-indigo-200',
     badge: 'bg-indigo-100 text-indigo-700',
     points: [
+      'Gymnastics enrichment & curriculum delivery for KS3 (ages 11–14)',
       'Trampolining enrichment clubs — after-school and lunchtime, all year groups',
       'Curriculum PE delivery — structured lessons aligned to your scheme of work',
       'GCSE trampolining specialist coaching and assessment support',
-      'Gymnastics also available for secondary curriculum and enrichment',
       'UKAG Award Pathway Level 1–6 progression for all pupils',
     ],
   },
@@ -76,7 +76,7 @@ const HOW_IT_WORKS = [
 const FAQS = [
   { q: 'Does it cost the school anything?', a: 'No. ASO programmes are funded entirely through parent subscriptions. There is no cost to the school.' },
   { q: 'Do we need to provide a member of staff?', a: 'No. Our coaches are fully responsible for the session. Your staff are welcome to observe but are not required.' },
-  { q: 'Which programmes do you offer?', a: 'We specialise in gymnastics (primary, KS1 & KS2) and trampolining (secondary, including curriculum PE and GCSE). Secondary schools can also request gymnastics. We tailor the programme to your year groups, facilities, and timetable.' },
+  { q: 'Which programmes do you offer?', a: 'We specialise in gymnastics and trampolining. Gymnastics is delivered in primary schools (KS1 & KS2) and secondary schools (KS3, ages 11–14). Trampolining is delivered in secondary schools, including enrichment clubs, curriculum PE, and GCSE. Both can run in the same secondary school.' },
   { q: 'What happens if a child has an accident?', a: 'All ASO coaches are first-aid trained. Incidents are logged digitally and parents notified same day. Reports are available to school admin.' },
   { q: 'Can ASO support our PE Premium evidence?', a: 'Yes. We provide participation data, award progression reports, and session summaries that can be used directly in your PE Premium impact statement.' },
   { q: 'How quickly can we get started?', a: 'Subject to DBS clearance and site assessment, most schools are up and running within 2–4 weeks of first contact.' },
