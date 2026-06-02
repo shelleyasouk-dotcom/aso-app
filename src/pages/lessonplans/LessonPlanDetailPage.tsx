@@ -590,9 +590,12 @@ export function LessonPlanDetailPage() {
                 ))}
                 <div className="flex gap-2">
                   {editingNote && <button onClick={() => setEditingNote(false)} className="flex-1 border border-gray-200 text-gray-600 font-bold text-sm py-3 rounded-2xl">Cancel</button>}
-                  <button onClick={submitNote} disabled={savingNote || !noteSchoolId} className="flex-1 bg-[#1a3a6b] text-white font-bold text-sm py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50">
-                    <Send size={14} /> {savingNote ? 'Saving…' : editingNote ? 'Save changes' : 'Submit note'}
-                  </button>
+                  {mySchools.length === 0
+                    ? <p className="w-full text-center text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-2xl py-3 px-4">You don't have a school assigned yet — ask your area lead to add you to a school.</p>
+                    : <button onClick={submitNote} disabled={savingNote || !noteSchoolId} className="flex-1 bg-[#1a3a6b] text-white font-bold text-sm py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                        <Send size={14} /> {savingNote ? 'Saving…' : editingNote ? 'Save changes' : 'Submit note'}
+                      </button>
+                  }
                 </div>
               </div>
             )}
@@ -701,9 +704,12 @@ export function LessonPlanDetailPage() {
                 </div>
                 <div className="flex gap-2">
                   {editingReport && <button onClick={() => setEditingReport(false)} className="flex-1 border border-gray-200 text-gray-600 font-bold text-sm py-3 rounded-2xl">Cancel</button>}
-                  <button onClick={submitReport} disabled={savingReport || !reportSchoolId} className="flex-1 bg-[#1a3a6b] text-white font-bold text-sm py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50">
-                    <Send size={14} /> {savingReport ? 'Saving…' : editingReport ? 'Save report' : 'Submit report'}
-                  </button>
+                  {mySchools.length === 0
+                    ? <p className="w-full text-center text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-2xl py-3 px-4">You don't have a school assigned yet — ask your area lead to add you to a school.</p>
+                    : <button onClick={submitReport} disabled={savingReport || !reportSchoolId} className="flex-1 bg-[#1a3a6b] text-white font-bold text-sm py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                        <Send size={14} /> {savingReport ? 'Saving…' : editingReport ? 'Save report' : 'Submit report'}
+                      </button>
+                  }
                 </div>
               </div>
             )}
