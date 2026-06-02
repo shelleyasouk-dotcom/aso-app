@@ -1,107 +1,41 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, CheckCircle } from 'lucide-react'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 
-const SPORTS = [
-  {
-    emoji: '⚽',
-    name: 'Football',
-    tagline: 'The beautiful game for everyone',
-    description: 'Develop dribbling, passing, shooting and teamwork through structured drills and small-sided games. Suitable for all abilities from complete beginners to school team players.',
-    ageRange: '5–11',
-    benefits: ['Coordination & agility', 'Team communication', 'Spatial awareness', 'Cardiovascular fitness'],
-    color: 'bg-green-50 border-green-200',
-    badge: 'bg-green-100 text-green-700',
-  },
-  {
-    emoji: '🏀',
-    name: 'Basketball',
-    tagline: 'Fast-paced fun with ball skills',
-    description: 'Learn dribbling, passing, shooting and defensive positioning in a fun, energetic environment. Great for developing hand-eye coordination and court awareness.',
-    ageRange: '6–11',
-    benefits: ['Hand-eye coordination', 'Decision making', 'Balance & footwork', 'Social skills'],
-    color: 'bg-orange-50 border-orange-200',
-    badge: 'bg-orange-100 text-orange-700',
-  },
-  {
-    emoji: '🏏',
-    name: 'Cricket',
-    tagline: 'Classic British summer sport',
-    description: 'Batting, bowling and fielding fundamentals delivered through Quick Cricket and Kwik Cricket formats designed specifically for primary-age children.',
-    ageRange: '6–11',
-    benefits: ['Reaction speed', 'Concentration', 'Patience & strategy', 'Fine motor skills'],
-    color: 'bg-yellow-50 border-yellow-200',
-    badge: 'bg-yellow-100 text-yellow-700',
-  },
-  {
-    emoji: '🏐',
-    name: 'Netball',
-    tagline: 'Develop team play and precision',
-    description: 'Passing, footwork, court positioning and game strategy. High 5 Netball (adapted for primaries) ensures every child gets equal involvement.',
-    ageRange: '6–11',
-    benefits: ['Throwing & catching', 'Tactical thinking', 'Leadership skills', 'Stamina'],
-    color: 'bg-purple-50 border-purple-200',
-    badge: 'bg-purple-100 text-purple-700',
-  },
-  {
-    emoji: '🏉',
-    name: 'Tag Rugby',
-    tagline: 'Contact-free, full-on fun',
-    description: 'All the excitement of rugby without the physical contact. Tag Rugby develops speed, handling and team awareness in a safe, accessible format.',
-    ageRange: '5–11',
-    benefits: ['Speed & agility', 'Handling skills', 'Spatial awareness', 'Team tactics'],
-    color: 'bg-red-50 border-red-200',
-    badge: 'bg-red-100 text-red-700',
-  },
-  {
-    emoji: '🎾',
-    name: 'Tennis',
-    tagline: 'Mini tennis built for young players',
-    description: 'Mini Tennis (with foam balls and smaller courts) makes the sport accessible from day one. Focus on rallying, serving and movement patterns.',
-    ageRange: '5–10',
-    benefits: ['Racket skills', 'Coordination', 'Focus & patience', 'Footwork'],
-    color: 'bg-lime-50 border-lime-200',
-    badge: 'bg-lime-100 text-lime-700',
-  },
+const PROGRAMMES = [
   {
     emoji: '🤸',
     name: 'Gymnastics',
-    tagline: 'UKAG Award Pathway programme',
-    description: 'Sessions fully aligned with the UKAG Award Pathway, building core strength, flexibility, coordination, and technical gymnastics skills through progressive floor and apparatus work.',
+    audience: 'Primary Schools',
+    tagline: 'UKAG Award Pathway · KS1 & KS2',
+    description: 'ASO gymnastics sessions are fully aligned with the UK Academy of Gymnastics Award Pathway, providing primary school children with a structured, progressive journey from their very first vault to advanced floor and apparatus work. Every session is age-appropriate, inclusive, and led by UKAG-affiliated coaches.',
     ageRange: '4–11',
-    benefits: ['Core strength', 'Flexibility', 'Coordination', 'UKAG Level 1–6'],
+    levels: [
+      { title: 'KS1 (Yr 1 & 2)', desc: 'Fundamental movement, body shape, balance, and introductory floor skills. Big focus on confidence and enjoyment.' },
+      { title: 'KS2 (Yr 3 & 4)', desc: 'Developing floor sequences, introductory apparatus work, and controlled jumps and landings.' },
+      { title: 'KS2 (Yr 5 & 6)', desc: 'Progressive apparatus skills, sequencing routines, and working towards UKAG Levels 3–4.' },
+    ],
+    benefits: ['Core strength & flexibility', 'Coordination & spatial awareness', 'Confidence & discipline', 'UKAG Level 1–6 progression'],
     color: 'bg-pink-50 border-pink-200',
     badge: 'bg-pink-100 text-pink-700',
-  },
-  {
-    emoji: '🏃',
-    name: 'Athletics & Multi-sport',
-    tagline: 'Explore the full spectrum of sport',
-    description: 'Running, jumping, throwing and sport-specific activities delivered through a multi-sport carousel. Ideal for children still discovering their favourite activity.',
-    ageRange: '5–11',
-    benefits: ['Fundamental movement', 'Sport sampling', 'Confidence', 'Physical literacy'],
-    color: 'bg-blue-50 border-blue-200',
-    badge: 'bg-blue-100 text-blue-700',
-  },
-  {
-    emoji: '🧘',
-    name: 'Yoga',
-    tagline: 'Mindfulness and movement combined',
-    description: 'Child-friendly yoga sessions building flexibility, balance and body awareness through fun poses, breathing exercises and relaxation techniques.',
-    ageRange: '5–11',
-    benefits: ['Flexibility & balance', 'Focus & calm', 'Body awareness', 'Mindfulness'],
-    color: 'bg-teal-50 border-teal-200',
-    badge: 'bg-teal-100 text-teal-700',
+    headingColor: 'text-pink-700',
   },
   {
     emoji: '🤾',
     name: 'Trampolining',
-    tagline: 'UKAG Award Pathway programme',
-    description: 'Trampolining delivered through the UKAG Award Pathway, developing core strength, coordination and aerial awareness through progressive skills in a fully supervised environment.',
-    ageRange: '8–16',
-    benefits: ['Core strength', 'Coordination', 'Spatial awareness', 'UKAG Level 1–6'],
+    audience: 'Secondary Schools',
+    tagline: 'UKAG Award Pathway · Curriculum & GCSE',
+    description: 'ASO delivers professional trampolining for secondary schools, covering after-school enrichment, curriculum PE lessons, and GCSE trampolining. All sessions follow the UKAG Award Pathway and are delivered in a fully supervised, safeguarding-compliant environment by trained coaches.',
+    ageRange: '11–18',
+    levels: [
+      { title: 'Enrichment Clubs', desc: 'After-school and lunchtime clubs open to all pupils. UKAG Level 1–6 progression in a fun, social environment.' },
+      { title: 'Curriculum PE', desc: 'Trampolining integrated into your school\'s PE curriculum — structured lessons with clear learning outcomes.' },
+      { title: 'GCSE Trampolining', desc: 'Specialist coaching for GCSE trampolining, covering required elements, routines, and assessment preparation.' },
+    ],
+    benefits: ['Core strength & aerial awareness', 'Coordination & balance', 'Curriculum & GCSE support', 'UKAG Level 1–6 progression'],
     color: 'bg-indigo-50 border-indigo-200',
     badge: 'bg-indigo-100 text-indigo-700',
+    headingColor: 'text-indigo-700',
   },
 ]
 
@@ -113,73 +47,118 @@ export function PortalSportsPage() {
       {/* Hero */}
       <section className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] text-white py-12 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3">Our Sports Programmes</h1>
+          <div className="inline-flex items-center gap-2 bg-[#f5c518]/20 text-[#f5c518] text-sm font-semibold px-4 py-1.5 rounded-full mb-5">
+            🏅 UKAG Affiliated
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3">Our Programmes</h1>
           <p className="text-white/70 text-base leading-relaxed">
-            Every sport we offer is delivered by qualified coaches using age-appropriate formats, so children learn properly and fall in love with being active.
+            Specialist gymnastics for primary schools and trampolining for secondary schools — both delivered through the nationally recognised UKAG Award Pathway.
           </p>
         </div>
       </section>
 
-      {/* Sports grid */}
-      <section className="max-w-5xl mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {SPORTS.map(sport => (
-            <div key={sport.name} className={`rounded-2xl border p-5 ${sport.color}`}>
-              <div className="flex items-start gap-4 mb-3">
-                <span className="text-4xl">{sport.emoji}</span>
-                <div>
-                  <h2 className="font-extrabold text-gray-900 text-lg leading-tight">{sport.name}</h2>
-                  <p className="text-sm text-gray-500">{sport.tagline}</p>
-                </div>
-                <span className={`ml-auto text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${sport.badge}`}>
-                  Age {sport.ageRange}
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">{sport.description}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {sport.benefits.map(b => (
-                  <span key={b} className="text-xs bg-white/80 text-gray-600 border border-white px-2 py-0.5 rounded-full">
-                    {b}
+      {/* Programmes */}
+      <section className="max-w-5xl mx-auto px-4 py-12 flex flex-col gap-8">
+        {PROGRAMMES.map(prog => (
+          <div key={prog.name} className={`rounded-2xl border p-6 sm:p-8 ${prog.color}`}>
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-5 mb-6">
+              <span className="text-6xl shrink-0">{prog.emoji}</span>
+              <div className="flex-1">
+                <div className="flex flex-wrap items-center gap-3 mb-1">
+                  <h2 className={`font-extrabold text-2xl ${prog.headingColor}`}>{prog.name}</h2>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${prog.badge}`}>
+                    Age {prog.ageRange}
                   </span>
-                ))}
+                </div>
+                <p className="text-sm font-semibold text-gray-500 mb-1">{prog.audience}</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">{prog.tagline}</p>
               </div>
             </div>
-          ))}
-        </div>
+
+            <p className="text-sm text-gray-700 leading-relaxed mb-6">{prog.description}</p>
+
+            {/* Delivery levels */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              {prog.levels.map(level => (
+                <div key={level.title} className="bg-white/80 border border-white rounded-xl p-4">
+                  <p className="font-bold text-gray-900 text-xs mb-1">{level.title}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed">{level.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Benefits */}
+            <div className="flex flex-wrap gap-2">
+              {prog.benefits.map(b => (
+                <div key={b} className="flex items-center gap-1.5 bg-white/80 border border-white rounded-full px-3 py-1">
+                  <CheckCircle size={12} className="text-green-600 shrink-0" />
+                  <span className="text-xs text-gray-700">{b}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </section>
 
-      {/* UKAG section */}
-      <section className="bg-[#1a3a6b] text-white py-10 px-4">
+      {/* UKAG Award Pathway */}
+      <section className="bg-[#1a3a6b] text-white py-12 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="text-4xl mb-3">🏅</div>
           <h2 className="text-2xl font-extrabold mb-2">UKAG Award Pathway</h2>
-          <p className="text-white/70 text-sm mb-6 leading-relaxed">
-            Our gymnastics programmes are fully aligned with the nationally recognised UKAG Award Pathway, providing children with a clear and structured progression journey from Level 1 through to Level 6. Each level develops confidence, coordination, strength, flexibility, and technical gymnastics skills in a safe and engaging environment. Awards are presented in sessions and certificates sent home.
+          <p className="text-white/70 text-sm mb-2 leading-relaxed">
+            Both gymnastics and trampolining programmes use the nationally recognised UKAG Award Pathway, giving children a clear, structured progression from Level 1 through to Level 6. Each level develops confidence, coordination, strength, flexibility, and technical skill.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {['Level 1', 'Level 2', 'Level 3', 'Level 4', 'Level 5', 'Level 6'].map((level, i) => (
-              <div key={level} className="flex flex-col items-center gap-1">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-extrabold text-sm border-2 ${
-                  i === 0 ? 'bg-gray-300 border-gray-300 text-gray-700' :
-                  i === 1 ? 'bg-yellow-300 border-yellow-300 text-yellow-800' :
-                  i === 2 ? 'bg-amber-400 border-amber-400 text-amber-900' :
-                  i === 3 ? 'bg-gray-400 border-gray-400 text-white' :
-                  i === 4 ? 'bg-yellow-500 border-yellow-500 text-yellow-900' :
-                  'bg-[#f5c518] border-[#f5c518] text-[#1a3a6b]'
-                }`}>
+          <p className="text-white/70 text-sm mb-8 leading-relaxed">
+            Awards are presented in sessions, certificates sent home, and results tracked through the ASO coaches app. Schools receive participation and award data to support PE Premium impact reporting.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            {[
+              { level: 'Level 1', desc: 'Foundation', style: 'bg-gray-300 border-gray-300 text-gray-700' },
+              { level: 'Level 2', desc: 'Bronze', style: 'bg-yellow-300 border-yellow-300 text-yellow-800' },
+              { level: 'Level 3', desc: 'Silver', style: 'bg-amber-400 border-amber-400 text-amber-900' },
+              { level: 'Level 4', desc: 'Gold', style: 'bg-gray-400 border-gray-400 text-white' },
+              { level: 'Level 5', desc: 'Platinum', style: 'bg-yellow-500 border-yellow-500 text-yellow-900' },
+              { level: 'Level 6', desc: 'Elite', style: 'bg-[#f5c518] border-[#f5c518] text-[#1a3a6b]' },
+            ].map((l, i) => (
+              <div key={l.level} className="flex flex-col items-center gap-1.5">
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center font-extrabold text-lg border-2 ${l.style}`}>
                   {i + 1}
                 </div>
-                <span className="text-xs text-white/60">{level}</span>
+                <span className="text-xs text-white/60 font-semibold">{l.level}</span>
+                <span className="text-[10px] text-white/40">{l.desc}</span>
               </div>
             ))}
           </div>
+          <p className="text-xs text-white/40">
+            UKAG also offers teacher and coach training — contact us to find out more about getting your staff UKAG-trained.
+          </p>
+        </div>
+      </section>
+
+      {/* Secondary gymnastics note */}
+      <section className="max-w-5xl mx-auto px-4 py-10">
+        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-5">
+          <span className="text-4xl shrink-0">🤸</span>
+          <div className="flex-1 text-center sm:text-left">
+            <h3 className="font-extrabold text-gray-900 text-base mb-1">Gymnastics in Secondary Schools</h3>
+            <p className="text-sm text-gray-500 leading-relaxed">
+              ASO can also deliver gymnastics enrichment and curriculum gymnastics in secondary schools. Contact us to discuss how we can support your secondary PE programme alongside trampolining.
+            </p>
+          </div>
+          <a
+            href="mailto:info@activeschoolorganisation.co.uk"
+            className="shrink-0 inline-flex items-center gap-2 bg-[#1a3a6b] text-white font-bold px-5 py-2.5 rounded-xl hover:bg-[#142f58] transition-colors text-sm"
+          >
+            Enquire <ChevronRight size={14} />
+          </a>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-10 px-4 text-center">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Find a club offering these sports</h2>
-        <p className="text-sm text-gray-500 mb-5">Check what's available at schools near you.</p>
+      <section className="pb-12 px-4 text-center">
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Find a club near you</h2>
+        <p className="text-sm text-gray-500 mb-5">Check what's available at schools in your area.</p>
         <button
           onClick={() => navigate('/portal/clubs')}
           className="inline-flex items-center gap-2 bg-[#1a3a6b] text-white font-bold px-7 py-3 rounded-xl hover:bg-[#142f58] transition-colors"

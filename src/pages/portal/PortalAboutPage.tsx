@@ -57,7 +57,7 @@ export function PortalAboutPage() {
               We believe every child deserves the opportunity to feel confident, capable, and proud of what they can achieve, regardless of their background or ability. Through high-quality coaching, structured progression pathways, and positive sporting experiences, we help children build not only physical skills, but resilience, confidence, discipline, and self-belief.
             </p>
             <p className="text-gray-600 text-sm leading-relaxed mt-3">
-              We proudly partner with primary schools across the UK to deliver professional after-school programmes that combine fun, development, and achievement. Through the nationally recognised UKAG Award Pathway, children are given a clear and structured progression journey from Level 1 through to Level 6, working towards real goals while representing their school with pride and becoming part of something bigger than themselves.
+              We proudly partner with primary and secondary schools across the UK to deliver specialist gymnastics and trampolining programmes — after-school enrichment, curriculum PE, and GCSE trampolining. Through our affiliation with the UK Academy of Gymnastics (UKAG), children progress through a nationally recognised Award Pathway from Level 1 to Level 6, working towards real goals while representing their school with pride.
             </p>
             <p className="text-gray-600 text-sm leading-relaxed mt-3 font-semibold text-gray-700">
               Our aim is simple — create healthier, happier, more confident children through sport.
@@ -119,7 +119,7 @@ export function PortalAboutPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               { title: 'In-school delivery', desc: 'Sessions run within school grounds so parents don\'t need to arrange extra travel. Your child stays safe on a site they know.' },
-              { title: 'Multi-sport approach', desc: 'Rather than specialising early, we expose children to a range of sports so they discover what they love.' },
+              { title: 'Specialist focus', desc: 'We specialise in gymnastics and trampolining — delivering expert, curriculum-aligned coaching in both primary and secondary schools.' },
               { title: 'Award recognition', desc: 'The UKAG Award Pathway (Level 1–6) gives children something concrete to achieve — certificates and recognition in school.' },
               { title: 'Small group coaching', desc: 'Kept to manageable group sizes so every child gets attention, feedback, and a great experience every session.' },
             ].map(item => (

@@ -43,16 +43,16 @@ const AUDIENCES = [
     ],
   },
   {
-    emoji: '🤝',
-    title: 'Councils & Sport Partnerships',
-    color: 'bg-amber-50 border-amber-200',
-    badge: 'bg-amber-100 text-amber-700',
+    emoji: '🎓',
+    title: 'Secondary Schools',
+    color: 'bg-indigo-50 border-indigo-200',
+    badge: 'bg-indigo-100 text-indigo-700',
     points: [
-      'Contributes to local sport, health, and wellbeing strategies',
-      'Helps meet Sport England and Active Travel obligations for young people',
-      'Provides grassroots sporting pathways from school to community clubs',
-      'Transparent safeguarding standards and public liability insurance',
-      'Willing to collaborate on grant-funded initiatives and pilot programmes',
+      'Trampolining enrichment clubs — after-school and lunchtime, all year groups',
+      'Curriculum PE delivery — structured lessons aligned to your scheme of work',
+      'GCSE trampolining specialist coaching and assessment support',
+      'Gymnastics also available for secondary curriculum and enrichment',
+      'UKAG Award Pathway Level 1–6 progression for all pupils',
     ],
   },
 ]
@@ -76,7 +76,7 @@ const HOW_IT_WORKS = [
 const FAQS = [
   { q: 'Does it cost the school anything?', a: 'No. ASO programmes are funded entirely through parent subscriptions. There is no cost to the school.' },
   { q: 'Do we need to provide a member of staff?', a: 'No. Our coaches are fully responsible for the session. Your staff are welcome to observe but are not required.' },
-  { q: 'Can we choose which sports are offered?', a: 'Yes. We tailor the programme to your facilities, year groups, and priorities. If you have a specific sport in mind, we\'ll do our best to accommodate it.' },
+  { q: 'Which programmes do you offer?', a: 'We specialise in gymnastics (primary, KS1 & KS2) and trampolining (secondary, including curriculum PE and GCSE). Secondary schools can also request gymnastics. We tailor the programme to your year groups, facilities, and timetable.' },
   { q: 'What happens if a child has an accident?', a: 'All ASO coaches are first-aid trained. Incidents are logged digitally and parents notified same day. Reports are available to school admin.' },
   { q: 'Can ASO support our PE Premium evidence?', a: 'Yes. We provide participation data, award progression reports, and session summaries that can be used directly in your PE Premium impact statement.' },
   { q: 'How quickly can we get started?', a: 'Subject to DBS clearance and site assessment, most schools are up and running within 2–4 weeks of first contact.' },
@@ -98,7 +98,7 @@ export function PortalForSchoolsPage() {
             Partnering with ASO to Get Children Active
           </h1>
           <p className="text-white/70 text-base leading-relaxed mb-6">
-            ASO works with primary schools, multi-academy trusts, local authorities, and councils to deliver high-quality, fully managed after-school sports programmes. We handle everything — you get the results.
+            ASO works with primary and secondary schools, multi-academy trusts, and local authorities to deliver specialist gymnastics and trampolining programmes. UKAG-affiliated coaches, fully managed delivery — you get the results.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
             <a
