@@ -20,6 +20,7 @@ import {
   BookOpen,
   GraduationCap,
   Medal,
+  CalendarDays,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -74,6 +75,7 @@ export function MyAreaPage() {
   const personalTiles: Tile[] = [
     { label: 'My Profile', description: 'Digital ID & certificates', icon: UserCircle, path: '/profile', color: 'bg-indigo-50 text-indigo-700' },
     { label: 'My Timesheet', description: 'View your clock records', icon: Clock, path: '/my-timesheet', color: 'bg-blue-50 text-[#1a3a6b]' },
+    { label: 'My Availability', description: 'Locations & days I can cover', icon: CalendarDays, path: '/coach-pool', color: 'bg-teal-50 text-teal-700' },
     { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-sky-50 text-sky-700' },
     { label: 'Expenses', description: 'Submit travel & mileage', icon: ReceiptText, path: '/expenses', color: 'bg-orange-50 text-orange-700' },
     { label: 'Absences', description: 'Log & manage requests', icon: CalendarOff, path: '/absences', color: 'bg-rose-50 text-rose-700' },

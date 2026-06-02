@@ -260,9 +260,7 @@ export default function App() {
           } />
 
           <Route path="/coach-pool" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
-              <CoachPoolPage />
-            </ProtectedRoute>
+            <ProtectedRoute><CoachPoolPage /></ProtectedRoute>
           } />
           <Route path="/absences" element={
             <ProtectedRoute><AbsencesPage /></ProtectedRoute>
