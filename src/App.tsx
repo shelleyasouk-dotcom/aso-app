@@ -89,6 +89,7 @@ import { LeadershipCoursePage } from './pages/course/LeadershipCoursePage'
 import { CourseModulePage } from './pages/course/CourseModulePage'
 import { ApparatusCpdHubPage } from './pages/course/ApparatusCpdHubPage'
 import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailPage'
+import { AreaLeadCoursePage } from './pages/course/AreaLeadCoursePage'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -410,6 +411,8 @@ export default function App() {
           <Route path="/course/apparatus" element={<ProtectedRoute><ApparatusCpdHubPage /></ProtectedRoute>} />
           <Route path="/course/apparatus/:courseSlug" element={<ProtectedRoute><ApparatusCourseDetailPage /></ProtectedRoute>} />
           <Route path="/course/apparatus/:courseSlug/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
+          <Route path="/course/area-lead" element={<ProtectedRoute><AreaLeadCoursePage /></ProtectedRoute>} />
+          <Route path="/course/area-lead/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

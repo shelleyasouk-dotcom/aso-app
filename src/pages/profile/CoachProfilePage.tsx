@@ -293,7 +293,7 @@ export function CoachProfilePage() {
     supabase.from('course_certificates')
       .select('course_id, course_title, completed_at')
       .eq('user_id', targetId)
-      .in('course_id', ['floor', 'bars', 'beam', 'vault'])
+      .in('course_id', ['floor', 'bars', 'beam', 'vault', 'area_lead_v1'])
       .then(({ data }) => setApparatusCerts(data ?? []))
   }, [targetId])
 
@@ -666,10 +666,11 @@ export function CoachProfilePage() {
         {/* Apparatus CPD certificates */}
         {apparatusCerts.length > 0 && (() => {
           const APPARATUS_META: Record<string, { emoji: string; label: string; gradient: string }> = {
-            floor: { emoji: '🤸', label: 'Floor Coaching CPD', gradient: 'from-rose-600 to-pink-700' },
-            bars:  { emoji: '🏋️', label: 'Bars Coaching CPD',  gradient: 'from-blue-700 to-indigo-700' },
-            beam:  { emoji: '⚖️', label: 'Beam Coaching CPD',  gradient: 'from-amber-500 to-orange-600' },
-            vault: { emoji: '🏃', label: 'Vault Coaching CPD', gradient: 'from-green-600 to-teal-700' },
+            floor:         { emoji: '🤸', label: 'Floor Coaching CPD',        gradient: 'from-rose-600 to-pink-700' },
+            bars:          { emoji: '🏋️', label: 'Bars Coaching CPD',         gradient: 'from-blue-700 to-indigo-700' },
+            beam:          { emoji: '⚖️', label: 'Beam Coaching CPD',         gradient: 'from-amber-500 to-orange-600' },
+            vault:         { emoji: '🏃', label: 'Vault Coaching CPD',        gradient: 'from-green-600 to-teal-700' },
+            area_lead_v1:  { emoji: '🗺️', label: 'UKAG Area Lead Award',      gradient: 'from-violet-700 to-purple-900' },
           }
           return (
             <div>

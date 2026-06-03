@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   ChevronRight, CheckCircle, XCircle, Award, BookOpen, ChevronDown, ChevronUp,
 } from 'lucide-react'
@@ -8,13 +8,19 @@ import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { LEADERSHIP_COURSE } from '../../data/leadershipCourse'
 import { APPARATUS_CPD_COURSES } from '../../data/apparatusCpd'
+import { AREA_LEAD_COURSE } from '../../data/areaLeadCourse'
 
 export function CourseModulePage() {
   const { moduleId, courseSlug } = useParams<{ moduleId: string; courseSlug?: string }>()
   const { profile } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const course = courseSlug
+  const isAreaLead = location.pathname.startsWith('/course/area-lead')
+
+  const course = isAreaLead
+    ? AREA_LEAD_COURSE
+    : courseSlug
     ? APPARATUS_CPD_COURSES.find(c => c.slug === courseSlug) ?? null
     : LEADERSHIP_COURSE
   const mod = course ? course.modules.find(m => m.id === moduleId) : undefined
@@ -93,12 +99,12 @@ export function CourseModulePage() {
         .from('profiles').select('id')
         .in('role', ['area_lead', 'director'])
         .neq('id', profile.id)
-      const notifTitle = courseSlug
+      const notifTitle = isAreaLead
+        ? `${profile.full_name} completed the Area Lead Course`
+        : courseSlug
         ? `${profile.full_name} completed ${course.title}`
         : `${profile.full_name} completed the Leadership Programme`
-      const notifBody = courseSlug
-        ? `All ${course.modules.length} modules completed — certificate awarded.`
-        : 'All 7 modules completed — certificate awarded.'
+      const notifBody = `All ${course.modules.length} modules completed — certificate awarded.`
       if ((leaders ?? []).length > 0) {
         await supabase.from('notifications').insert(
           (leaders ?? []).map((l: { id: string }) => ({
@@ -113,7 +119,7 @@ export function CourseModulePage() {
     }
 
     setSaving(false)
-    navigate(courseSlug ? `/course/apparatus/${courseSlug}` : '/course/leadership')
+    navigate(isAreaLead ? '/course/area-lead' : courseSlug ? `/course/apparatus/${courseSlug}` : '/course/leadership')
   }
 
   function resetQuiz() {
