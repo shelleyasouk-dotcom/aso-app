@@ -55,7 +55,7 @@ export function AreaLeadCoursePage() {
             <span className="text-4xl shrink-0">🗺️</span>
           </div>
           <div className="flex flex-wrap gap-2 mt-3">
-            {['Lead Coaches+', 'Online • Workshop', '7 modules'].map(tag => (
+            {['Lead Coaches+', 'Online • Workshop', `${total} modules`].map(tag => (
               <span key={tag} className="text-[10px] font-bold bg-white/15 text-white/80 px-2.5 py-1 rounded-full">
                 {tag}
               </span>
