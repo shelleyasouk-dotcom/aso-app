@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, BookOpen, ChevronDown, ChevronRight, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Plus, BookOpen, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Phone, Mail, User, AlertCircle, Info } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -15,14 +15,13 @@ interface ChildWithRefs extends Child {
   assigned_coach?: Profile | null
 }
 
-// Extract a numeric sort key from a year group string
 function yearSortKey(yg: string): number {
   if (!yg) return 99
   const lower = yg.toLowerCase()
-  if (lower.includes('nursery') || lower.includes('n')) return -1
+  if (lower.includes('nursery')) return -1
   if (lower.includes('reception') || /\br\b/.test(lower)) return 0
   const num = parseInt(lower.match(/\d+/)?.[0] ?? '99')
-  return num
+  return isNaN(num) ? 99 : num
 }
 
 function normaliseYear(yg: string | null): string {
@@ -40,8 +39,7 @@ export function ChildrenAdminPage() {
   const [loading, setLoading] = useState(true)
   const [filterSchool, setFilterSchool] = useState('')
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set())
-
-  const isDirector = canManageSchools(profile?.role ?? '')
+  const [expandedChildIds, setExpandedChildIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadSchools()
@@ -61,17 +59,27 @@ export function ChildrenAdminPage() {
   }
 
   async function loadCoaches() {
-    const { data } = await supabase
+    // Two-step: get assignments first, then fetch profiles — avoids join issues
+    const { data: assignments } = await supabase
       .from('staff_school_assignments')
-      .select('school_id, staff:profiles!staff_id(id, full_name, role)')
-    if (!data) return
+      .select('school_id, staff_id')
+    if (!assignments || assignments.length === 0) return
+
+    const staffIds = [...new Set(assignments.map((a: any) => a.staff_id))]
+    const { data: staffData } = await supabase
+      .from('profiles')
+      .select('id, full_name, role')
+      .in('id', staffIds)
+    if (!staffData) return
+
+    const staffMap = new Map(staffData.map((s: any) => [s.id, s]))
     const map = new Map<string, Profile[]>()
-    for (const row of data) {
-      const staff = row.staff as any
+    for (const { school_id, staff_id } of assignments as any[]) {
+      const staff = staffMap.get(staff_id) as Profile | undefined
       if (!staff) continue
-      const list = map.get(row.school_id) ?? []
-      list.push(staff)
-      map.set(row.school_id, list)
+      const list = map.get(school_id) ?? []
+      if (!list.find(s => s.id === staff.id)) list.push(staff)
+      map.set(school_id, list)
     }
     setCoachesBySchool(map)
   }
@@ -81,17 +89,14 @@ export function ChildrenAdminPage() {
       .from('children')
       .select('*, school:schools(*), assigned_coach:profiles!assigned_coach_id(*)')
       .order('full_name')
-
     if (filterSchool) query = query.eq('school_id', filterSchool)
-
     const { data } = await query
     if (data) {
       setChildren(data)
-      // Auto-expand all groups when first loaded or filter changes
+      // Auto-expand all year-group sections
       const keys = new Set<string>()
       for (const c of data) {
-        const schoolKey = filterSchool ? '' : (c.school_id ?? '')
-        keys.add(`${schoolKey}__${normaliseYear(c.year_group)}`)
+        keys.add(`${filterSchool ? '' : c.school_id}__${normaliseYear(c.year_group)}`)
       }
       setOpenGroups(keys)
     }
@@ -131,37 +136,29 @@ export function ChildrenAdminPage() {
   }
 
   function toggleGroup(key: string) {
-    setOpenGroups(prev => {
-      const next = new Set(prev)
-      next.has(key) ? next.delete(key) : next.add(key)
-      return next
-    })
+    setOpenGroups(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
   }
 
-  // Build grouped structure
-  // If filtering by school: { [yearGroup]: children[] }
-  // If all schools: { [schoolId]: { school, groups: { [yearGroup]: children[] } } }
+  function toggleChildDetails(id: string) {
+    setExpandedChildIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  // Group children: by school (if showing all), then by year group within each school
   const grouped = (() => {
     if (filterSchool) {
       const byYear = new Map<string, ChildWithRefs[]>()
       for (const c of children) {
         const yg = normaliseYear(c.year_group)
-        const list = byYear.get(yg) ?? []
-        list.push(c)
-        byYear.set(yg, list)
+        const list = byYear.get(yg) ?? []; list.push(c); byYear.set(yg, list)
       }
       return [{ schoolId: filterSchool, school: schools.find(s => s.id === filterSchool), yearGroups: byYear }]
     } else {
       const bySchool = new Map<string, { school?: School; yearGroups: Map<string, ChildWithRefs[]> }>()
       for (const c of children) {
-        if (!bySchool.has(c.school_id)) {
-          bySchool.set(c.school_id, { school: c.school, yearGroups: new Map() })
-        }
+        if (!bySchool.has(c.school_id)) bySchool.set(c.school_id, { school: c.school, yearGroups: new Map() })
         const yg = normaliseYear(c.year_group)
-        const schoolEntry = bySchool.get(c.school_id)!
-        const list = schoolEntry.yearGroups.get(yg) ?? []
-        list.push(c)
-        schoolEntry.yearGroups.set(yg, list)
+        const entry = bySchool.get(c.school_id)!
+        const list = entry.yearGroups.get(yg) ?? []; list.push(c); entry.yearGroups.set(yg, list)
       }
       return Array.from(bySchool.entries()).map(([schoolId, val]) => ({ schoolId, ...val }))
     }
@@ -179,29 +176,14 @@ export function ChildrenAdminPage() {
           <Card>
             <h3 className="font-semibold text-[#1a3a6b] mb-4">New Child</h3>
             <div className="flex flex-col gap-3">
-              <Input
-                label="Full Name"
-                placeholder="e.g. Emma Johnson"
-                value={form.full_name}
-                onChange={e => setForm({ ...form, full_name: e.target.value })}
-              />
-              <Input
-                label="Date of Birth (optional)"
-                type="date"
-                value={form.date_of_birth}
-                onChange={e => setForm({ ...form, date_of_birth: e.target.value })}
-              />
-              <Input
-                label="Year / Class (optional)"
-                placeholder="e.g. Year 2 / Class 5"
-                value={form.year_group}
-                onChange={e => setForm({ ...form, year_group: e.target.value })}
-              />
-              <Select
-                label="School"
-                value={form.school_id}
-                onChange={e => setForm({ ...form, school_id: e.target.value })}
-              >
+              <Input label="Full Name" placeholder="e.g. Emma Johnson" value={form.full_name}
+                onChange={e => setForm({ ...form, full_name: e.target.value })} />
+              <Input label="Date of Birth (optional)" type="date" value={form.date_of_birth}
+                onChange={e => setForm({ ...form, date_of_birth: e.target.value })} />
+              <Input label="Year / Class (optional)" placeholder="e.g. Year 2 / Class 5" value={form.year_group}
+                onChange={e => setForm({ ...form, year_group: e.target.value })} />
+              <Select label="School" value={form.school_id}
+                onChange={e => setForm({ ...form, school_id: e.target.value })}>
                 <option value="">Select a school…</option>
                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </Select>
@@ -216,7 +198,7 @@ export function ChildrenAdminPage() {
         )}
 
         {/* School filter */}
-        <Select value={filterSchool} onChange={e => setFilterSchool(e.target.value)}>
+        <Select value={filterSchool} onChange={e => { setFilterSchool(e.target.value); setLoading(true) }}>
           <option value="">All Schools ({children.length} children)</option>
           {schools.map(s => {
             const count = children.filter(c => c.school_id === s.id).length
@@ -239,7 +221,6 @@ export function ChildrenAdminPage() {
 
             return (
               <div key={schoolId}>
-                {/* School header (only shown when all schools) */}
                 {!filterSchool && (
                   <div className="flex items-center gap-2 px-1 mb-2 mt-2">
                     <div className="w-2 h-2 rounded-full bg-[#1a3a6b] shrink-0" />
@@ -250,7 +231,6 @@ export function ChildrenAdminPage() {
                   </div>
                 )}
 
-                {/* Year group sections */}
                 <div className="flex flex-col gap-2">
                   {sortedYears.map(([yearGroup, kids]) => {
                     const groupKey = `${filterSchool ? '' : schoolId}__${yearGroup}`
@@ -275,59 +255,117 @@ export function ChildrenAdminPage() {
                           </span>
                         </button>
 
-                        {/* Children in this year group */}
                         {isOpen && (
                           <div className="border-t border-gray-50 divide-y divide-gray-50">
-                            {kids.map(child => (
-                              <div key={child.id} className="px-4 py-3">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <div className="w-8 h-8 bg-[#1a3a6b] rounded-full flex items-center justify-center shrink-0">
-                                    <span className="text-white font-bold text-[10px]">
-                                      {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                    </span>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-gray-800 text-sm truncate">{child.full_name}</p>
-                                    {child.date_of_birth && (
-                                      <p className="text-xs text-gray-400">
-                                        {new Date(child.date_of_birth).toLocaleDateString('en-GB')}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <Badge color={child.is_active ? 'green' : 'gray'}>
-                                      {child.is_active ? 'Active' : 'Inactive'}
-                                    </Badge>
-                                    <button onClick={() => toggleActive(child)} className="text-gray-300 p-0.5">
-                                      {child.is_active
-                                        ? <ToggleRight size={20} className="text-green-500" />
-                                        : <ToggleLeft size={20} />
-                                      }
-                                    </button>
-                                  </div>
-                                </div>
+                            {kids.map(child => {
+                              const detailsOpen = expandedChildIds.has(child.id)
+                              const hasContact = child.contact_phone || child.contact_email || child.parent_name
+                              const hasNeeds = child.additional_needs && child.additional_needs.toLowerCase() !== 'no'
 
-                                {/* Coach assignment — only shows coaches at this school */}
-                                <div>
-                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                    Assigned Coach
-                                  </label>
-                                  <select
-                                    className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 bg-[#f4f6f9]"
-                                    value={child.assigned_coach_id ?? ''}
-                                    onChange={e => assignCoach(child.id, e.target.value)}
-                                  >
-                                    <option value="">No coach assigned</option>
-                                    {schoolCoaches.length > 0
-                                      ? schoolCoaches.map(c => (
-                                          <option key={c.id} value={c.id}>{c.full_name}</option>
-                                        ))
-                                      : <option disabled>No coaches assigned to this school</option>
-                                    }
-                                  </select>
+                              return (
+                                <div key={child.id} className="px-4 py-3">
+                                  {/* Name row */}
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-8 h-8 bg-[#1a3a6b] rounded-full flex items-center justify-center shrink-0">
+                                      <span className="text-white font-bold text-[10px]">
+                                        {child.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                      </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-1.5">
+                                        <p className="font-semibold text-gray-800 text-sm truncate">{child.full_name}</p>
+                                        {hasNeeds && (
+                                          <AlertCircle size={13} className="text-amber-500 shrink-0" title="Additional needs" />
+                                        )}
+                                      </div>
+                                      {child.date_of_birth && (
+                                        <p className="text-xs text-gray-400">
+                                          DOB: {new Date(child.date_of_birth).toLocaleDateString('en-GB')}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      {/* Details toggle */}
+                                      <button
+                                        onClick={() => toggleChildDetails(child.id)}
+                                        className={`p-1.5 rounded-lg transition-colors ${detailsOpen ? 'bg-[#1a3a6b]/10 text-[#1a3a6b]' : 'text-gray-300'}`}
+                                        title="View contact details"
+                                      >
+                                        <Info size={15} />
+                                      </button>
+                                      <Badge color={child.is_active ? 'green' : 'gray'}>
+                                        {child.is_active ? 'Active' : 'Off'}
+                                      </Badge>
+                                      <button onClick={() => toggleActive(child)} className="text-gray-300 p-0.5">
+                                        {child.is_active
+                                          ? <ToggleRight size={20} className="text-green-500" />
+                                          : <ToggleLeft size={20} />
+                                        }
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Expandable contact details */}
+                                  {detailsOpen && (
+                                    <div className="mb-3 bg-[#f4f6f9] rounded-xl p-3 flex flex-col gap-2">
+                                      {child.parent_name && (
+                                        <div className="flex items-center gap-2 text-sm">
+                                          <User size={13} className="text-gray-400 shrink-0" />
+                                          <div>
+                                            <span className="text-gray-700 font-medium">{child.parent_name}</span>
+                                            <span className="text-xs text-gray-400 ml-1">Parent / Guardian</span>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {child.contact_phone && (
+                                        <a href={`tel:${child.contact_phone}`} className="flex items-center gap-2 text-sm text-[#1a3a6b] font-medium">
+                                          <Phone size={13} className="shrink-0" />
+                                          {child.contact_phone}
+                                        </a>
+                                      )}
+                                      {child.contact_email && (
+                                        <a href={`mailto:${child.contact_email}`} className="flex items-center gap-2 text-sm text-[#1a3a6b] font-medium truncate">
+                                          <Mail size={13} className="shrink-0" />
+                                          {child.contact_email}
+                                        </a>
+                                      )}
+                                      {hasNeeds && (
+                                        <div className="flex items-start gap-2 text-sm">
+                                          <AlertCircle size={13} className="text-amber-500 mt-0.5 shrink-0" />
+                                          <div>
+                                            <p className="text-xs font-bold text-amber-700 mb-0.5">Additional needs</p>
+                                            <p className="text-gray-700 text-xs leading-snug">{child.additional_needs}</p>
+                                          </div>
+                                        </div>
+                                      )}
+                                      {!hasContact && !hasNeeds && (
+                                        <p className="text-xs text-gray-400 text-center py-1">No contact details recorded.</p>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Coach assignment — only shows coaches at this school */}
+                                  <div>
+                                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                      Assigned Coach
+                                    </label>
+                                    <select
+                                      className="mt-1 w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 bg-[#f4f6f9]"
+                                      value={child.assigned_coach_id ?? ''}
+                                      onChange={e => assignCoach(child.id, e.target.value)}
+                                    >
+                                      <option value="">No coach assigned</option>
+                                      {schoolCoaches.length > 0
+                                        ? schoolCoaches.map(c => (
+                                            <option key={c.id} value={c.id}>{c.full_name}</option>
+                                          ))
+                                        : <option disabled>No coaches at this school yet</option>
+                                      }
+                                    </select>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              )
+                            })}
                           </div>
                         )}
                       </div>
