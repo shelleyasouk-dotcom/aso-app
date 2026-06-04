@@ -297,6 +297,42 @@ export function ImportRegisterPage() {
       }
     }
 
+    // Sync to class_children for awards tracker (current semester)
+    const { data: sem } = await supabase
+      .from('academic_semesters')
+      .select('academic_year, semester_number')
+      .eq('is_current', true)
+      .single()
+    if (sem) {
+      for (let idx = 0; idx < parsed.children.length; idx++) {
+        const wc = parsed.children[idx]
+        const cid = childIds[idx]
+        if (!cid) continue
+        const nameParts = wc.fullName.trim().split(' ')
+        const firstName = nameParts[0] ?? ''
+        const lastName = nameParts.slice(1).join(' ') || '.'
+        // Check if a class_children record already linked to this child exists
+        const { data: existing } = await supabase
+          .from('class_children')
+          .select('id')
+          .eq('child_id', cid)
+          .eq('academic_year', sem.academic_year)
+          .eq('semester_number', sem.semester_number)
+          .maybeSingle()
+        if (!existing) {
+          await supabase.from('class_children').insert({
+            first_name: firstName,
+            last_name: lastName,
+            school_id: selectedSchoolId,
+            academic_year: sem.academic_year,
+            semester_number: sem.semester_number,
+            added_by: assignedCoachId,
+            child_id: cid,
+          })
+        }
+      }
+    }
+
     // Create session registers
     const registerIds: string[] = []
     for (const date of dates) {

@@ -125,6 +125,24 @@ export function ChildrenAdminPage() {
 
   async function assignCoach(childId: string, coachId: string) {
     await supabase.from('children').update({ assigned_coach_id: coachId || null }).eq('id', childId)
+
+    // Sync class_children so the awards tracker reflects the new coach
+    if (coachId) {
+      const { data: sem } = await supabase
+        .from('academic_semesters')
+        .select('academic_year, semester_number')
+        .eq('is_current', true)
+        .single()
+      if (sem) {
+        await supabase
+          .from('class_children')
+          .update({ added_by: coachId })
+          .eq('child_id', childId)
+          .eq('academic_year', sem.academic_year)
+          .eq('semester_number', sem.semester_number)
+      }
+    }
+
     setChildren(prev => prev.map(c => {
       if (c.id !== childId) return c
       const allCoaches = Array.from(coachesBySchool.values()).flat()
