@@ -10,7 +10,6 @@ import type { SessionRegister, School } from '../../types'
 
 interface RegisterWithMeta extends SessionRegister {
   school?: School
-  lead_coach?: { full_name: string }
   present_count?: number
   total_count?: number
 }

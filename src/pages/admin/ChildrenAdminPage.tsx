@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Plus, BookOpen, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Phone, Mail, User, AlertCircle, Info } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { Input, Select } from '../../components/ui/Input'
-import { canManageSchools } from '../../lib/roles'
 import type { Child, School, Profile } from '../../types'
 
 interface ChildWithRefs extends Child {
   school?: School
-  assigned_coach?: Profile | null
+  assigned_coach?: Profile
 }
 
 function yearSortKey(yg: string): number {
@@ -29,7 +27,6 @@ function normaliseYear(yg: string | null): string {
 }
 
 export function ChildrenAdminPage() {
-  const { profile } = useAuth()
   const [children, setChildren] = useState<ChildWithRefs[]>([])
   const [schools, setSchools] = useState<School[]>([])
   const [coachesBySchool, setCoachesBySchool] = useState<Map<string, Profile[]>>(new Map())
@@ -131,7 +128,7 @@ export function ChildrenAdminPage() {
     setChildren(prev => prev.map(c => {
       if (c.id !== childId) return c
       const allCoaches = Array.from(coachesBySchool.values()).flat()
-      return { ...c, assigned_coach_id: coachId || null, assigned_coach: allCoaches.find(a => a.id === coachId) ?? null }
+      return { ...c, assigned_coach_id: coachId || null, assigned_coach: allCoaches.find(a => a.id === coachId) }
     }))
   }
 
@@ -275,7 +272,7 @@ export function ChildrenAdminPage() {
                                       <div className="flex items-center gap-1.5">
                                         <p className="font-semibold text-gray-800 text-sm truncate">{child.full_name}</p>
                                         {hasNeeds && (
-                                          <AlertCircle size={13} className="text-amber-500 shrink-0" title="Additional needs" />
+                                          <AlertCircle size={13} className="text-amber-500 shrink-0" />
                                         )}
                                       </div>
                                       {child.date_of_birth && (

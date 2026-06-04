@@ -7,8 +7,14 @@ import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 import type { SessionRegister, RegisterEntry, Child, Profile, School } from '../../types'
 
+interface ChildSummary {
+  id: string
+  full_name: string
+  year_group: string | null
+}
+
 interface EntryWithChild extends RegisterEntry {
-  child?: Child & { assigned_coach?: Profile | null }
+  child?: Child & { assigned_coach?: Profile }
 }
 
 interface FullRegister extends SessionRegister {
@@ -23,7 +29,7 @@ export function ViewRegisterPage() {
   const [register, setRegister] = useState<FullRegister | null>(null)
   const [entries, setEntries] = useState<EntryWithChild[]>([])
   const [coaches, setCoaches] = useState<Profile[]>([])
-  const [allChildren, setAllChildren] = useState<Child[]>([])
+  const [allChildren, setAllChildren] = useState<ChildSummary[]>([])
   const [notes, setNotes] = useState('')
   const [editingDate, setEditingDate] = useState(false)
   const [newDate, setNewDate] = useState('')
@@ -86,7 +92,7 @@ export function ViewRegisterPage() {
     await supabase.from('children').update({ assigned_coach_id: coachId || null }).eq('id', childId)
     setEntries(prev => prev.map(e =>
       e.child?.id === childId
-        ? { ...e, child: { ...e.child!, assigned_coach: coaches.find(c => c.id === coachId) ?? null } }
+        ? { ...e, child: { ...e.child!, assigned_coach: coaches.find(c => c.id === coachId) } }
         : e
     ))
   }
