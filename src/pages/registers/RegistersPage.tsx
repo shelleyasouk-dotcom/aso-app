@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, ClipboardList, Calendar } from 'lucide-react'
+import { Plus, ClipboardList, Calendar, Upload } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -50,14 +50,25 @@ export function RegistersPage() {
   return (
     <Layout title="Session Registers">
       <div className="px-4 pt-6 flex flex-col gap-4">
-        <Button
-          variant="primary"
-          size="lg"
-          fullWidth
-          onClick={() => navigate('/registers/new')}
-        >
-          <Plus size={20} /> New Register
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            onClick={() => navigate('/registers/new')}
+          >
+            <Plus size={20} /> New Register
+          </Button>
+          {(profile?.role === 'director' || profile?.role === 'area_lead' || profile?.role === 'lead_coach') && (
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => navigate('/registers/import')}
+            >
+              <Upload size={18} />
+            </Button>
+          )}
+        </div>
 
         {loading ? (
           <p className="text-center text-gray-400 py-8">Loading…</p>
