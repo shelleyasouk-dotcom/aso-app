@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, BookOpen, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Phone, Mail, User, AlertCircle, Info } from 'lucide-react'
+import { Plus, BookOpen, ChevronDown, ChevronRight, ToggleLeft, ToggleRight, Phone, Mail, User, AlertCircle, Info, Camera, HeartPulse } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
@@ -302,15 +302,36 @@ export function ChildrenAdminPage() {
                                     </div>
                                   </div>
 
+                                  {/* Permission strip */}
+                                  {(child.photo_permission !== null || child.first_aid_consent !== null) && (
+                                    <div className="flex items-center gap-2 mb-2">
+                                      {child.photo_permission !== null && (
+                                        <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${child.photo_permission ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                                          <Camera size={10} />
+                                          {child.photo_permission ? 'Photo: Y' : 'Photo: N'}
+                                        </div>
+                                      )}
+                                      {child.first_aid_consent !== null && (
+                                        <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${child.first_aid_consent ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                                          <HeartPulse size={10} />
+                                          {child.first_aid_consent ? 'First Aid: Y' : 'First Aid: N'}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+
                                   {/* Expandable contact details */}
                                   {detailsOpen && (
                                     <div className="mb-3 bg-[#f4f6f9] rounded-xl p-3 flex flex-col gap-2">
+                                      {/* Primary contact */}
                                       {child.parent_name && (
                                         <div className="flex items-center gap-2 text-sm">
                                           <User size={13} className="text-gray-400 shrink-0" />
                                           <div>
                                             <span className="text-gray-700 font-medium">{child.parent_name}</span>
-                                            <span className="text-xs text-gray-400 ml-1">Parent / Guardian</span>
+                                            {child.parent_relationship && (
+                                              <span className="text-xs text-gray-400 ml-1">({child.parent_relationship})</span>
+                                            )}
                                           </div>
                                         </div>
                                       )}
@@ -335,7 +356,48 @@ export function ChildrenAdminPage() {
                                           </div>
                                         </div>
                                       )}
-                                      {!hasContact && !hasNeeds && (
+
+                                      {/* Secondary contact */}
+                                      {child.secondary_contact_name && (
+                                        <div className="pt-1 border-t border-gray-200">
+                                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Emergency Contact 2</p>
+                                          <div className="flex items-center gap-2 text-sm">
+                                            <User size={13} className="text-gray-400 shrink-0" />
+                                            <span className="text-gray-700 font-medium">{child.secondary_contact_name}</span>
+                                            {child.secondary_contact_relationship && (
+                                              <span className="text-xs text-gray-400">({child.secondary_contact_relationship})</span>
+                                            )}
+                                          </div>
+                                          {child.secondary_contact_phone && (
+                                            <a href={`tel:${child.secondary_contact_phone}`} className="flex items-center gap-2 text-sm text-[#1a3a6b] font-medium mt-1">
+                                              <Phone size={13} className="shrink-0" />
+                                              {child.secondary_contact_phone}
+                                            </a>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Tertiary contact */}
+                                      {child.tertiary_contact_name && (
+                                        <div className="pt-1 border-t border-gray-200">
+                                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Emergency Contact 3</p>
+                                          <div className="flex items-center gap-2 text-sm">
+                                            <User size={13} className="text-gray-400 shrink-0" />
+                                            <span className="text-gray-700 font-medium">{child.tertiary_contact_name}</span>
+                                            {child.tertiary_contact_relationship && (
+                                              <span className="text-xs text-gray-400">({child.tertiary_contact_relationship})</span>
+                                            )}
+                                          </div>
+                                          {child.tertiary_contact_phone && (
+                                            <a href={`tel:${child.tertiary_contact_phone}`} className="flex items-center gap-2 text-sm text-[#1a3a6b] font-medium mt-1">
+                                              <Phone size={13} className="shrink-0" />
+                                              {child.tertiary_contact_phone}
+                                            </a>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {!hasContact && !hasNeeds && !child.secondary_contact_name && (
                                         <p className="text-xs text-gray-400 text-center py-1">No contact details recorded.</p>
                                       )}
                                     </div>

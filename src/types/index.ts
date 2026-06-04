@@ -85,8 +85,17 @@ export interface Child {
   contact_email: string | null
   contact_phone: string | null
   parent_name: string | null
+  parent_relationship: string | null
   year_group: string | null
   additional_needs: string | null
+  photo_permission: boolean | null
+  first_aid_consent: boolean | null
+  secondary_contact_name: string | null
+  secondary_contact_phone: string | null
+  secondary_contact_relationship: string | null
+  tertiary_contact_name: string | null
+  tertiary_contact_phone: string | null
+  tertiary_contact_relationship: string | null
   school_id: string
   assigned_coach_id: string | null
   is_active: boolean
