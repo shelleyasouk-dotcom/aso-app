@@ -33,11 +33,12 @@ export function AwardsPage() {
   const [lastName, setLastName] = useState('')
   const [adding, setAdding] = useState(false)
 
-  // Lead view toggle
-  const [viewMode, setViewMode] = useState<'mine' | 'all'>('mine')
-
   const isLead = profile?.role === 'lead_coach' || profile?.role === 'area_lead' || profile?.role === 'director'
   const isAreaLead = profile?.role === 'area_lead' || profile?.role === 'director'
+
+  // Directors/area leads see all coaches by default; coaches see their own class
+  const [viewMode, setViewMode] = useState<'mine' | 'all'>('mine')
+  useEffect(() => { if (isAreaLead) setViewMode('all') }, [isAreaLead])
 
   // Load semester + schools
   useEffect(() => {
@@ -180,8 +181,8 @@ export function AwardsPage() {
 
           {selectedSchoolId && semester && (
             <>
-              {/* Lead view toggle */}
-              {isLead && (
+              {/* Lead view toggle — lead coaches can switch; directors/area leads always see all */}
+              {isLead && !isAreaLead && (
                 <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                   {([
                     { id: 'mine', label: 'My Class', icon: UserCheck },
@@ -199,8 +200,8 @@ export function AwardsPage() {
                 </div>
               )}
 
-              {/* Add child section — only shown in "My Class" view */}
-              {viewMode === 'mine' && (
+              {/* Add child section — only for coaches in their own class view */}
+              {viewMode === 'mine' && !isAreaLead && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">
