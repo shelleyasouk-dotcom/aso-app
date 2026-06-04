@@ -3,6 +3,7 @@ import {
   Clock, LogIn, LogOut, UserCircle, ReceiptText, FileText, Megaphone,
   ChevronDown, ChevronUp, ArrowLeft, CalendarOff, CalendarCheck,
   ClipboardList, Award, Building2, UsersRound, FolderOpen, Bell,
+  BookOpen, GraduationCap, Medal, Dumbbell, ShieldAlert, Upload,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
@@ -83,7 +84,7 @@ export function GuidePage() {
 
       <div className="px-4 py-6 flex flex-col gap-3 pb-12">
 
-        {/* ── ALL STAFF ─────────────────────────────────────── */}
+        {/* ── GETTING STARTED ─────────────────────────────────── */}
         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Getting started</p>
 
         <Section icon={LogIn} title="Install the app on your phone">
@@ -98,7 +99,7 @@ export function GuidePage() {
           <Step number={2} text="Tap the bell to open the notifications panel." />
           <Step number={3} text="Tap any notification to mark it as read — absence notifications will take you straight to the Absences page." />
           <Step number={4} text="Tap Mark all read to clear the badge at once." />
-          <Note text="Notifications are sent when an absence request is submitted or when a decision (approved/rejected) is made." />
+          <Note text="Notifications are sent when an absence request is submitted or when a decision (approved/rejected) is made. Area leads and directors also receive a notification when a coach completes a CPD course or earns a certificate." />
         </Section>
 
         <Section icon={Clock} title="How to clock in and out">
@@ -126,7 +127,8 @@ export function GuidePage() {
           <Step number={3} text="Fill in your DBS number, DBS expiry, Safeguarding expiry, and First Aid expiry." />
           <Step number={4} text="Tap Save Details." />
           <Step number={5} text="Your digital ID card appears at the top — show it on your phone at schools." />
-          <Note text="Keep your DBS expiry date up to date. The app will warn you when it's getting close." />
+          <Step number={6} text="Completed CPD courses and certifications are shown automatically below your ID card — no need to add them manually." />
+          <Note text="Keep your DBS expiry date up to date. The app will warn you when it's getting close. Your lead coach and area lead can see your certificates and training on your profile." />
         </Section>
 
         <Section icon={FolderOpen} title="Uploading your certificates and documents">
@@ -147,8 +149,8 @@ export function GuidePage() {
           <Note text="Submit expenses in the same week where possible." />
         </Section>
 
-        <Section icon={Award} title="UKAG Awards — tracking progress">
-          <Step number={1} text="Tap Awards on the home screen." />
+        <Section icon={Award} title="UKAG Awards — tracking children's progress">
+          <Step number={1} text="Tap Awards in Coach Zone." />
           <Step number={2} text="Search for a child by name or browse by school." />
           <Step number={3} text="Tap a child's name to view their skill profile." />
           <Step number={4} text="Tick skills as they are demonstrated during sessions." />
@@ -167,15 +169,99 @@ export function GuidePage() {
           <Step number={3} text="Tap the download icon on any document to open it." />
         </Section>
 
-        {/* ── LEAD COACHES AND ABOVE ────────────────────────── */}
+        {/* ── COACHING & CPD ──────────────────────────────────── */}
         {isManager && (
           <>
             <div className="mt-2">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mb-3">Lead Coach & Area Lead</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mb-3">Coaching & CPD</p>
             </div>
 
+            <Section icon={GraduationCap} title="UKAG Library — coaching plans for every level">
+              <Step number={1} text="Tap UKAG Library in Coach Zone." />
+              <Step number={2} text="Browse Levels 1–6, each covering a different stage of gymnast development." />
+              <Step number={3} text="Tap a level to view all progressions, core skills, coaching cues, and support techniques." />
+              <Step number={4} text="Use the level pages during session planning — they show exactly which skills to introduce and the right cues to use." />
+              <Note text="The Apparatus CPD courses (below) are built around Levels 1–3 of this library. Work through both together." />
+            </Section>
+
+            <Section icon={BookOpen} title="Semester Plans — weekly coaching plans and feedback">
+              <Step number={1} text="Tap Semester Plans in Coach Zone." />
+              <Step number={2} text="Browse plans by week — each week has a focus area and suggested activities." />
+              <Step number={3} text="Tap a week to view the full plan and leave feedback notes after your session." />
+              <Note text="Plans are set at area lead level. If you think a plan needs updating, add a feedback note and speak to your area lead." />
+            </Section>
+
+            <Section icon={Dumbbell} title="Apparatus CPD — Floor, Bars, Beam & Vault">
+              <Step number={1} text="Tap Apparatus CPD in Coach Zone." />
+              <Step number={2} text="Choose an apparatus: Floor, Bars, Beam, or Vault." />
+              <Step number={3} text="Each course has 3 modules. Complete them in order — you must pass one to unlock the next." />
+              <Step number={4} text="Each module has reading sections followed by a short quiz. You need 3 out of 4 correct to pass." />
+              <Step number={5} text="All content is aligned to UKAG Levels 1–3, so you'll learn the exact skills, cues, and coaching techniques used in the library." />
+              <Step number={6} text="A certificate is awarded when you complete all 3 modules. It appears on your profile automatically." />
+              <Note text="You can complete all four apparatus courses independently. Each one earns its own certificate visible to your lead coach and area lead." />
+            </Section>
+
+            <Section icon={Medal} title="Leadership Course — Lead Coach certification">
+              <Step number={1} text="Tap Leadership Course in Coach Zone." />
+              <Step number={2} text="Work through the modules in order — each one unlocks when you pass the previous." />
+              <Step number={3} text="Each module covers a different leadership topic with reading sections and a quiz." />
+              <Step number={4} text="Pass all modules to earn the UKAG Lead Coach Award certificate, which is saved to your profile." />
+              <Note text="Your area lead receives a notification when you complete the full course." />
+            </Section>
+
+            <Section icon={ClipboardList} title="Session registers — taking and viewing attendance">
+              <Step number={1} text="Tap Session Registers in Coach Zone." />
+              <Step number={2} text="Tap New Register, select the school and date, then tick the children present." />
+              <Step number={3} text="Tap Save Register — the record is stored and visible to your area lead." />
+              <Step number={4} text="Past registers appear in the list. Tap any to view the full attendance summary." />
+            </Section>
+
+            <Section icon={Upload} title="Importing a Wix register — adding children from a booking export">
+              <Step number={1} text="Export the participant list from your Wix booking session as a CSV file." />
+              <Step number={2} text="Tap Session Registers in Coach Zone, then tap the upload icon (top right of the page)." />
+              <Step number={3} text="Select the CSV file — the app reads the school name and start date from the filename automatically." />
+              <Step number={4} text="Confirm the school from the dropdown (the app suggests the closest match), set the start date, and choose how many weeks the course runs (default: 6)." />
+              <Step number={5} text="Tap Import — children are added or updated in the system and linked to a register for every session date." />
+              <Step number={6} text="Each session register is now ready to use. Open any register and tap a child's name to mark them present." />
+              <Note text="Re-importing the same file won't create duplicates — it updates any children already in the system and adds any new ones." />
+            </Section>
+
+            <Section icon={ShieldAlert} title="Incident reports — logging accidents and incidents">
+              <Step number={1} text="Tap Incident Reports in Coach Zone." />
+              <Step number={2} text="Tap New Report and complete the form: what happened, who was involved, when and where." />
+              <Step number={3} text="Include any first aid given and whether parents were informed." />
+              <Step number={4} text="Tap Submit — the report is saved and your area lead is notified." />
+              <Step number={5} text="You can view all your submitted reports in the list and add follow-up notes." />
+              <Note text="Always submit an incident report the same day, even for minor incidents. Do not rely on memory." />
+            </Section>
+
+            {isAdmin && (
+              <>
+                <div className="mt-2">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mb-3">Management</p>
+                </div>
+
+                <Section icon={GraduationCap} title="Area Lead Development Course">
+                  <Step number={1} text="Tap Area Lead Course in Coach Zone." />
+                  <Step number={2} text="Work through all 8 modules in order: Regional Leadership, Supporting Coaches, School Relationships, Recruitment Support, Quality Assurance, Problem Solving, Reporting Systems, and Communication." />
+                  <Step number={3} text="Each module has reading sections and a quiz — you need 3 out of 4 correct to pass." />
+                  <Step number={4} text="Complete all 8 modules to earn the UKAG Area Lead Award certificate, which is saved to your profile." />
+                  <Note text="This course combines online learning with workshop attendance. The certificate is awarded on full completion and is visible on your profile." />
+                </Section>
+
+                <Section icon={CalendarOff} title="Approving team absences">
+                  <Step number={1} text="Tap Absences on the home screen." />
+                  <Step number={2} text="Tap the Team tab — a red badge shows how many are waiting." />
+                  <Step number={3} text="Pending requests are shown at the top. Tap Approve or Reject." />
+                  <Step number={4} text="You can add an optional note before confirming." />
+                  <Step number={5} text="The staff member receives a notification with your decision." />
+                  <Step number={6} text="Tap This Week to see a calendar view of who's absent each day." />
+                </Section>
+              </>
+            )}
+
             <Section icon={CalendarCheck} title="My Sessions — seeing who's at your locations">
-              <Step number={1} text="Tap My Sessions on the home screen." />
+              <Step number={1} text="Tap My Sessions in Coach Zone." />
               <Step number={2} text="The Live tab shows every school you're assigned to, with a green dot next to staff who are currently clocked in." />
               <Step number={3} text="You can manually clock a staff member In or Out from here if they forgot." />
               <Step number={4} text="The elapsed time shows how long each person has been on shift." />
@@ -183,30 +269,10 @@ export function GuidePage() {
               <Step number={6} text="The History tab shows past clock records — use it to check or correct hours." />
               <Note text="Only schools assigned to you appear here. Contact Admin if a school is missing." />
             </Section>
-
-            <Section icon={ClipboardList} title="Taking a session register">
-              <Step number={1} text="Tap Session Register on the home screen." />
-              <Step number={2} text="Tap New Register." />
-              <Step number={3} text="Select the school and date." />
-              <Step number={4} text="Tick the children who are present." />
-              <Step number={5} text="Tap Save Register." />
-              <Step number={6} text="Past registers appear in the list — tap any to view or edit." />
-            </Section>
-
-            {isAdmin && (
-              <Section icon={CalendarOff} title="Approving team absences">
-                <Step number={1} text="Tap Absences on the home screen." />
-                <Step number={2} text="Tap the Team tab — a red badge shows how many are waiting." />
-                <Step number={3} text="Pending requests are shown at the top. Tap Approve or Reject." />
-                <Step number={4} text="You can add an optional note before confirming." />
-                <Step number={5} text="The staff member receives a notification with your decision." />
-                <Step number={6} text="Tap This Week to see a calendar view of who's absent each day." />
-              </Section>
-            )}
           </>
         )}
 
-        {/* ── OUTREACH WORKERS AND ABOVE ───────────────────── */}
+        {/* ── OUTREACH ────────────────────────────────────────── */}
         {canOutreach && (
           <>
             {!isManager && (
