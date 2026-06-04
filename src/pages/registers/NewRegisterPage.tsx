@@ -31,15 +31,32 @@ export function NewRegisterPage() {
   }, [selectedSchoolId])
 
   async function loadSchools() {
-    const { data } = await supabase
-      .from('staff_school_assignments')
-      .select('school:schools(*)')
-      .eq('staff_id', profile!.id)
-    if (data) {
-      const s = data.map((d: any) => d.school).filter(Boolean) as School[]
-      setSchools(s)
-      if (s.length === 1) setSelectedSchoolId(s[0].id)
+    const role = profile!.role
+    let list: School[] = []
+
+    if (role === 'director') {
+      const { data } = await supabase.from('schools').select('*').order('name')
+      list = data ?? []
+    } else if (role === 'area_lead') {
+      const [{ data: areaSchools }, { data: assigned }] = await Promise.all([
+        supabase.from('schools').select('*').eq('area_lead_id', profile!.id).order('name'),
+        supabase.from('staff_school_assignments').select('school:schools(*)').eq('staff_id', profile!.id),
+      ])
+      const combined = [
+        ...(areaSchools ?? []),
+        ...((assigned ?? []).map((d: any) => d.school).filter(Boolean)),
+      ]
+      list = Array.from(new Map(combined.map(s => [s.id, s])).values())
+    } else {
+      const { data } = await supabase
+        .from('staff_school_assignments')
+        .select('school:schools(*)')
+        .eq('staff_id', profile!.id)
+      list = (data ?? []).map((d: any) => d.school).filter(Boolean) as School[]
     }
+
+    setSchools(list)
+    if (list.length === 1) setSelectedSchoolId(list[0].id)
   }
 
   async function loadChildren() {
