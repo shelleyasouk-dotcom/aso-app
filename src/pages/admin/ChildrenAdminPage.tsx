@@ -13,17 +13,12 @@ interface ChildWithRefs extends Child {
   assigned_coach?: Profile
 }
 
-function yearSortKey(yg: string): number {
-  if (!yg) return 99
-  const lower = yg.toLowerCase()
-  if (lower.includes('nursery')) return -1
-  if (lower.includes('reception') || /\br\b/.test(lower)) return 0
-  const num = parseInt(lower.match(/\d+/)?.[0] ?? '99')
-  return isNaN(num) ? 99 : num
+function coachGroupKey(child: ChildWithRefs): string {
+  return child.assigned_coach_id ?? '__unassigned__'
 }
 
-function normaliseYear(yg: string | null): string {
-  return yg?.trim() || 'No class recorded'
+function coachGroupLabel(child: ChildWithRefs): string {
+  return child.assigned_coach?.full_name ?? 'Unassigned'
 }
 
 export function ChildrenAdminPage() {
@@ -90,10 +85,10 @@ export function ChildrenAdminPage() {
     const { data } = await query
     if (data) {
       setChildren(data)
-      // Auto-expand all year-group sections
+      // Auto-expand all coach sections
       const keys = new Set<string>()
       for (const c of data) {
-        keys.add(`${filterSchool ? '' : c.school_id}__${normaliseYear(c.year_group)}`)
+        keys.add(`${c.school_id}__${c.assigned_coach_id ?? '__unassigned__'}`)
       }
       setOpenGroups(keys)
     }
@@ -158,22 +153,34 @@ export function ChildrenAdminPage() {
     setExpandedChildIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
   }
 
-  // Group children: by school (if showing all), then by year group within each school
+  // Group children: by school (if showing all), then by assigned coach within each school
   const grouped = (() => {
-    if (filterSchool) {
-      const byYear = new Map<string, ChildWithRefs[]>()
-      for (const c of children) {
-        const yg = normaliseYear(c.year_group)
-        const list = byYear.get(yg) ?? []; list.push(c); byYear.set(yg, list)
+    const buildCoachGroups = (kids: ChildWithRefs[]) => {
+      const byCoach = new Map<string, { label: string; children: ChildWithRefs[] }>()
+      for (const c of kids) {
+        const key = coachGroupKey(c)
+        const label = coachGroupLabel(c)
+        const entry = byCoach.get(key) ?? { label, children: [] }
+        entry.children.push(c)
+        byCoach.set(key, entry)
       }
-      return [{ schoolId: filterSchool, school: schools.find(s => s.id === filterSchool), yearGroups: byYear }]
+      // Sort: unassigned last, others alphabetically
+      return Array.from(byCoach.entries()).sort(([ka], [kb]) => {
+        if (ka === '__unassigned__') return 1
+        if (kb === '__unassigned__') return -1
+        return byCoach.get(ka)!.label.localeCompare(byCoach.get(kb)!.label)
+      })
+    }
+
+    if (filterSchool) {
+      return [{ schoolId: filterSchool, school: schools.find(s => s.id === filterSchool), coachGroups: buildCoachGroups(children) }]
     } else {
-      const bySchool = new Map<string, { school?: School; yearGroups: Map<string, ChildWithRefs[]> }>()
+      const bySchool = new Map<string, { school?: School; coachGroups: ReturnType<typeof buildCoachGroups> }>()
       for (const c of children) {
-        if (!bySchool.has(c.school_id)) bySchool.set(c.school_id, { school: c.school, yearGroups: new Map() })
-        const yg = normaliseYear(c.year_group)
-        const entry = bySchool.get(c.school_id)!
-        const list = entry.yearGroups.get(yg) ?? []; list.push(c); entry.yearGroups.set(yg, list)
+        if (!bySchool.has(c.school_id)) bySchool.set(c.school_id, { school: c.school, coachGroups: [] })
+      }
+      for (const [schoolId, entry] of bySchool) {
+        entry.coachGroups = buildCoachGroups(children.filter(c => c.school_id === schoolId))
       }
       return Array.from(bySchool.entries()).map(([schoolId, val]) => ({ schoolId, ...val }))
     }
@@ -229,10 +236,9 @@ export function ChildrenAdminPage() {
             <p className="text-gray-500 text-sm">No children registered yet.</p>
           </Card>
         ) : (
-          grouped.map(({ schoolId, school, yearGroups }) => {
+          grouped.map(({ schoolId, school, coachGroups }) => {
             const schoolCoaches = coachesBySchool.get(schoolId) ?? []
-            const sortedYears = Array.from(yearGroups.entries())
-              .sort(([a], [b]) => yearSortKey(a) - yearSortKey(b))
+            const totalChildren = coachGroups.reduce((n, [, g]) => n + g.children.length, 0)
 
             return (
               <div key={schoolId}>
@@ -240,20 +246,19 @@ export function ChildrenAdminPage() {
                   <div className="flex items-center gap-2 px-1 mb-2 mt-2">
                     <div className="w-2 h-2 rounded-full bg-[#1a3a6b] shrink-0" />
                     <p className="font-bold text-[#1a3a6b] text-sm">{school?.name}</p>
-                    <span className="text-xs text-gray-400">
-                      {Array.from(yearGroups.values()).flat().length} children
-                    </span>
+                    <span className="text-xs text-gray-400">{totalChildren} children</span>
                   </div>
                 )}
 
                 <div className="flex flex-col gap-2">
-                  {sortedYears.map(([yearGroup, kids]) => {
-                    const groupKey = `${filterSchool ? '' : schoolId}__${yearGroup}`
+                  {coachGroups.map(([coachKey, group]) => {
+                    const groupKey = `${schoolId}__${coachKey}`
                     const isOpen = openGroups.has(groupKey)
+                    const isUnassigned = coachKey === '__unassigned__'
 
                     return (
-                      <div key={yearGroup} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                        {/* Year group header */}
+                      <div key={coachKey} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        {/* Coach header */}
                         <button
                           onClick={() => toggleGroup(groupKey)}
                           className="w-full flex items-center justify-between px-4 py-3 text-left"
@@ -263,16 +268,18 @@ export function ChildrenAdminPage() {
                               ? <ChevronDown size={16} className="text-gray-400 shrink-0" />
                               : <ChevronRight size={16} className="text-gray-400 shrink-0" />
                             }
-                            <p className="font-semibold text-[#1a3a6b] text-sm">{yearGroup}</p>
+                            <p className={`font-semibold text-sm ${isUnassigned ? 'text-gray-400 italic' : 'text-[#1a3a6b]'}`}>
+                              {group.label}
+                            </p>
                           </div>
                           <span className="text-xs font-bold bg-[#1a3a6b]/10 text-[#1a3a6b] px-2 py-0.5 rounded-full">
-                            {kids.length}
+                            {group.children.length}
                           </span>
                         </button>
 
                         {isOpen && (
                           <div className="border-t border-gray-50 divide-y divide-gray-50">
-                            {kids.map(child => {
+                            {group.children.map(child => {
                               const detailsOpen = expandedChildIds.has(child.id)
                               const hasContact = child.contact_phone || child.contact_email || child.parent_name
                               const hasNeeds = child.additional_needs && child.additional_needs.toLowerCase() !== 'no'
