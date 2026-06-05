@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { CheckCircle, XCircle, Calendar, User, UserPlus, Trash2, ChevronDown, Save } from 'lucide-react'
+import { CheckCircle, XCircle, Calendar, User, UserPlus, Trash2, ChevronDown, Save, Info, Phone, Mail, AlertCircle, Camera, HeartPulse } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -37,6 +37,11 @@ export function ViewRegisterPage() {
   const [addChildId, setAddChildId] = useState('')
   const [savingNotes, setSavingNotes] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [expandedChildIds, setExpandedChildIds] = useState<Set<string>>(new Set())
+
+  function toggleChildInfo(id: string) {
+    setExpandedChildIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
 
   const role = profile?.role
   const isAdmin = role === 'director' || role === 'area_lead'
@@ -235,6 +240,9 @@ export function ViewRegisterPage() {
             entries.map(entry => {
               const child = entry.child
               const assignedCoach = child?.assigned_coach
+              const infoOpen = child ? expandedChildIds.has(child.id) : false
+              const hasNeeds = child?.additional_needs && child.additional_needs.toLowerCase() !== 'no'
+
               return (
                 <div
                   key={entry.id}
@@ -242,25 +250,48 @@ export function ViewRegisterPage() {
                     entry.present ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-200'
                   }`}
                 >
+                  {/* Main row */}
                   <div className="flex items-center gap-3 px-4 py-3">
                     {/* Attendance toggle */}
-                    <button
-                      onClick={() => togglePresent(entry)}
-                      className="shrink-0"
-                    >
+                    <button onClick={() => togglePresent(entry)} className="shrink-0">
                       {entry.present
                         ? <CheckCircle size={26} className="text-green-500" />
                         : <XCircle size={26} className="text-red-400" />
                       }
                     </button>
 
-                    {/* Name + year */}
+                    {/* Name */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 text-sm leading-tight">{child?.full_name}</p>
-                      {child?.year_group && (
-                        <p className="text-xs text-gray-400">{child.year_group}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-semibold text-gray-800 text-sm leading-tight truncate">{child?.full_name}</p>
+                        {hasNeeds && <AlertCircle size={12} className="text-amber-500 shrink-0" />}
+                      </div>
+                      {/* Permission strip */}
+                      {child && (child.photo_permission !== null || child.first_aid_consent !== null) && (
+                        <div className="flex gap-1 mt-0.5">
+                          {child.photo_permission !== null && (
+                            <span className={`flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${child.photo_permission ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-700'}`}>
+                              <Camera size={8} />{child.photo_permission ? 'Y' : 'N'}
+                            </span>
+                          )}
+                          {child.first_aid_consent !== null && (
+                            <span className={`flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full ${child.first_aid_consent ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-700'}`}>
+                              <HeartPulse size={8} />{child.first_aid_consent ? 'Y' : 'N'}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
+
+                    {/* Info toggle */}
+                    {child && (
+                      <button
+                        onClick={() => toggleChildInfo(child.id)}
+                        className={`p-1.5 rounded-lg transition-colors shrink-0 ${infoOpen ? 'bg-[#1a3a6b]/15 text-[#1a3a6b]' : 'text-gray-300'}`}
+                      >
+                        <Info size={16} />
+                      </button>
+                    )}
 
                     {/* Coach assignment (lead+) */}
                     {isLead && (
@@ -289,6 +320,102 @@ export function ViewRegisterPage() {
                       </button>
                     )}
                   </div>
+
+                  {/* Expandable form responses */}
+                  {infoOpen && child && (
+                    <div className="mx-3 mb-3 bg-white/80 rounded-xl p-3 flex flex-col gap-2 border border-gray-200">
+                      <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">Form Responses</p>
+
+                      {/* DOB */}
+                      {child.date_of_birth && (
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <span className="font-bold text-gray-400 w-20 shrink-0">DOB</span>
+                          {new Date(child.date_of_birth).toLocaleDateString('en-GB')}
+                        </div>
+                      )}
+
+                      {/* Year group */}
+                      {child.year_group && (
+                        <div className="flex items-center gap-2 text-xs text-gray-600">
+                          <span className="font-bold text-gray-400 w-20 shrink-0">Year group</span>
+                          {child.year_group}
+                        </div>
+                      )}
+
+                      {/* Primary contact */}
+                      {child.parent_name && (
+                        <div className="pt-1 border-t border-gray-100">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Primary Contact</p>
+                          <div className="flex items-center gap-2 text-xs">
+                            <User size={11} className="text-gray-400 shrink-0" />
+                            <span className="font-medium text-gray-700">{child.parent_name}</span>
+                            {child.parent_relationship && <span className="text-gray-400">({child.parent_relationship})</span>}
+                          </div>
+                          {child.contact_phone && (
+                            <a href={`tel:${child.contact_phone}`} className="flex items-center gap-2 text-xs text-[#1a3a6b] font-semibold mt-1">
+                              <Phone size={11} className="shrink-0" />{child.contact_phone}
+                            </a>
+                          )}
+                          {child.contact_email && (
+                            <a href={`mailto:${child.contact_email}`} className="flex items-center gap-2 text-xs text-[#1a3a6b] font-semibold mt-1 truncate">
+                              <Mail size={11} className="shrink-0" />{child.contact_email}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Secondary contact */}
+                      {child.secondary_contact_name && (
+                        <div className="pt-1 border-t border-gray-100">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Emergency Contact 2</p>
+                          <div className="flex items-center gap-2 text-xs">
+                            <User size={11} className="text-gray-400 shrink-0" />
+                            <span className="font-medium text-gray-700">{child.secondary_contact_name}</span>
+                            {child.secondary_contact_relationship && <span className="text-gray-400">({child.secondary_contact_relationship})</span>}
+                          </div>
+                          {child.secondary_contact_phone && (
+                            <a href={`tel:${child.secondary_contact_phone}`} className="flex items-center gap-2 text-xs text-[#1a3a6b] font-semibold mt-1">
+                              <Phone size={11} className="shrink-0" />{child.secondary_contact_phone}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Tertiary contact */}
+                      {child.tertiary_contact_name && (
+                        <div className="pt-1 border-t border-gray-100">
+                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Emergency Contact 3</p>
+                          <div className="flex items-center gap-2 text-xs">
+                            <User size={11} className="text-gray-400 shrink-0" />
+                            <span className="font-medium text-gray-700">{child.tertiary_contact_name}</span>
+                            {child.tertiary_contact_relationship && <span className="text-gray-400">({child.tertiary_contact_relationship})</span>}
+                          </div>
+                          {child.tertiary_contact_phone && (
+                            <a href={`tel:${child.tertiary_contact_phone}`} className="flex items-center gap-2 text-xs text-[#1a3a6b] font-semibold mt-1">
+                              <Phone size={11} className="shrink-0" />{child.tertiary_contact_phone}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Additional needs */}
+                      {hasNeeds && (
+                        <div className="pt-1 border-t border-gray-100">
+                          <div className="flex items-start gap-2">
+                            <AlertCircle size={11} className="text-amber-500 mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-0.5">Additional Needs</p>
+                              <p className="text-xs text-gray-700 leading-snug">{child.additional_needs}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {!child.parent_name && !child.contact_phone && !child.secondary_contact_name && !hasNeeds && (
+                        <p className="text-xs text-gray-400 text-center py-1">No form responses recorded.</p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })
