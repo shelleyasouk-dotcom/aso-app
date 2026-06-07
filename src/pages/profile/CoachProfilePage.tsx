@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X, Lock, User, IdCard, ScrollText, CheckCircle2 } from 'lucide-react'
+import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X, Lock, User, IdCard, ScrollText, CheckCircle2, ChevronDown } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -1253,12 +1253,46 @@ function Row({ label, value }: { label: string; value: string }) {
 
 const CONTRACT_ROLES = ['junior_coach', 'assistant_coach', 'lead_coach', 'area_lead']
 
+interface ContractItem { type: 'text' | 'bullet'; text: string }
+interface ContractSectionData { heading: string; items: ContractItem[] }
 interface StaffContract {
   id: string
   role: string
   title: string
-  storage_path: string | null
   version: string
+  content: ContractSectionData[] | null
+}
+
+function ContractAccordionSection({ section, index }: { section: ContractSectionData; index: number }) {
+  const [open, setOpen] = useState(index === 0)
+  return (
+    <div className="border border-emerald-200 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-white text-left"
+      >
+        <span className="text-sm font-semibold text-[#1a5c3a] pr-2">{section.heading}</span>
+        <ChevronDown size={16} className={`text-emerald-500 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && section.items.length > 0 && (
+        <div className="px-4 pb-4 pt-1 bg-white border-t border-emerald-100 flex flex-col gap-1.5">
+          {section.items.map((item, i) => (
+            item.type === 'bullet'
+              ? <div key={i} className="flex items-start gap-2">
+                  <span className="text-emerald-500 mt-1 shrink-0">•</span>
+                  <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
+                </div>
+              : <p key={i} className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
+          ))}
+        </div>
+      )}
+      {open && section.items.length === 0 && (
+        <div className="px-4 pb-3 pt-1 bg-white border-t border-emerald-100">
+          <p className="text-sm text-gray-400 italic">No details in this section.</p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function ContractSection({ staffId, staffRole, isDirector }: {
@@ -1273,13 +1307,12 @@ function ContractSection({ staffId, staffRole, isDirector }: {
   const [agreed, setAgreed] = useState(false)
   const [signing, setSigning] = useState(false)
   const [signError, setSignError] = useState<string | null>(null)
-  const [urlLoading, setUrlLoading] = useState(false)
+  const [showContract, setShowContract] = useState(false)
 
   useEffect(() => {
     if (!CONTRACT_ROLES.includes(staffRole)) { setLoaded(true); return }
-
     Promise.all([
-      supabase.from('staff_contracts').select('id,role,title,storage_path,version').eq('role', staffRole).eq('is_active', true).maybeSingle(),
+      supabase.from('staff_contracts').select('id,role,title,version,content').eq('role', staffRole).eq('is_active', true).maybeSingle(),
       supabase.from('profiles').select('contract_signed_at,contract_version').eq('id', staffId).maybeSingle(),
     ]).then(([{ data: c }, { data: p }]) => {
       if (c) setContract(c as StaffContract)
@@ -1290,14 +1323,6 @@ function ContractSection({ staffId, staffRole, isDirector }: {
       setLoaded(true)
     })
   }, [staffId, staffRole])
-
-  async function openContract() {
-    if (!contract?.storage_path) return
-    setUrlLoading(true)
-    const { data } = await supabase.storage.from('coach-files').createSignedUrl(contract.storage_path, 3600)
-    if (data?.signedUrl) window.open(data.signedUrl, '_blank')
-    setUrlLoading(false)
-  }
 
   async function sign() {
     if (!contract || !agreed) return
@@ -1315,7 +1340,8 @@ function ContractSection({ staffId, staffRole, isDirector }: {
   if (!loaded) return null
   if (!CONTRACT_ROLES.includes(staffRole)) return null
 
-  const versionMismatch = signedAt && signedVersion && contract && signedVersion !== contract.version
+  const versionMismatch = !!(signedAt && signedVersion && contract && signedVersion !== contract.version)
+  const needsSign = !signedAt || versionMismatch
 
   return (
     <div>
@@ -1328,65 +1354,72 @@ function ContractSection({ staffId, staffRole, isDirector }: {
       </div>
       <div className="bg-emerald-50 border border-emerald-200 border-t-0 rounded-b-2xl px-4 pt-4 pb-5 flex flex-col gap-4">
 
-        {/* Signing status */}
-        {signedAt ? (
-          <div className={`flex items-start gap-3 rounded-xl px-4 py-3 ${versionMismatch ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}`}>
-            <CheckCircle2 size={18} className={versionMismatch ? 'text-amber-500 shrink-0 mt-0.5' : 'text-green-600 shrink-0 mt-0.5'} />
-            <div>
-              <p className={`text-sm font-semibold ${versionMismatch ? 'text-amber-800' : 'text-green-800'}`}>
-                {versionMismatch ? 'New version available — re-acknowledgement required' : 'Contract acknowledged'}
-              </p>
+        {/* Signing status banner */}
+        {signedAt && !versionMismatch ? (
+          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+            <CheckCircle2 size={18} className="text-green-600 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-green-800">Contract acknowledged</p>
               <p className="text-xs text-gray-500 mt-0.5">
-                Signed {new Date(signedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(signedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 {signedVersion && ` · ${signedVersion}`}
               </p>
             </div>
+            <button
+              onClick={() => setShowContract(v => !v)}
+              className="text-xs font-semibold text-[#1a5c3a] bg-white border border-emerald-200 px-3 py-1.5 rounded-lg shrink-0"
+            >
+              {showContract ? 'Hide' : 'View'}
+            </button>
           </div>
         ) : (
           <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
             <ScrollText size={18} className="text-amber-500 shrink-0 mt-0.5" />
             <p className="text-sm text-amber-800 font-medium">
-              {isDirector ? 'This staff member has not yet acknowledged their contract.' : 'Please read and acknowledge your employment contract below.'}
+              {isDirector
+                ? 'This staff member has not yet acknowledged their contract.'
+                : versionMismatch
+                  ? 'A new version of your contract is available. Please read and re-acknowledge below.'
+                  : 'Please read each section of your contract below, then sign and agree.'}
             </p>
           </div>
         )}
 
-        {/* Contract info row */}
+        {/* Contract title row */}
         {contract && (
-          <div className="flex items-center justify-between bg-white border border-emerald-200 rounded-xl px-4 py-3">
+          <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-800">{contract.title}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Version {contract.version}</p>
+              <p className="text-sm font-semibold text-gray-700">{contract.title}</p>
+              <p className="text-xs text-gray-400">Version {contract.version}</p>
             </div>
-            {contract.storage_path && (
+            {(!signedAt || versionMismatch || !showContract) && contract.content && (
               <button
-                onClick={openContract}
-                disabled={urlLoading}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[#1a5c3a] bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg shrink-0"
+                onClick={() => setShowContract(v => !v)}
+                className="text-xs font-semibold text-[#1a5c3a] bg-white border border-emerald-200 px-3 py-1.5 rounded-lg shrink-0"
               >
-                {urlLoading ? 'Loading…' : <><Eye size={13} /> Open</>}
+                {showContract ? 'Collapse' : 'Read contract'}
               </button>
             )}
-            {!contract.storage_path && isDirector && (
-              <span className="text-xs text-gray-400">No PDF uploaded yet</span>
-            )}
           </div>
         )}
 
-        {/* Director: no PDF uploaded yet — instructions */}
-        {isDirector && contract && !contract.storage_path && (
-          <div className="bg-white border border-emerald-200 rounded-xl px-4 py-3">
-            <p className="text-xs font-bold text-[#1a5c3a] uppercase tracking-wide mb-1">Upload contract PDF</p>
-            <p className="text-xs text-gray-500 leading-relaxed">
-              Upload the PDF to Supabase Storage → <code className="bg-gray-100 px-1 rounded">coach-files</code> bucket at path <code className="bg-gray-100 px-1 rounded">contracts/{staffRole}.pdf</code>,
-              then run: <code className="bg-gray-100 px-1 rounded">UPDATE staff_contracts SET storage_path = 'contracts/{staffRole}.pdf' WHERE role = '{staffRole}';</code>
-            </p>
+        {/* Accordion sections */}
+        {showContract && contract?.content && (
+          <div className="flex flex-col gap-2">
+            {contract.content.map((section, i) => (
+              <ContractAccordionSection key={i} section={section} index={i} />
+            ))}
           </div>
         )}
 
-        {/* Acknowledgement — only for the staff member themselves; only if not yet signed (or version mismatch) */}
-        {!isDirector && contract && (!signedAt || versionMismatch) && (
-          <div className="flex flex-col gap-3">
+        {/* No content yet */}
+        {showContract && contract && !contract.content && (
+          <p className="text-sm text-gray-400 text-center py-2">Contract content not yet loaded. Run the staff_contracts_content.sql migration.</p>
+        )}
+
+        {/* Sign & agree — staff only, when not yet signed or version mismatch */}
+        {!isDirector && contract && needsSign && (
+          <div className="flex flex-col gap-3 border-t border-emerald-200 pt-4">
             <label className="flex items-start gap-3 cursor-pointer bg-[#1a5c3a]/5 border border-[#1a5c3a]/20 rounded-2xl p-4">
               <input
                 type="checkbox"
@@ -1395,21 +1428,18 @@ function ContractSection({ staffId, staffRole, isDirector }: {
                 className="w-5 h-5 mt-0.5 accent-[#1a5c3a] shrink-0 cursor-pointer"
               />
               <span className="text-sm font-semibold text-[#1a5c3a] leading-snug">
-                I confirm I have read and understood my employment contract ({contract.title}, {contract.version}).
+                I have read and understood my contract ({contract.title}, {contract.version}) and agree to all terms.
               </span>
             </label>
             {signError && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{signError}</p>}
             <button
               onClick={sign}
-              disabled={!agreed || signing || !contract.storage_path}
+              disabled={!agreed || signing}
               className="flex items-center justify-center gap-2 bg-[#1a5c3a] text-white font-bold py-3 rounded-xl text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <CheckCircle2 size={16} />
-              {signing ? 'Saving…' : 'Acknowledge Contract'}
+              {signing ? 'Saving…' : 'Sign & Agree'}
             </button>
-            {!contract.storage_path && (
-              <p className="text-xs text-center text-gray-400">Acknowledgement available once your director uploads the contract PDF.</p>
-            )}
           </div>
         )}
       </div>
