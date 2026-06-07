@@ -1269,7 +1269,6 @@ function ContractSection({ staffId, staffRole, isDirector }: {
   const [contract, setContract] = useState<StaffContract | null>(null)
   const [signedAt, setSignedAt] = useState<string | null>(null)
   const [signedVersion, setSignedVersion] = useState<string | null>(null)
-  const [contractUrl, setContractUrl] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [signing, setSigning] = useState(false)
@@ -1292,11 +1291,11 @@ function ContractSection({ staffId, staffRole, isDirector }: {
     })
   }, [staffId, staffRole])
 
-  async function loadContractUrl() {
+  async function openContract() {
     if (!contract?.storage_path) return
     setUrlLoading(true)
     const { data } = await supabase.storage.from('coach-files').createSignedUrl(contract.storage_path, 3600)
-    if (data?.signedUrl) setContractUrl(data.signedUrl)
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank')
     setUrlLoading(false)
   }
 
@@ -1361,23 +1360,16 @@ function ContractSection({ staffId, staffRole, isDirector }: {
             </div>
             {contract.storage_path && (
               <button
-                onClick={contractUrl ? undefined : loadContractUrl}
+                onClick={openContract}
                 disabled={urlLoading}
                 className="flex items-center gap-1.5 text-xs font-semibold text-[#1a5c3a] bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg shrink-0"
               >
-                {urlLoading ? 'Loading…' : <><Eye size={13} /> View</>}
+                {urlLoading ? 'Loading…' : <><Eye size={13} /> Open</>}
               </button>
             )}
             {!contract.storage_path && isDirector && (
               <span className="text-xs text-gray-400">No PDF uploaded yet</span>
             )}
-          </div>
-        )}
-
-        {/* PDF iframe — shown once URL is loaded */}
-        {contractUrl && (
-          <div className="rounded-xl overflow-hidden border border-emerald-200 bg-white" style={{ height: 420 }}>
-            <iframe src={contractUrl} className="w-full h-full" title="Employment Contract" />
           </div>
         )}
 
