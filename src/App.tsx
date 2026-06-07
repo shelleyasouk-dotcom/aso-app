@@ -91,6 +91,7 @@ import { CourseModulePage } from './pages/course/CourseModulePage'
 import { ApparatusCpdHubPage } from './pages/course/ApparatusCpdHubPage'
 import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailPage'
 import { AreaLeadCoursePage } from './pages/course/AreaLeadCoursePage'
+import { StaffOnboardingModal } from './components/StaffOnboardingModal'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -107,6 +108,7 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <BasketProvider>
+        <StaffOnboardingModal />
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
