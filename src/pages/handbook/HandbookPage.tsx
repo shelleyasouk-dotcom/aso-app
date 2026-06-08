@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   ChevronDown, ChevronUp, ArrowLeft, Users, ClipboardList, Clock, MapPin,
   ClipboardCheck, AlertTriangle, LogOut, CalendarX, Timer, MessageSquare,
-  Shield, Heart, Star, TrendingUp, CheckCircle, User, BookOpen, Phone, Building2, Camera
+  Shield, Heart, Star, TrendingUp, CheckCircle, User, BookOpen, Phone, Building2
 } from 'lucide-react'
 
 // ─── Shared components ────────────────────────────────────────────────────────
