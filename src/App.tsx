@@ -92,6 +92,7 @@ import { ApparatusCpdHubPage } from './pages/course/ApparatusCpdHubPage'
 import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailPage'
 import { AreaLeadCoursePage } from './pages/course/AreaLeadCoursePage'
 import { StaffOnboardingModal } from './components/StaffOnboardingModal'
+import { PhotoPolicyModal } from './components/PhotoPolicyModal'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -109,6 +110,7 @@ export default function App() {
       <AuthProvider>
         <BasketProvider>
         <StaffOnboardingModal />
+        <PhotoPolicyModal />
         <Routes>
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />

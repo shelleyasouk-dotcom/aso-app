@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   ChevronDown, ChevronUp, ArrowLeft, Users, ClipboardList, Clock, MapPin,
   ClipboardCheck, AlertTriangle, LogOut, CalendarX, Timer, MessageSquare,
-  Shield, Heart, Star, TrendingUp, CheckCircle, User, BookOpen, Phone, Building2
+  Shield, Heart, Star, TrendingUp, CheckCircle, User, BookOpen, Phone, Building2, Camera
 } from 'lucide-react'
 
 // ─── Shared components ────────────────────────────────────────────────────────
@@ -423,7 +423,7 @@ export function HandbookPage() {
         </Section>
 
         {/* Section 13 */}
-        <Section icon={Shield} title="Section 13 — Safeguarding" subtitle="Every coach's responsibility, every session">
+        <Section icon={Shield} title="Section 13 — Safeguarding & Photography" subtitle="Every coach's responsibility, every session · Updated June 2026">
           <Warn text="Safeguarding is not optional. It is not someone else's job. It is every coach's responsibility, every session, without exception." />
           <SubHeading text="The Basics — Always" />
           <Bullet text="Never be alone with a child in a closed space" />
@@ -439,6 +439,56 @@ export function HandbookPage() {
           <Step n={6} text="Complete the Safeguarding Concern Form the same day" />
           <Step n={7} text="The Area Lead will escalate to the Designated Safeguarding Lead (DSL)" />
           <Warn text="If a child is in immediate danger — call 999 first. Then notify your Area Lead." />
+
+          <SubHeading text="13.3 — Photography & Images" />
+          <Info text="Updated June 2026 — all staff must read and acknowledge this section." />
+          <p className="text-sm text-gray-700 pt-1">Parents give photo consent at enrolment covering ASO marketing and social media. All staff can see a child's consent status in the register. Check before taking any photos — ask your Lead Coach or Area Lead if unsure.</p>
+          <Warn text="Lead Coaches only may take photographs at sessions. Assistant Coaches and Junior Coaches do not take photos — on any device, at any time." />
+
+          <SubHeading text="Before You Take Any Photo (3 checks)" />
+          <Step n={1} text="Confirm with your Area Lead that photography is approved for this session" />
+          <Step n={2} text="Check consent status for every child — ask your Lead Coach or Area Lead if unsure" />
+          <Step n={3} text="Make sure no child without consent will appear in any shot — reposition the group if needed" />
+
+          <SubHeading text="What Makes a Safe Photo" />
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
+              <p className="text-xs font-bold text-green-700 mb-1.5">✅ Good</p>
+              <div className="flex flex-col gap-1">
+                {['Action shot — skill being performed', 'Child clothed appropriately', 'No school name or badge visible', 'Side-on or from behind', 'Taken in the session space'].map(t => (
+                  <p key={t} className="text-xs text-green-800">• {t}</p>
+                ))}
+              </div>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
+              <p className="text-xs font-bold text-red-700 mb-1.5">❌ Not acceptable</p>
+              <div className="flex flex-col gap-1">
+                {["Close-up of a child's face", 'School uniform name visible', 'Child adjusting clothing', 'Corridor, changing area, or toilet', 'Child unaware photo is being taken'].map(t => (
+                  <p key={t} className="text-xs text-red-800">• {t}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <SubHeading text="Never (zero exceptions)" />
+          {['Store photos of children in your personal camera roll long-term', 'Share photos in personal WhatsApp chats or on your own social media', 'Send photos directly to parents — even if they ask', 'Upload photos to any AI tool or editing app'].map(t => (
+            <Warn key={t} text={t} />
+          ))}
+
+          <SubHeading text="Device Rules" />
+          <Bullet text="Use the ASO Coaching App — that is the approved method." />
+          <Bullet text="If your Area Lead has given written approval to use your personal phone for a specific session:" />
+          <Note text="Disable auto-sync to iCloud / Google Photos before the session · Transfer to ASO secure storage within 24 hours · Delete from personal device immediately after — no exceptions" />
+
+          <SubHeading text="If a Parent Asks for Photos" />
+          <Note text="Say: 'I'll pass that on — our team will be able to help.' Then tell your Area Lead. Do not share anything directly." />
+
+          <SubHeading text="If Something Goes Wrong" />
+          <Bullet text="Lost or stolen device — tell your Area Lead the same day; they will notify the DSL; complete an Incident Report on the app" />
+          <Bullet text="Photo taken of wrong child — delete it immediately from all devices; tell your Lead Coach or Area Lead the same day; do not share it" />
+          <Bullet text="Someone else taking photos that concern you — do not confront them; report to your Area Lead after the session; if a child is at immediate risk — tell school staff and call 999" />
+          <Note text="You will not get into trouble for raising a concern in good faith. You will get into trouble for saying nothing." />
+
           <SubHeading text="Key Safeguarding Contacts" />
           <ContactCard role="Designated Safeguarding Lead (DSL)" contact="safeguarding@activeschool.org.uk" />
           <ContactCard role="National Safeguarding Lead" contact="Shelley Wood — 07814 899151" />
