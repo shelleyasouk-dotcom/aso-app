@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Camera, CheckCircle, BookOpen, X } from 'lucide-react'
+import { Camera, CheckCircle, BookOpen, X, AlertCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
-const STAFF_ROLES = ['area_lead', 'lead_coach', 'assistant_coach', 'junior_coach', 'outreach_worker', 'media_tech']
+const STAFF_ROLES = ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach', 'outreach_worker', 'media_tech']
 
 // Show to anyone who acknowledged before the June 2026 update, or never acknowledged
 const POLICY_UPDATED_AT = new Date('2026-06-01T00:00:00Z')
@@ -14,6 +14,7 @@ export function PhotoPolicyModal() {
   const navigate = useNavigate()
   const [agreed, setAgreed] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   if (!profile) return null
   if (!STAFF_ROLES.includes(profile.role)) return null
@@ -24,10 +25,18 @@ export function PhotoPolicyModal() {
   async function handleAccept() {
     if (!agreed || !profile) return
     setSaving(true)
-    await supabase
+    setSaveError(null)
+    const { error } = await supabase
       .from('profiles')
       .update({ photography_policy_ack_at: new Date().toISOString() })
       .eq('id', profile.id)
+    if (error) {
+      setSaveError(error.message.includes('photography_policy_ack_at')
+        ? 'Please run supabase/photography_policy.sql in the Supabase SQL Editor first.'
+        : error.message)
+      setSaving(false)
+      return
+    }
     await refreshProfile()
     setSaving(false)
   }
@@ -111,7 +120,13 @@ export function PhotoPolicyModal() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 shrink-0">
+        <div className="px-6 py-4 border-t border-gray-100 shrink-0 flex flex-col gap-3">
+          {saveError && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
+              <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700">{saveError}</p>
+            </div>
+          )}
           <button
             onClick={handleAccept}
             disabled={!agreed || saving}
