@@ -95,9 +95,9 @@ export function LessonPlanDetailPage() {
         schools = (data ?? []) as School[]
       } else {
         const { data: assignments } = await supabase
-          .from('school_coach_assignments')
+          .from('staff_school_assignments')
           .select('school_id, schools(*)')
-          .eq('coach_id', profile!.id)
+          .eq('staff_id', profile!.id)
         schools = (assignments ?? []).map((a: any) => a.schools).filter(Boolean) as School[]
       }
       setMySchools(schools)
