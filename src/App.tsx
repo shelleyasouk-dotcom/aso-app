@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { ParentProtectedRoute } from './components/auth/ParentProtectedRoute'
 import { PortalHomePage } from './pages/portal/PortalHomePage'
@@ -101,7 +101,11 @@ function RootRedirect() {
   if (hash.includes('type=recovery') || (hash.includes('access_token') && hash.includes('recovery'))) {
     return <Navigate to={'/reset-password' + hash} replace />
   }
-  return <Navigate to="/dashboard" replace />
+  const { profile, loading } = useAuth()
+  if (loading) return null
+  // Logged-in staff go to dashboard; everyone else sees the community home
+  if (profile) return <Navigate to="/dashboard" replace />
+  return <Navigate to="/home" replace />
 }
 
 export default function App() {
@@ -115,7 +119,9 @@ export default function App() {
           {/* Public */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          {/* Root: intercept Supabase recovery tokens before redirecting */}
+          {/* Community home — public landing page */}
+          <Route path="/home" element={<PortalHomePage />} />
+          {/* Root: intercept Supabase recovery tokens, then send guests to /home */}
           <Route path="/" element={<RootRedirect />} />
 
           {/* All authenticated staff */}

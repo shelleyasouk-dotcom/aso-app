@@ -12,7 +12,7 @@ type NavItem =
   | { type: 'dropdown'; label: string; items: { path: string; label: string; badge?: string; desc?: string }[] }
 
 const NAV: NavItem[] = [
-  { type: 'link', path: '/portal', label: 'Home', exact: true },
+  { type: 'link', path: '/home', label: 'Home', exact: true },
   { type: 'link', path: '/portal/clubs', label: 'Find Clubs' },
   {
     type: 'dropdown',
@@ -127,7 +127,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
 
           {/* Logo */}
-          <button onClick={() => navigate('/portal')} className="flex items-center gap-2 shrink-0">
+          <button onClick={() => navigate('/home')} className="flex items-center gap-2 shrink-0">
             <div className="bg-white rounded-xl p-1 shrink-0">
               <img src="/Untitled-2 (1).png" alt="Active School" className="h-8 w-8 object-contain" />
             </div>
@@ -242,20 +242,32 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                 )}
               </div>
             ) : (
-              <>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="text-xs font-medium text-white/80 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/10"
+                >
+                  Coach Login
+                </button>
                 <button
                   onClick={() => navigate('/portal/login')}
-                  className="text-sm font-medium text-white/80 hover:text-white transition-colors px-3 py-1.5"
+                  className="text-xs font-medium text-white/80 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/10"
                 >
-                  Log in
+                  Parent Login
+                </button>
+                <button
+                  onClick={() => navigate('/school-portal')}
+                  className="text-xs font-medium text-white/80 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/10"
+                >
+                  School Login
                 </button>
                 <button
                   onClick={() => navigate('/portal/register')}
-                  className="text-sm font-medium bg-[#f5c518] text-[#1a3a6b] rounded-lg px-3 py-1.5 hover:bg-yellow-400 transition-colors"
+                  className="text-xs font-medium bg-[#f5c518] text-[#1a3a6b] rounded-lg px-3 py-1.5 hover:bg-yellow-400 transition-colors"
                 >
                   Register
                 </button>
-              </>
+              </div>
             )}
 
             {/* Mobile hamburger */}
@@ -290,19 +302,35 @@ export function PortalLayout({ children }: PortalLayoutProps) {
               </button>
             ))}
             {!profile && (
-              <div className="flex gap-2 mt-2 pt-2 border-t border-white/10">
-                <button
-                  onClick={() => { navigate('/portal/login'); setMenuOpen(false) }}
-                  className="flex-1 py-2 text-sm font-medium text-white/80 hover:text-white border border-white/20 rounded-lg transition-colors"
-                >
-                  Log in
-                </button>
-                <button
-                  onClick={() => { navigate('/portal/register'); setMenuOpen(false) }}
-                  className="flex-1 py-2 text-sm font-medium bg-[#f5c518] text-[#1a3a6b] rounded-lg hover:bg-yellow-400 transition-colors"
-                >
-                  Register
-                </button>
+              <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-white/10">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { navigate('/login'); setMenuOpen(false) }}
+                    className="flex-1 py-2 text-sm font-medium text-white/80 hover:text-white border border-white/20 rounded-lg transition-colors"
+                  >
+                    Coach Login
+                  </button>
+                  <button
+                    onClick={() => { navigate('/portal/login'); setMenuOpen(false) }}
+                    className="flex-1 py-2 text-sm font-medium text-white/80 hover:text-white border border-white/20 rounded-lg transition-colors"
+                  >
+                    Parent Login
+                  </button>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { navigate('/school-portal'); setMenuOpen(false) }}
+                    className="flex-1 py-2 text-sm font-medium text-white/80 hover:text-white border border-white/20 rounded-lg transition-colors"
+                  >
+                    School Login
+                  </button>
+                  <button
+                    onClick={() => { navigate('/portal/register'); setMenuOpen(false) }}
+                    className="flex-1 py-2 text-sm font-medium bg-[#f5c518] text-[#1a3a6b] rounded-lg hover:bg-yellow-400 transition-colors"
+                  >
+                    Register
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -330,7 +358,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
             <div>
               <p className="font-semibold mb-3 text-sm">Quick Links</p>
               <div className="flex flex-col gap-2">
-                {ALL_LINKS.filter(l => l.path !== '/portal').map(link => (
+                {ALL_LINKS.filter(l => l.path !== '/home').map(link => (
                   <Link key={link.path} to={link.path} className="text-white/60 hover:text-white text-sm transition-colors flex items-center gap-1.5">
                     {link.label}
                     {link.badge && (
