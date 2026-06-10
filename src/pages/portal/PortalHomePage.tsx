@@ -108,42 +108,64 @@ export function PortalHomePage() {
   return (
     <PortalLayout>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[#1a3a6b] via-[#1e4a8c] to-[#142f58] text-white py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <img
-            src="/AS Brand Sheet (2) - Edited.png"
-            alt="Active School"
-            className="w-44 h-44 object-contain mx-auto -mb-2"
-          />
-          <div className="inline-flex items-center gap-2 bg-[#f5c518]/20 text-[#f5c518] text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
-            🏅 UKAG Affiliated Programme Provider
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
-            Gymnastics &amp; Trampolining<br />for Schools
-          </h1>
-          <p className="text-white/70 text-lg mb-8 leading-relaxed">
-            ASO delivers curriculum-based gymnastics and trampolining enrichment programmes in primary and secondary schools — affiliated with the UK Academy of Gymnastics.
-          </p>
+      <section className="bg-gradient-to-br from-[#1a3a6b] via-[#1e4a8c] to-[#142f58] text-white py-16 px-4 overflow-hidden">
+        <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-10">
 
-          {/* Search bar */}
-          <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto">
-            <div className="flex-1 relative">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by school or area…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl text-gray-800 text-sm bg-white border-0 focus:outline-none focus:ring-2 focus:ring-[#f5c518]"
-              />
+          {/* Text side */}
+          <div className="flex-1 text-center lg:text-left">
+            <img
+              src="/AS Brand Sheet (2) - Edited.png"
+              alt="Active School"
+              className="w-36 h-36 object-contain mx-auto lg:mx-0 -mb-2"
+            />
+            <div className="inline-flex items-center gap-2 bg-[#f5c518]/20 text-[#f5c518] text-sm font-semibold px-4 py-1.5 rounded-full mb-5">
+              🏅 UKAG Affiliated Programme Provider
             </div>
-            <button
-              type="submit"
-              className="bg-[#f5c518] text-[#1a3a6b] font-bold px-5 py-3 rounded-xl hover:bg-yellow-400 transition-colors whitespace-nowrap text-sm"
-            >
-              Find Clubs
-            </button>
-          </form>
+            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight mb-4">
+              Gymnastics &amp; Trampolining<br />for Schools
+            </h1>
+            <p className="text-white/70 text-lg mb-8 leading-relaxed max-w-xl">
+              ASO delivers curriculum-based gymnastics and trampolining enrichment programmes in primary and secondary schools — affiliated with the UK Academy of Gymnastics.
+            </p>
+            <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto lg:mx-0">
+              <div className="flex-1 relative">
+                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by school or area…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl text-gray-800 text-sm bg-white border-0 focus:outline-none focus:ring-2 focus:ring-[#f5c518]"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-[#f5c518] text-[#1a3a6b] font-bold px-5 py-3 rounded-xl hover:bg-yellow-400 transition-colors whitespace-nowrap text-sm"
+              >
+                Find Clubs
+              </button>
+            </form>
+          </div>
+
+          {/* Action photo stack — only shown on desktop when photos exist */}
+          {photoUrls.length >= 2 && (
+            <div className="hidden lg:flex shrink-0 relative w-72 h-80">
+              {/* Back photo — rotated right */}
+              <div className="absolute top-6 right-0 w-52 h-64 rounded-3xl overflow-hidden shadow-2xl rotate-3 border-4 border-white/20">
+                <img src={photoUrls[1]} alt="" className="w-full h-full object-cover" />
+              </div>
+              {/* Front photo — rotated left */}
+              <div className="absolute top-0 left-0 w-52 h-64 rounded-3xl overflow-hidden shadow-2xl -rotate-2 border-4 border-[#f5c518]/60">
+                <img src={photoUrls[0]} alt="" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          )}
+          {photoUrls.length === 1 && (
+            <div className="hidden lg:block shrink-0 w-64 h-72 rounded-3xl overflow-hidden shadow-2xl border-4 border-[#f5c518]/60 -rotate-1">
+              <img src={photoUrls[0]} alt="" className="w-full h-full object-cover" />
+            </div>
+          )}
+
         </div>
       </section>
 
@@ -165,30 +187,6 @@ export function PortalHomePage() {
           ))}
         </div>
       </section>
-
-      {/* ── Action Photo Gallery ── */}
-      {photoUrls.length > 0 && (
-        <section className="py-12 px-4 bg-white">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-extrabold text-gray-900 mb-2">ASO in Action</h2>
-              <p className="text-gray-500 text-sm">Real sessions, real children, real progress — across our schools and holiday camps.</p>
-            </div>
-            <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
-              {photoUrls.map((url, i) => (
-                <div key={i} className="break-inside-avoid rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-                  <img
-                    src={url}
-                    alt={`ASO session photo ${i + 1}`}
-                    className="w-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* ── Summer Holiday Camps ── */}
       <section className="bg-gradient-to-br from-[#fff8e1] to-[#fef3c7] border-t-4 border-[#f5c518] py-12 px-4">
@@ -296,10 +294,19 @@ export function PortalHomePage() {
       {/* What we deliver */}
       <section className="bg-gray-50 py-12 mt-8">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">What We Deliver</h2>
-          <p className="text-gray-500 text-sm mb-8">
-            Specialist gymnastics and trampolining — curriculum-based enrichment programmes for primary and secondary schools.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-end gap-6 mb-8">
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">What We Deliver</h2>
+              <p className="text-gray-500 text-sm">
+                Specialist gymnastics and trampolining — curriculum-based enrichment programmes for primary and secondary schools.
+              </p>
+            </div>
+            {photoUrls.length >= 3 && (
+              <div className="shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-[2rem] overflow-hidden shadow-lg rotate-1 border-4 border-white">
+                <img src={photoUrls[2]} alt="" className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {PROGRAMMES.map(prog => (
               <div
@@ -467,14 +474,21 @@ export function PortalHomePage() {
       {/* Work With Us */}
       <section className="bg-gradient-to-br from-[#1a3a6b] via-[#1e4a8c] to-[#142f58] py-14 px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-[#f5c518]/20 text-[#f5c518] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-              🏃 Join the Team
+          <div className="flex flex-col sm:flex-row items-center gap-8 mb-8">
+            {photoUrls.length >= 4 && (
+              <div className="shrink-0 w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-[#f5c518] shadow-xl -rotate-2">
+                <img src={photoUrls[3]} alt="" className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            )}
+            <div className="text-center sm:text-left flex-1">
+              <div className="inline-flex items-center gap-2 bg-[#f5c518]/20 text-[#f5c518] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
+                🏃 Join the Team
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Work With Us</h2>
+              <p className="text-white/70 text-sm max-w-lg leading-relaxed">
+                Passionate about gymnastics or trampolining and working with young people? We're always looking for qualified coaches to join our growing team.
+              </p>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Work With Us</h2>
-            <p className="text-white/70 text-sm max-w-lg mx-auto leading-relaxed">
-              Passionate about gymnastics or trampolining and working with young people? We're always looking for qualified coaches to join our growing team.
-            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
