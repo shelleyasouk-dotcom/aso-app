@@ -70,7 +70,17 @@ export function PortalHomePage() {
       .eq('camp_type', 'summer')
       .gte('end_date', today)
       .order('display_order')
-      .then(({ data }) => setCamps((data ?? []) as HolidayCamp[]))
+      .then(({ data }) => {
+        const all = (data ?? []) as HolidayCamp[]
+        // One card per venue — keep the earliest (lowest display_order) week per city
+        const seen = new Set<string>()
+        const unique = all.filter(c => {
+          if (seen.has(c.city ?? c.venue_name)) return false
+          seen.add(c.city ?? c.venue_name)
+          return true
+        })
+        setCamps(unique)
+      })
 
     // Load website photos: uploaded images + director-approved profile photos
     Promise.all([
@@ -218,7 +228,7 @@ export function PortalHomePage() {
                       <h3 className="font-extrabold text-gray-900 text-base leading-tight">{camp.venue_name}</h3>
                       <div className="flex items-center gap-1 mt-1">
                         <MapPin size={11} className="text-gray-400 shrink-0" />
-                        <p className="text-xs text-gray-400">{camp.city}</p>
+                        <p className="text-xs text-gray-400">{camp.venue_name}</p>
                       </div>
                     </div>
                     {camp.is_full
@@ -228,11 +238,9 @@ export function PortalHomePage() {
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-500">
                     <Calendar size={11} className="text-[#1a3a6b] shrink-0" />
-                    <span className="text-xs">{new Date(camp.start_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – {new Date(camp.end_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                    <span className="text-xs">3 weeks · 28 Jul – 20 Aug 2026</span>
                   </div>
-                  {camp.price_pence > 0 && (
-                    <p className="text-sm font-extrabold text-[#1a3a6b]">£{(camp.price_pence / 100).toFixed(0)} <span className="text-xs font-normal text-gray-400">per child</span></p>
-                  )}
+                  <p className="text-sm font-extrabold text-[#1a3a6b]">from £67.50 <span className="text-xs font-normal text-gray-400">per child</span></p>
                   {camp.is_full ? (
                     <div className="mt-auto w-full text-center bg-gray-100 text-gray-400 font-semibold text-xs py-2.5 rounded-xl">Fully Booked</div>
                   ) : camp.booking_url ? (
@@ -260,11 +268,11 @@ export function PortalHomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
               {[
                 { venue: "Pilgrim's Cross", city: 'Andover', region: 'Hampshire' },
-                { venue: "Saint Martin's Primary School", city: 'Salisbury', region: 'Wiltshire' },
-                { venue: 'Overton Primary School', city: 'Basingstoke', region: 'Hampshire' },
-                { venue: 'Hamworthy Schools', city: 'Poole', region: 'Dorset' },
-                { venue: 'Bristol Venue TBC', city: 'Bristol', region: 'Bristol' },
+                { venue: "St Martin's CE Primary School", city: 'Salisbury', region: 'Wiltshire' },
+                { venue: 'Overton CE Primary School', city: 'Basingstoke', region: 'Hampshire' },
                 { venue: 'Sholing Junior School', city: 'Southampton', region: 'Hampshire' },
+                { venue: 'Twin Sails Infant School', city: 'Poole', region: 'Dorset' },
+                { venue: 'Hotwells Primary School', city: 'Bristol', region: 'Bristol' },
               ].map(v => (
                 <div key={v.venue} className="bg-white rounded-2xl border-2 border-[#f5c518]/60 p-4 flex items-center gap-3">
                   <span className="text-2xl shrink-0">☀️</span>
