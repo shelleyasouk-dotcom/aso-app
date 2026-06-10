@@ -28,6 +28,7 @@ import { SchoolRosterPage } from './pages/school/SchoolRosterPage'
 import { LoginPage } from './pages/auth/LoginPage'
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
+import { ContactMessagesPage } from './pages/messages/ContactMessagesPage'
 import { ClockInPage } from './pages/clockin/ClockInPage'
 import { TimesheetsPage } from './pages/clockin/TimesheetsPage'
 import { RegistersPage } from './pages/registers/RegistersPage'
@@ -130,6 +131,9 @@ export default function App() {
           } />
           <Route path="/my-area" element={
             <ProtectedRoute><MyAreaPage /></ProtectedRoute>
+          } />
+          <Route path="/messages" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}><ContactMessagesPage /></ProtectedRoute>
           } />
           <Route path="/clock-in" element={
             <ProtectedRoute><ClockInPage /></ProtectedRoute>

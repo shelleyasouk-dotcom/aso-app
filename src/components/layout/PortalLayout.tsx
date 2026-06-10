@@ -1,9 +1,41 @@
 import { useState, useRef, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { Menu, X, LogOut, User, ChevronDown, ShoppingCart, Copy, Check, Tag } from 'lucide-react'
+import { Menu, X, LogOut, User, ChevronDown, ShoppingCart, Copy, Check, Tag, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useBasket } from '../../contexts/BasketContext'
+
+// ─── Toggle to false once email is restored ───────────────────────────────────
+const EMAIL_DOWN = true
+
+// ─── Email outage banner ──────────────────────────────────────────────────────
+
+function EmailOutageBanner() {
+  const navigate = useNavigate()
+  const [dismissed, setDismissed] = useState(() => !!localStorage.getItem('email_outage_dismissed_v1'))
+  if (!EMAIL_DOWN || dismissed) return null
+  return (
+    <div className="bg-amber-500 text-white px-4 py-2.5 flex items-center justify-between gap-3">
+      <button
+        onClick={() => navigate('/portal/contact')}
+        className="flex items-center gap-2 flex-1 text-left hover:opacity-90 transition-opacity"
+      >
+        <AlertTriangle size={15} className="shrink-0" />
+        <span className="text-sm font-semibold">
+          ⚠️ Our email (info@activeschool.org.uk) is temporarily down.
+          <span className="underline ml-1 font-bold">Use our contact form to reach us →</span>
+        </span>
+      </button>
+      <button
+        onClick={() => { setDismissed(true); localStorage.setItem('email_outage_dismissed_v1', '1') }}
+        className="shrink-0 text-white/70 hover:text-white"
+        aria-label="Dismiss"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  )
+}
 
 // ─── Early Bird Banner ────────────────────────────────────────────────────────
 
@@ -180,6 +212,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      <EmailOutageBanner />
       <EarlyBirdBanner />
       {/* Header */}
       <header className="bg-[#1a3a6b] text-white sticky top-0 z-30 shadow-lg">

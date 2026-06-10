@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   Bell,
   X,
+  Inbox,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -49,9 +50,12 @@ export function Layout({ children, title, showBack }: LayoutProps) {
 
   const unreadCount = notifications.filter(n => !n.read).length
 
+  const isDirector = profile?.role === 'director'
+
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
     { path: '/my-area', icon: LayoutGrid, label: 'Coach Zone' },
+    ...(isDirector ? [{ path: '/messages', icon: Inbox, label: 'Messages' }] : []),
   ]
 
   return (
@@ -117,7 +121,7 @@ export function Layout({ children, title, showBack }: LayoutProps) {
                 notifications.map(n => (
                   <button
                     key={n.id}
-                    onClick={() => { markRead(n.id); setShowNotifs(false); if (n.type === 'absence_request' || n.type === 'absence_update') navigate('/absences') }}
+                    onClick={() => { markRead(n.id); setShowNotifs(false); if (n.type === 'absence_request' || n.type === 'absence_update') navigate('/absences'); else if (n.type === 'contact_message') navigate('/messages') }}
                     className={`w-full text-left px-4 py-3 border-b border-gray-50 transition-colors hover:bg-gray-50 ${n.read ? 'opacity-60' : ''}`}
                   >
                     <div className="flex items-start gap-2">
