@@ -242,7 +242,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-1">
+              <div className="hidden md:flex items-center gap-1">
                 <button
                   onClick={() => navigate('/login')}
                   className="text-xs font-medium text-white/80 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/10"
