@@ -42,7 +42,7 @@ export function PortalContactPage() {
     })
 
     if (insertErr) {
-      setError('Sorry, something went wrong. Please try again.')
+      setError(`Sorry, something went wrong: ${insertErr.message}`)
       setSubmitting(false)
       return
     }
