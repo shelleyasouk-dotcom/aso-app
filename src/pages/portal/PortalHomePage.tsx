@@ -72,17 +72,32 @@ export function PortalHomePage() {
       .order('display_order')
       .then(({ data }) => setCamps((data ?? []) as HolidayCamp[]))
 
-    // Load website photos from coach-files/website/ folder
-    supabase.storage
-      .from('coach-files')
-      .list('website', { limit: 20, sortBy: { column: 'name', order: 'asc' } })
-      .then(({ data: files }) => {
-        if (!files) return
-        const urls = files
-          .filter(f => f.name && /\.(jpe?g|png|webp|gif)$/i.test(f.name))
-          .map(f => `${SUPABASE_URL}/storage/v1/object/public/coach-files/website/${f.name}`)
-        setPhotoUrls(urls)
-      })
+    // Load website photos: uploaded images + director-approved profile photos
+    Promise.all([
+      supabase.storage
+        .from('coach-files')
+        .list('website', { limit: 40, sortBy: { column: 'name', order: 'asc' } }),
+      supabase
+        .from('profiles')
+        .select('photo_url')
+        .eq('website_photo_approved' as string, true)
+        .not('photo_url', 'is', null),
+    ]).then(([storageRes, profilesRes]) => {
+      const folderUrls = (storageRes.data ?? [])
+        .filter(f => f.name && /\.(jpe?g|png|webp|gif)$/i.test(f.name))
+        .map(f => `${SUPABASE_URL}/storage/v1/object/public/coach-files/website/${f.name}`)
+
+      const profileUrls = ((profilesRes.data ?? []) as { photo_url: string }[])
+        .filter(p => p.photo_url)
+        .map(p => {
+          const path = p.photo_url.startsWith('http')
+            ? p.photo_url
+            : `${SUPABASE_URL}/storage/v1/object/public/coach-files/${p.photo_url}`
+          return path
+        })
+
+      setPhotoUrls([...folderUrls, ...profileUrls])
+    })
   }, [])
 
   function handleSearch(e: React.FormEvent) {

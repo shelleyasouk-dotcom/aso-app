@@ -224,6 +224,8 @@ export function CoachProfilePage() {
 
   const [subject, setSubject] = useState<Profile | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | undefined>()
+  const [websitePhotoApproved, setWebsitePhotoApproved] = useState(false)
+  const [togglingWebsiteApproval, setTogglingWebsiteApproval] = useState(false)
   const [fields, setFields] = useState({
     phone: '', dbs_number: '',
     dbs_expiry: '',          // stored as "date of issue" now
@@ -322,8 +324,21 @@ export function CoachProfilePage() {
     if (data) setPhotoUrl(URL.createObjectURL(data))
   }
 
+  async function toggleWebsitePhotoApproval() {
+    if (!targetId) return
+    setTogglingWebsiteApproval(true)
+    const newVal = !websitePhotoApproved
+    const { error } = await supabase
+      .from('profiles')
+      .update({ website_photo_approved: newVal } as Record<string, unknown>)
+      .eq('id', targetId)
+    if (!error) setWebsitePhotoApproved(newVal)
+    setTogglingWebsiteApproval(false)
+  }
+
   function applyProfile(p: Profile) {
     setSubject(p)
+    setWebsitePhotoApproved(!!(p as Profile & { website_photo_approved?: boolean }).website_photo_approved)
     if (p.photo_url) loadPhotoAsBlob(p.photo_url)
     else setPhotoUrl(undefined)
     setFields({
@@ -739,6 +754,31 @@ export function CoachProfilePage() {
               <div className="mt-3 bg-red-100 border-2 border-red-400 rounded-xl px-3 py-3">
                 <p className="text-sm text-red-800 font-bold mb-1">Upload failed</p>
                 <p className="text-sm text-red-700">{uploadError}</p>
+              </div>
+            )}
+            {/* Director-only: approve this photo for use on the public website */}
+            {viewer?.role === 'director' && !isOwnProfile && subject?.photo_url && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <button
+                  onClick={toggleWebsitePhotoApproval}
+                  disabled={togglingWebsiteApproval}
+                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-colors ${
+                    websitePhotoApproved
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                  }`}
+                >
+                  {websitePhotoApproved ? (
+                    <><CheckCircle2 size={15} /> Approved for website</>
+                  ) : (
+                    <><User size={15} /> Approve for website</>
+                  )}
+                </button>
+                <p className="text-xs text-gray-400 mt-1.5">
+                  {websitePhotoApproved
+                    ? 'This photo appears in the ASO in Action gallery on the home page.'
+                    : 'Only approve photos where the coach is wearing an Active School top.'}
+                </p>
               </div>
             )}
           </Card>
