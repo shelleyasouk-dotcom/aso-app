@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, MapPin, Trophy, Users, ChevronRight, CheckCircle } from 'lucide-react'
+import { Search, MapPin, Trophy, Users, ChevronRight, CheckCircle, Calendar, ExternalLink } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import type { HolidayCamp } from '../../types'
 
 const PROGRAMMES = [
   {
@@ -47,6 +48,7 @@ export function PortalHomePage() {
   const navigate = useNavigate()
   const [regions, setRegions] = useState<string[]>([])
   const [search, setSearch] = useState('')
+  const [camps, setCamps] = useState<HolidayCamp[]>([])
 
   useEffect(() => {
     supabase
@@ -57,6 +59,15 @@ export function PortalHomePage() {
         const unique = [...new Set((data ?? []).map((r: { area: string }) => r.area).filter(Boolean))]
         setRegions(unique.sort())
       })
+    const today = new Date().toISOString().split('T')[0]
+    supabase
+      .from('holiday_camps')
+      .select('*')
+      .eq('is_published', true)
+      .eq('camp_type', 'summer')
+      .gte('end_date', today)
+      .order('display_order')
+      .then(({ data }) => setCamps((data ?? []) as HolidayCamp[]))
   }, [])
 
   function handleSearch(e: React.FormEvent) {
@@ -125,26 +136,105 @@ export function PortalHomePage() {
         </div>
       </section>
 
-      {/* Summer Camps teaser */}
-      <section className="max-w-5xl mx-auto px-4 pt-10 pb-2">
-        <div
-          onClick={() => navigate('/portal/summer-camps')}
-          className="cursor-pointer bg-gradient-to-r from-[#f5c518] to-[#f59e0b] rounded-2xl p-5 flex flex-col sm:flex-row items-center gap-5 hover:shadow-lg transition-shadow"
-        >
-          <span className="text-5xl shrink-0">☀️</span>
-          <div className="flex-1 text-center sm:text-left">
-            <div className="inline-flex items-center gap-1.5 bg-[#1a3a6b]/10 text-[#1a3a6b] text-[10px] font-extrabold px-2.5 py-1 rounded-full mb-1.5 uppercase tracking-wide">
-              New · Summer 2026
+      {/* ── Summer Holiday Camps ── */}
+      <section className="bg-gradient-to-br from-[#fff8e1] to-[#fef3c7] border-t-4 border-[#f5c518] py-12 px-4">
+        <div className="max-w-5xl mx-auto">
+
+          {/* Heading */}
+          <div className="text-center mb-8">
+            <div className="text-5xl mb-3">☀️</div>
+            <div className="inline-flex items-center gap-1.5 bg-[#f5c518] text-[#1a3a6b] text-[10px] font-extrabold px-3 py-1.5 rounded-full mb-3 uppercase tracking-wide">
+              Summer 2026 · Booking Now Open
             </div>
-            <h3 className="font-extrabold text-[#1a3a6b] text-lg leading-tight mb-1">ASO Summer Holiday Camps</h3>
-            <p className="text-[#7c3c00] text-sm">
-              Three camps across different regions — <strong>open to all children</strong>, not just school pupils. Locations and booking coming soon.
+            <h2 className="text-3xl font-extrabold text-[#1a3a6b] leading-tight mb-2">
+              ASO Summer Holiday Gymnastics Camps
+            </h2>
+            <p className="text-[#7c3c00] text-sm max-w-xl mx-auto leading-relaxed">
+              Six venues across England — <strong>open to all children aged 4–11</strong>, no school connection required.
+              UKAG Award Pathway sessions every day.
             </p>
           </div>
-          <div className="shrink-0">
-            <span className="inline-flex items-center gap-1.5 bg-[#1a3a6b] text-white font-bold text-sm px-5 py-2.5 rounded-xl hover:bg-[#142f58] transition-colors">
-              Find Out More <ChevronRight size={15} />
-            </span>
+
+          {/* Venue cards */}
+          {camps.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {camps.map(camp => (
+                <div key={camp.id} className="bg-white rounded-2xl border-2 border-[#f5c518] p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[10px] font-extrabold text-[#1a3a6b]/50 uppercase tracking-widest mb-0.5">{camp.region}</p>
+                      <h3 className="font-extrabold text-gray-900 text-base leading-tight">{camp.venue_name}</h3>
+                      <div className="flex items-center gap-1 mt-1">
+                        <MapPin size={11} className="text-gray-400 shrink-0" />
+                        <p className="text-xs text-gray-400">{camp.city}</p>
+                      </div>
+                    </div>
+                    {camp.is_full
+                      ? <span className="text-[9px] font-extrabold bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full uppercase shrink-0">Full</span>
+                      : <span className="text-[9px] font-extrabold bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase shrink-0">Open</span>
+                    }
+                  </div>
+                  <div className="flex items-center gap-1.5 text-gray-500">
+                    <Calendar size={11} className="text-[#1a3a6b] shrink-0" />
+                    <span className="text-xs">{new Date(camp.start_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – {new Date(camp.end_date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                  {camp.price_pence > 0 && (
+                    <p className="text-sm font-extrabold text-[#1a3a6b]">£{(camp.price_pence / 100).toFixed(0)} <span className="text-xs font-normal text-gray-400">per child</span></p>
+                  )}
+                  {camp.is_full ? (
+                    <div className="mt-auto w-full text-center bg-gray-100 text-gray-400 font-semibold text-xs py-2.5 rounded-xl">Fully Booked</div>
+                  ) : camp.booking_url ? (
+                    <a
+                      href={camp.booking_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto w-full flex items-center justify-center gap-1.5 bg-[#1a3a6b] text-white font-bold text-sm py-2.5 rounded-xl hover:bg-[#142f58] transition-colors"
+                    >
+                      <ExternalLink size={13} /> Book Now
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/portal/summer-camps')}
+                      className="mt-auto w-full flex items-center justify-center gap-1.5 bg-[#1a3a6b]/10 text-[#1a3a6b] font-bold text-sm py-2.5 rounded-xl hover:bg-[#1a3a6b]/20 transition-colors"
+                    >
+                      Find Out More <ChevronRight size={13} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Venue list before DB is populated */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
+              {[
+                { venue: "Pilgrim's Cross", city: 'Andover', region: 'Hampshire' },
+                { venue: "Saint Martin's Primary School", city: 'Salisbury', region: 'Wiltshire' },
+                { venue: 'Overton Primary School', city: 'Basingstoke', region: 'Hampshire' },
+                { venue: 'Hamworthy Junior & Infant School', city: 'Poole', region: 'Dorset' },
+                { venue: 'Bristol Venue TBC', city: 'Bristol', region: 'Bristol' },
+                { venue: 'Sholing Junior School', city: 'Southampton', region: 'Hampshire' },
+              ].map(v => (
+                <div key={v.venue} className="bg-white rounded-2xl border-2 border-[#f5c518]/60 p-4 flex items-center gap-3">
+                  <span className="text-2xl shrink-0">☀️</span>
+                  <div>
+                    <p className="text-[10px] font-extrabold text-[#1a3a6b]/50 uppercase tracking-widest">{v.region}</p>
+                    <p className="font-bold text-gray-900 text-sm leading-tight">{v.venue}</p>
+                    <p className="text-xs text-gray-400">{v.city}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* CTA row */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => navigate('/portal/summer-camps')}
+              className="flex items-center gap-2 bg-[#1a3a6b] text-white font-bold px-7 py-3 rounded-xl hover:bg-[#142f58] transition-colors"
+            >
+              View All Camps & Book <ChevronRight size={16} />
+            </button>
+            <p className="text-xs text-[#7c3c00]">Ages 4–11 · All abilities welcome · UKAG Award Pathway</p>
           </div>
         </div>
       </section>
