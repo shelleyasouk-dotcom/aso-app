@@ -210,7 +210,7 @@ export function PortalHomePage() {
                 { venue: "Pilgrim's Cross", city: 'Andover', region: 'Hampshire' },
                 { venue: "Saint Martin's Primary School", city: 'Salisbury', region: 'Wiltshire' },
                 { venue: 'Overton Primary School', city: 'Basingstoke', region: 'Hampshire' },
-                { venue: 'Hamworthy Junior & Infant School', city: 'Poole', region: 'Dorset' },
+                { venue: 'Hamworthy Schools', city: 'Poole', region: 'Dorset' },
                 { venue: 'Bristol Venue TBC', city: 'Bristol', region: 'Bristol' },
                 { venue: 'Sholing Junior School', city: 'Southampton', region: 'Hampshire' },
               ].map(v => (
