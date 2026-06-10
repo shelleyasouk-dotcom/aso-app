@@ -5,6 +5,8 @@ import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import type { HolidayCamp } from '../../types'
 
+const SUPABASE_URL = 'https://yhsxtjttoxzhmbeenhow.supabase.co'
+
 const PROGRAMMES = [
   {
     emoji: '🤸',
@@ -49,6 +51,7 @@ export function PortalHomePage() {
   const [regions, setRegions] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [camps, setCamps] = useState<HolidayCamp[]>([])
+  const [photoUrls, setPhotoUrls] = useState<string[]>([])
 
   useEffect(() => {
     supabase
@@ -68,6 +71,18 @@ export function PortalHomePage() {
       .gte('end_date', today)
       .order('display_order')
       .then(({ data }) => setCamps((data ?? []) as HolidayCamp[]))
+
+    // Load website photos from coach-files/website/ folder
+    supabase.storage
+      .from('coach-files')
+      .list('website', { limit: 20, sortBy: { column: 'name', order: 'asc' } })
+      .then(({ data: files }) => {
+        if (!files) return
+        const urls = files
+          .filter(f => f.name && /\.(jpe?g|png|webp|gif)$/i.test(f.name))
+          .map(f => `${SUPABASE_URL}/storage/v1/object/public/coach-files/website/${f.name}`)
+        setPhotoUrls(urls)
+      })
   }, [])
 
   function handleSearch(e: React.FormEvent) {
@@ -135,6 +150,30 @@ export function PortalHomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── Action Photo Gallery ── */}
+      {photoUrls.length > 0 && (
+        <section className="py-12 px-4 bg-white">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-extrabold text-gray-900 mb-2">ASO in Action</h2>
+              <p className="text-gray-500 text-sm">Real sessions, real children, real progress — across our schools and holiday camps.</p>
+            </div>
+            <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
+              {photoUrls.map((url, i) => (
+                <div key={i} className="break-inside-avoid rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  <img
+                    src={url}
+                    alt={`ASO session photo ${i + 1}`}
+                    className="w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Summer Holiday Camps ── */}
       <section className="bg-gradient-to-br from-[#fff8e1] to-[#fef3c7] border-t-4 border-[#f5c518] py-12 px-4">
