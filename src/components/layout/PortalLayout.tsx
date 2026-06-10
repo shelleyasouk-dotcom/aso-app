@@ -112,6 +112,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [loginMenuOpen, setLoginMenuOpen] = useState(false)
   const { items } = useBasket()
 
   const isParent = profile?.role === 'parent'
@@ -242,28 +243,36 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                 )}
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-1">
-                <button
-                  onClick={() => navigate('/login')}
-                  className="text-xs font-medium text-white/80 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/10"
-                >
-                  Coach Login
-                </button>
-                <button
-                  onClick={() => navigate('/portal/login')}
-                  className="text-xs font-medium text-white/80 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/10"
-                >
-                  Parent Login
-                </button>
-                <button
-                  onClick={() => navigate('/school-portal')}
-                  className="text-xs font-medium text-white/80 hover:text-white transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/10"
-                >
-                  School Login
-                </button>
+              <div className="flex items-center gap-2">
+                {/* Log In dropdown */}
+                <div className="relative">
+                  <button
+                    onClick={() => setLoginMenuOpen(v => !v)}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
+                  >
+                    Log In <ChevronDown size={14} />
+                  </button>
+                  {loginMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-100 py-1 w-44 z-50">
+                      {[
+                        { label: 'Coach Login',  path: '/login' },
+                        { label: 'Parent Login', path: '/portal/login' },
+                        { label: 'School Login', path: '/school-portal' },
+                      ].map(item => (
+                        <button
+                          key={item.path}
+                          onClick={() => { navigate(item.path); setLoginMenuOpen(false) }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 font-medium"
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={() => navigate('/portal/register')}
-                  className="text-xs font-medium bg-[#f5c518] text-[#1a3a6b] rounded-lg px-3 py-1.5 hover:bg-yellow-400 transition-colors"
+                  className="text-sm font-bold bg-[#f5c518] text-[#1a3a6b] rounded-lg px-3 py-1.5 hover:bg-yellow-400 transition-colors"
                 >
                   Register
                 </button>
@@ -302,35 +311,27 @@ export function PortalLayout({ children }: PortalLayoutProps) {
               </button>
             ))}
             {!profile && (
-              <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-white/10">
-                <div className="flex gap-2">
+              <div className="mt-2 pt-2 border-t border-white/10">
+                <p className="text-xs text-white/40 px-3 mb-1.5">Log in as</p>
+                {[
+                  { label: 'Coach Login',  path: '/login' },
+                  { label: 'Parent Login', path: '/portal/login' },
+                  { label: 'School Login', path: '/school-portal' },
+                ].map(item => (
                   <button
-                    onClick={() => { navigate('/login'); setMenuOpen(false) }}
-                    className="flex-1 py-2 text-sm font-medium text-white/80 hover:text-white border border-white/20 rounded-lg transition-colors"
+                    key={item.path}
+                    onClick={() => { navigate(item.path); setMenuOpen(false) }}
+                    className="w-full text-left px-3 py-2.5 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                   >
-                    Coach Login
+                    {item.label}
                   </button>
-                  <button
-                    onClick={() => { navigate('/portal/login'); setMenuOpen(false) }}
-                    className="flex-1 py-2 text-sm font-medium text-white/80 hover:text-white border border-white/20 rounded-lg transition-colors"
-                  >
-                    Parent Login
-                  </button>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => { navigate('/school-portal'); setMenuOpen(false) }}
-                    className="flex-1 py-2 text-sm font-medium text-white/80 hover:text-white border border-white/20 rounded-lg transition-colors"
-                  >
-                    School Login
-                  </button>
-                  <button
-                    onClick={() => { navigate('/portal/register'); setMenuOpen(false) }}
-                    className="flex-1 py-2 text-sm font-medium bg-[#f5c518] text-[#1a3a6b] rounded-lg hover:bg-yellow-400 transition-colors"
-                  >
-                    Register
-                  </button>
-                </div>
+                ))}
+                <button
+                  onClick={() => { navigate('/portal/register'); setMenuOpen(false) }}
+                  className="w-full mt-2 py-2.5 text-sm font-bold bg-[#f5c518] text-[#1a3a6b] rounded-lg hover:bg-yellow-400 transition-colors"
+                >
+                  Register
+                </button>
               </div>
             )}
           </div>
