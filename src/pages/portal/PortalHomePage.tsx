@@ -76,7 +76,7 @@ export function PortalHomePage() {
     Promise.all([
       supabase.storage
         .from('coach-files')
-        .list('website', { limit: 40, sortBy: { column: 'name', order: 'asc' } }),
+        .list('Public', { limit: 40, sortBy: { column: 'name', order: 'asc' } }),
       supabase
         .from('profiles')
         .select('photo_url')
@@ -85,7 +85,7 @@ export function PortalHomePage() {
     ]).then(([storageRes, profilesRes]) => {
       const folderUrls = (storageRes.data ?? [])
         .filter(f => f.name && /\.(jpe?g|png|webp|gif)$/i.test(f.name))
-        .map(f => `${SUPABASE_URL}/storage/v1/object/public/coach-files/website/${f.name}`)
+        .map(f => `${SUPABASE_URL}/storage/v1/object/public/coach-files/Public/${f.name}`)
 
       const profileUrls = ((profilesRes.data ?? []) as { photo_url: string }[])
         .filter(p => p.photo_url)
