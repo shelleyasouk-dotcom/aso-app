@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 
 // ─── Toggle this to false once email is restored ──────────────────────────────
-const EMAIL_DOWN = true
+const EMAIL_DOWN = false
 
 const ENQUIRY_TYPES = [
   { value: 'parent',      label: '👨‍👩‍👧 Parent / Guardian — booking or child query' },

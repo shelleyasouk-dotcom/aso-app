@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useBasket } from '../../contexts/BasketContext'
 
 // ─── Toggle to false once email is restored ───────────────────────────────────
-const EMAIL_DOWN = true
+const EMAIL_DOWN = false
 
 // ─── Email outage banner ──────────────────────────────────────────────────────
 
