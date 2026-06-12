@@ -68,12 +68,15 @@ export function TimesheetsPage() {
         return
       }
 
-      // Area lead / lead coach: find staff via schools in their area
-      // Step 1: find schools in this area
+      // Area lead / lead coach: find staff via schools in their area(s)
+      // Step 1: find schools in this area — support multi-area leads via profile.areas[]
       let schoolIds: string[] = []
-      if (profile.area) {
+      const areaList = profile.areas && profile.areas.length > 0
+        ? profile.areas
+        : profile.area ? [profile.area] : []
+      if (areaList.length > 0) {
         const { data: areaSchools } = await supabase
-          .from('schools').select('id').eq('area', profile.area)
+          .from('schools').select('id').in('area', areaList)
         schoolIds = (areaSchools ?? []).map((s: { id: string }) => s.id)
       }
 
