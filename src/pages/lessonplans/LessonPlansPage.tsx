@@ -167,22 +167,26 @@ export function LessonPlansPage() {
           </div>
         )}
 
-        {/* Director / area lead: link to staff reports */}
-        {(profile?.role === 'director' || profile?.role === 'area_lead') && (
-          <div className="px-4">
-            <button
-              onClick={() => navigate('/weekly-reports')}
-              className="w-full flex items-center gap-3 bg-[#1a3a6b]/5 border border-[#1a3a6b]/15 rounded-2xl px-4 py-3 text-left hover:bg-[#1a3a6b]/10 transition-colors"
-            >
-              <FileText size={18} className="text-[#1a3a6b] shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-extrabold text-[#1a3a6b]">View Staff Reports</p>
-                <p className="text-xs text-gray-500">See all weekly reports submitted by your coaches</p>
-              </div>
-              <ChevronRight size={15} className="text-gray-300 shrink-0" />
-            </button>
-          </div>
-        )}
+        {/* All staff: link to weekly reports */}
+        <div className="px-4">
+          <button
+            onClick={() => navigate('/weekly-reports')}
+            className="w-full flex items-center gap-3 bg-[#1a3a6b]/5 border border-[#1a3a6b]/15 rounded-2xl px-4 py-3 text-left hover:bg-[#1a3a6b]/10 transition-colors"
+          >
+            <FileText size={18} className="text-[#1a3a6b] shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-extrabold text-[#1a3a6b]">
+                {profile?.role === 'director' || profile?.role === 'area_lead' ? 'View Staff Reports' : 'Weekly Reports'}
+              </p>
+              <p className="text-xs text-gray-500">
+                {profile?.role === 'director' || profile?.role === 'area_lead'
+                  ? 'See all weekly reports submitted by your coaches'
+                  : 'View reports from your school — great for reflection'}
+              </p>
+            </div>
+            <ChevronRight size={15} className="text-gray-300 shrink-0" />
+          </button>
+        </div>
 
         {/* Week cards */}
         <div className="px-4 flex flex-col gap-3">

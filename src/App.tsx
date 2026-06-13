@@ -189,9 +189,7 @@ export default function App() {
             <ProtectedRoute><LessonPlanDetailPage /></ProtectedRoute>
           } />
           <Route path="/weekly-reports" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
-              <WeeklyReportsPage />
-            </ProtectedRoute>
+            <ProtectedRoute><WeeklyReportsPage /></ProtectedRoute>
           } />
           <Route path="/ukag" element={
             <ProtectedRoute><UKAGLibraryPage /></ProtectedRoute>

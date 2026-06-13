@@ -44,8 +44,10 @@ export function WeeklyReportsPage() {
       .order('submitted_at', { ascending: false })
       .limit(300)
 
-    // Scope area leads to their own area's staff
-    if (profile?.role === 'area_lead') {
+    if (profile?.role === 'director') {
+      // Directors see everything — no filter needed
+    } else if (profile?.role === 'area_lead') {
+      // Area leads see their area(s)
       const areaList = profile.areas && profile.areas.length > 0
         ? profile.areas
         : profile.area ? [profile.area] : []
@@ -56,6 +58,15 @@ export function WeeklyReportsPage() {
         if (schoolIds.length > 0) q = q.in('school_id', schoolIds)
         else { setReports([]); setLoading(false); return }
       }
+    } else {
+      // Regular staff: see reports for schools they're assigned to
+      const { data: assignments } = await supabase
+        .from('staff_school_assignments')
+        .select('school_id')
+        .eq('staff_id', profile!.id)
+      const schoolIds = (assignments ?? []).map((a: { school_id: string }) => a.school_id)
+      if (schoolIds.length > 0) q = q.in('school_id', schoolIds)
+      else { setReports([]); setLoading(false); return }
     }
 
     const { data } = await q
