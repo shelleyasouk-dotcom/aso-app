@@ -121,7 +121,7 @@ export function Layout({ children, title, showBack }: LayoutProps) {
                 notifications.map(n => (
                   <button
                     key={n.id}
-                    onClick={() => { markRead(n.id); setShowNotifs(false); if (n.type === 'absence_request' || n.type === 'absence_update') navigate('/absences'); else if (n.type === 'contact_message') navigate('/messages') }}
+                    onClick={() => { markRead(n.id); setShowNotifs(false); if (n.type === 'absence_request' || n.type === 'absence_update') navigate('/absences'); else if (n.type === 'contact_message') navigate('/messages'); else if (n.type === 'week_report') navigate('/weekly-reports') }}
                     className={`w-full text-left px-4 py-3 border-b border-gray-50 transition-colors hover:bg-gray-50 ${n.read ? 'opacity-60' : ''}`}
                   >
                     <div className="flex items-start gap-2">

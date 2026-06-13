@@ -84,6 +84,7 @@ import { JobApplicationsAdminPage } from './pages/admin/JobApplicationsAdminPage
 import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
 import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
 import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
+import { WeeklyReportsPage } from './pages/lessonplans/WeeklyReportsPage'
 import { LessonPlansAdminPage } from './pages/admin/LessonPlansAdminPage'
 import { UKAGLibraryPage } from './pages/ukag/UKAGLibraryPage'
 import { UKAGLevelPage } from './pages/ukag/UKAGLevelPage'
@@ -186,6 +187,11 @@ export default function App() {
           } />
           <Route path="/lesson-plans/week/:week" element={
             <ProtectedRoute><LessonPlanDetailPage /></ProtectedRoute>
+          } />
+          <Route path="/weekly-reports" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <WeeklyReportsPage />
+            </ProtectedRoute>
           } />
           <Route path="/ukag" element={
             <ProtectedRoute><UKAGLibraryPage /></ProtectedRoute>

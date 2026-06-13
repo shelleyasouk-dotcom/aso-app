@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, Clock, ChevronRight, GraduationCap, Lock, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle, Clock, ChevronRight, GraduationCap, Lock, ChevronDown, ChevronUp, FileText } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -164,6 +164,23 @@ export function LessonPlansPage() {
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Director / area lead: link to staff reports */}
+        {(profile?.role === 'director' || profile?.role === 'area_lead') && (
+          <div className="px-4">
+            <button
+              onClick={() => navigate('/weekly-reports')}
+              className="w-full flex items-center gap-3 bg-[#1a3a6b]/5 border border-[#1a3a6b]/15 rounded-2xl px-4 py-3 text-left hover:bg-[#1a3a6b]/10 transition-colors"
+            >
+              <FileText size={18} className="text-[#1a3a6b] shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-extrabold text-[#1a3a6b]">View Staff Reports</p>
+                <p className="text-xs text-gray-500">See all weekly reports submitted by your coaches</p>
+              </div>
+              <ChevronRight size={15} className="text-gray-300 shrink-0" />
+            </button>
           </div>
         )}
 
