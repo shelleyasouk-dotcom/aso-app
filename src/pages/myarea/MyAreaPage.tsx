@@ -69,7 +69,7 @@ export function MyAreaPage() {
 
   const role = profile.role
   const isLead = role === 'lead_coach' || role === 'area_lead' || role === 'director'
-  const isCoach = isLead || role === 'assistant_coach' || role === 'junior_coach'
+
   const isAreaLead = role === 'area_lead' || role === 'director'
   const isDirector = role === 'director'
   const isOutreach = role === 'outreach_worker'
@@ -81,6 +81,13 @@ export function MyAreaPage() {
     { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-sky-50 text-sky-700' },
     { label: 'Expenses', description: 'Submit travel & mileage', icon: ReceiptText, path: '/expenses', color: 'bg-orange-50 text-orange-700' },
     { label: 'Absences', description: 'Log & manage requests', icon: CalendarOff, path: '/absences', color: 'bg-rose-50 text-rose-700' },
+  ]
+
+  const juniorCoachTiles: Tile[] = [
+    { label: 'Semester Plans', description: 'Plans & feedback by week', icon: BookOpen, path: '/lesson-plans', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
+    { label: 'UKAG Library', description: 'Level 1–6 coaching plans', icon: GraduationCap, path: '/ukag', color: 'bg-violet-50 text-violet-800' },
+    { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
+    { label: 'Apparatus CPD', description: 'Floor, Bars, Beam & Vault', icon: Dumbbell, path: '/course/apparatus', color: 'bg-rose-50 text-rose-700' },
   ]
 
   const coachingTiles: Tile[] = [
@@ -121,7 +128,8 @@ export function MyAreaPage() {
 
         <TileSection title="Personal" tiles={personalTiles} />
 
-        {isCoach && <TileSection title="Coaching" tiles={coachingTiles} />}
+        {isLead && <TileSection title="Coaching" tiles={coachingTiles} />}
+        {(role === 'assistant_coach' || role === 'junior_coach') && <TileSection title="Coaching" tiles={juniorCoachTiles} />}
 
         {(isAreaLead || isOutreach) && (
           <TileSection
