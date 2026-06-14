@@ -61,6 +61,67 @@ function getFormValueContains(headers: string[], row: string[], keyword: string,
   return ''
 }
 
+// New format: direct column headers (e.g. "Child's Full Name", "Child's Date of Birth")
+function isDirectColumnFormat(headers: string[]): boolean {
+  return headers.some(h => h.trim() === "Child's Full Name")
+}
+
+function trivialValue(s: string): boolean {
+  return !s || ['no', 'none', 'n/a', 'na', 'no.', '-'].includes(s.toLowerCase().trim())
+}
+
+function parseDirectColumnCsv(headers: string[], dataRows: string[][]): WixChild[] {
+  const col = (name: string) => headers.findIndex(h => h.trim().toLowerCase() === name.toLowerCase())
+
+  const iName     = col("child's full name")
+  const iDob      = col("child's date of birth")
+  const iNeeds    = col("does your child have any additional needs or support requirements?")
+  const iDetails  = col("if yes, please provide details")
+  const iParent   = col("parent / guardian full name")
+  const iRelation = col("relationship to the child")
+  const iPhone    = col("contact number")
+  const iEmail    = col("email")
+
+  if (iName === -1) return []
+
+  return dataRows
+    .filter(row => row[iName]?.trim())
+    .map(row => {
+      const fullName   = row[iName]?.trim() ?? ''
+      const needsYN    = iNeeds >= 0   ? row[iNeeds]?.trim()   ?? '' : ''
+      const needsDet   = iDetails >= 0 ? row[iDetails]?.trim() ?? '' : ''
+
+      // Capture additional needs — include the details field even when "No" if it has meaningful content
+      let additionalNeeds = ''
+      if (needsYN.toLowerCase() === 'yes') {
+        additionalNeeds = trivialValue(needsDet) ? 'Yes — no details provided' : needsDet
+      } else if (!trivialValue(needsDet)) {
+        additionalNeeds = needsDet
+      }
+
+      return {
+        fullName,
+        dob: parseDob(iDob >= 0 ? row[iDob]?.trim() ?? '' : ''),
+        school: '',
+        yearGroup: '',
+        additionalNeeds,
+        parentName:           iParent >= 0   ? row[iParent]?.trim()   ?? '' : '',
+        parentRelationship:   iRelation >= 0 ? row[iRelation]?.trim() ?? '' : '',
+        contactEmail:         iEmail >= 0    ? row[iEmail]?.trim()    ?? '' : row[2]?.trim() ?? '',
+        contactPhone:         iPhone >= 0    ? row[iPhone]?.trim()    ?? '' : '',
+        photoPermission:      null, // not in this CSV format — set manually
+        firstAidConsent:      null,
+        secondaryContactName: '',
+        secondaryContactPhone: '',
+        secondaryContactRelationship: '',
+        tertiaryContactName: '',
+        tertiaryContactPhone: '',
+        tertiaryContactRelationship: '',
+      }
+    })
+    .filter(c => c.fullName)
+}
+
 function parseDob(raw: string): string | null {
   if (!raw) return null
   raw = raw.trim()
@@ -88,7 +149,7 @@ function parseBool(val: string): boolean | null {
   return null
 }
 
-function parseWixCsv(text: string): WixChild[] {
+function parseCsvText(text: string): string[][] {
   const rows: string[][] = []
   for (const line of text.split('\n')) {
     if (!line.trim()) continue
@@ -102,10 +163,21 @@ function parseWixCsv(text: string): WixChild[] {
     row.push(cur)
     rows.push(row)
   }
+  return rows
+}
+
+function parseWixCsv(text: string): WixChild[] {
+  const rows = parseCsvText(text)
   if (rows.length < 2) return []
   const headers = rows[0]
-  const children: WixChild[] = []
 
+  // New format: direct column headers (exported from Wix booking with named columns)
+  if (isDirectColumnFormat(headers)) {
+    return parseDirectColumnCsv(headers, rows.slice(1))
+  }
+
+  // Legacy format: Form Field N / Form Response N pairs
+  const children: WixChild[] = []
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i]
     if (row.length < 5) continue
@@ -118,10 +190,8 @@ function parseWixCsv(text: string): WixChild[] {
     const needsRaw    = getFormValue(headers, row, "Does your child have any additional needs or support requirements?")
     const parentName  = getFormValue(headers, row, 'Parent / Guardian Full Name')
 
-    // Relationship — first occurrence = primary parent
     const parentRelationship        = getFormValueContains(headers, row, 'Relationship to the child', 0)
 
-    // Photo & first aid — flexible keyword search
     const photoRaw    = getFormValueContains(headers, row, 'photo')
                      || getFormValueContains(headers, row, 'photograph')
                      || getFormValueContains(headers, row, 'image')
@@ -129,14 +199,12 @@ function parseWixCsv(text: string): WixChild[] {
                      || getFormValueContains(headers, row, 'administer')
                      || getFormValueContains(headers, row, 'medical')
 
-    // Secondary emergency contact
     const secondaryContactName         = getFormValueContains(headers, row, 'second')
     const secondaryContactPhone        = getFormValueContains(headers, row, 'second phone')
                                       || getFormValueContains(headers, row, 'second contact number')
     const secondaryContactRelationship = getFormValueContains(headers, row, 'second relationship')
                                       || getFormValueContains(headers, row, 'Relationship to the child', 1)
 
-    // Tertiary emergency contact
     const tertiaryContactName         = getFormValueContains(headers, row, 'third')
                                      || getFormValueContains(headers, row, 'tertiary')
     const tertiaryContactPhone        = getFormValueContains(headers, row, 'third phone')

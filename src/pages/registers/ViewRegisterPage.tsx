@@ -93,6 +93,13 @@ export function ViewRegisterPage() {
     await supabase.from('register_entries').update({ present: newVal }).eq('id', entry.id)
   }
 
+  async function setPhotoPermission(childId: string, val: boolean) {
+    await supabase.from('children').update({ photo_permission: val }).eq('id', childId)
+    setEntries(prev => prev.map(e =>
+      e.child?.id === childId ? { ...e, child: { ...e.child!, photo_permission: val } } : e
+    ))
+  }
+
   async function assignCoach(childId: string, coachId: string | null) {
     await supabase.from('children').update({ assigned_coach_id: coachId || null }).eq('id', childId)
     setEntries(prev => prev.map(e =>
@@ -400,16 +407,40 @@ export function ViewRegisterPage() {
 
                       {/* Additional needs */}
                       {hasNeeds && (
-                        <div className="pt-1 border-t border-gray-100">
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 mt-1">
                           <div className="flex items-start gap-2">
-                            <AlertCircle size={11} className="text-amber-500 mt-0.5 shrink-0" />
+                            <AlertCircle size={13} className="text-amber-500 mt-0.5 shrink-0" />
                             <div>
-                              <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider mb-0.5">Additional Needs</p>
-                              <p className="text-xs text-gray-700 leading-snug">{child.additional_needs}</p>
+                              <p className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider mb-0.5">Additional Needs / Notes</p>
+                              <p className="text-xs text-amber-900 leading-snug">{child.additional_needs}</p>
                             </div>
                           </div>
                         </div>
                       )}
+
+                      {/* Photo permission */}
+                      <div className="pt-1 border-t border-gray-100">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Photo permission</p>
+                        <div className="flex gap-2">
+                          {(['yes', 'no', 'unknown'] as const).map(opt => {
+                            const isSet = opt === 'yes' ? child.photo_permission === true : opt === 'no' ? child.photo_permission === false : child.photo_permission === null
+                            return (
+                              <button
+                                key={opt}
+                                onClick={() => opt !== 'unknown' && setPhotoPermission(child.id, opt === 'yes')}
+                                disabled={opt === 'unknown'}
+                                className={`px-3 py-1 rounded-full text-[10px] font-bold capitalize transition-colors ${
+                                  isSet
+                                    ? opt === 'yes' ? 'bg-green-200 text-green-800' : opt === 'no' ? 'bg-red-200 text-red-700' : 'bg-gray-100 text-gray-400'
+                                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                                }`}
+                              >
+                                {opt === 'unknown' ? '?' : opt}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
 
                       {!child.parent_name && !child.contact_phone && !child.secondary_contact_name && !hasNeeds && (
                         <p className="text-xs text-gray-400 text-center py-1">No form responses recorded.</p>
