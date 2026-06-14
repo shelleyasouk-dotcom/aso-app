@@ -69,6 +69,7 @@ export function MyAreaPage() {
 
   const role = profile.role
   const isLead = role === 'lead_coach' || role === 'area_lead' || role === 'director'
+  const isCoach = isLead || role === 'assistant_coach' || role === 'junior_coach'
   const isAreaLead = role === 'area_lead' || role === 'director'
   const isDirector = role === 'director'
   const isOutreach = role === 'outreach_worker'
@@ -120,7 +121,7 @@ export function MyAreaPage() {
 
         <TileSection title="Personal" tiles={personalTiles} />
 
-        {isLead && <TileSection title="Coaching" tiles={coachingTiles} />}
+        {isCoach && <TileSection title="Coaching" tiles={coachingTiles} />}
 
         {(isAreaLead || isOutreach) && (
           <TileSection
