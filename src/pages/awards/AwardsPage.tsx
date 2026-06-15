@@ -222,8 +222,8 @@ export function AwardsPage() {
                 </div>
               )}
 
-              {/* Add child section — only for coaches in their own class view */}
-              {viewMode === 'mine' && !isAreaLead && (
+              {/* Add child section — visible to all coaches and to area leads/directors */}
+              {(viewMode === 'mine' || isAreaLead) && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">
