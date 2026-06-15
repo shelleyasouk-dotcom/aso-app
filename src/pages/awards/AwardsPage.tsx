@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronRight, Plus, X, Users, UserCheck,
-  GraduationCap, Loader2, UserCog,
+  GraduationCap, Loader2, UserCog, Upload, CheckCircle,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -33,6 +33,13 @@ export function AwardsPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [adding, setAdding] = useState(false)
+
+  // CSV upload
+  const csvRef = useRef<HTMLInputElement>(null)
+  const [showCsv, setShowCsv] = useState(false)
+  const [csvParsed, setCsvParsed] = useState<{ first: string; last: string }[]>([])
+  const [csvUploading, setCsvUploading] = useState(false)
+  const [csvDone, setCsvDone] = useState(false)
 
   const isLead = profile?.role === 'lead_coach' || profile?.role === 'area_lead' || profile?.role === 'director'
   const isAreaLead = profile?.role === 'area_lead' || profile?.role === 'director'
@@ -146,6 +153,56 @@ export function AwardsPage() {
     setChildren(prev => prev.filter(c => c.id !== childId))
   }
 
+  function handleCsvFile(file: File) {
+    const reader = new FileReader()
+    reader.onload = e => {
+      const text = e.target?.result as string
+      const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+      const parsed: { first: string; last: string }[] = []
+      // Detect if first row is a header (contains "name" / "first" / "last")
+      const firstRow = lines[0]?.toLowerCase() ?? ''
+      const startIdx = (firstRow.includes('first') || firstRow.includes('name') || firstRow.includes('last')) ? 1 : 0
+      for (let i = startIdx; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim())
+        const first = cols[0] ?? ''
+        const last = cols[1] ?? ''
+        if (first) parsed.push({ first, last })
+      }
+      setCsvParsed(parsed)
+      setCsvDone(false)
+    }
+    reader.readAsText(file)
+  }
+
+  async function bulkInsertCsv() {
+    if (!csvParsed.length || !selectedSchoolId || !profile || !semester) return
+    setCsvUploading(true)
+    // Fetch existing to avoid duplicates
+    const { data: existing } = await supabase
+      .from('class_children')
+      .select('first_name, last_name')
+      .eq('school_id', selectedSchoolId)
+      .eq('academic_year', semester.academic_year)
+      .eq('semester_number', semester.semester_number)
+    const existingSet = new Set((existing ?? []).map((c: any) => `${c.first_name}|${c.last_name}`.toLowerCase()))
+    const toInsert = csvParsed
+      .filter(c => !existingSet.has(`${c.first}|${c.last}`.toLowerCase()))
+      .map(c => ({
+        first_name: c.first,
+        last_name: c.last,
+        school_id: selectedSchoolId,
+        academic_year: semester.academic_year,
+        semester_number: semester.semester_number,
+        added_by: profile.id,
+      }))
+    if (toInsert.length > 0) {
+      await supabase.from('class_children').insert(toInsert)
+    }
+    await loadChildren()
+    setCsvUploading(false)
+    setCsvDone(true)
+  }
+
   async function reassignChild(childId: string, newCoachId: string) {
     const coach = schoolCoaches.find(c => c.id === newCoachId)
     await supabase.from('class_children').update({ added_by: newCoachId }).eq('id', childId)
@@ -229,15 +286,78 @@ export function AwardsPage() {
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                       My Class — {myCount} / {MAX_CHILDREN}
                     </p>
-                    {myCount < MAX_CHILDREN && !showAdd && (
-                      <button
-                        onClick={() => setShowAdd(true)}
-                        className="flex items-center gap-1 text-xs font-bold text-[#1a3a6b] bg-[#1a3a6b]/10 px-3 py-1.5 rounded-full"
-                      >
-                        <Plus size={12} /> Add child
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isLead && !showCsv && (
+                        <button
+                          onClick={() => { setShowCsv(true); setShowAdd(false); setCsvParsed([]); setCsvDone(false) }}
+                          className="flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 px-3 py-1.5 rounded-full"
+                        >
+                          <Upload size={12} /> Upload list
+                        </button>
+                      )}
+                      {myCount < MAX_CHILDREN && !showAdd && (
+                        <button
+                          onClick={() => { setShowAdd(true); setShowCsv(false) }}
+                          className="flex items-center gap-1 text-xs font-bold text-[#1a3a6b] bg-[#1a3a6b]/10 px-3 py-1.5 rounded-full"
+                        >
+                          <Plus size={12} /> Add child
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {/* CSV upload panel */}
+                  {showCsv && (
+                    <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3 mb-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-bold text-gray-700">Upload children from CSV</p>
+                        <button onClick={() => setShowCsv(false)} className="text-gray-300 hover:text-gray-500"><X size={16} /></button>
+                      </div>
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        Create a spreadsheet with two columns: <strong>First Name</strong> and <strong>Last Name</strong>. Save as CSV and upload below.
+                      </p>
+                      <button
+                        onClick={() => csvRef.current?.click()}
+                        className="border-2 border-dashed border-gray-200 rounded-xl py-4 flex flex-col items-center gap-1.5 text-gray-400 hover:border-gray-300 transition-colors"
+                      >
+                        <Upload size={20} />
+                        <span className="text-xs font-semibold">Tap to select CSV file</span>
+                      </button>
+                      <input ref={csvRef} type="file" accept=".csv,.txt" className="hidden"
+                        onChange={e => { const f = e.target.files?.[0]; if (f) handleCsvFile(f); e.target.value = '' }} />
+
+                      {csvParsed.length > 0 && !csvDone && (
+                        <>
+                          <div className="max-h-40 overflow-y-auto flex flex-col gap-1">
+                            {csvParsed.map((c, i) => (
+                              <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-gray-50 last:border-0">
+                                <span className="text-gray-700">{c.first} {c.last}</span>
+                                <button onClick={() => setCsvParsed(prev => prev.filter((_, idx) => idx !== i))} className="text-gray-300 hover:text-red-400"><X size={12} /></button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => setShowCsv(false)} className="flex-1 border border-gray-200 text-gray-600 font-bold text-sm py-2.5 rounded-xl">Cancel</button>
+                            <button
+                              onClick={bulkInsertCsv}
+                              disabled={csvUploading}
+                              className="flex-1 bg-[#1a3a6b] text-white font-bold text-sm py-2.5 rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-50"
+                            >
+                              {csvUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                              Add {csvParsed.length} children
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {csvDone && (
+                        <div className="flex items-center gap-2 text-green-700 bg-green-50 rounded-xl px-3 py-2.5">
+                          <CheckCircle size={16} />
+                          <span className="text-sm font-semibold">Children added successfully!</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {showAdd && (
                     <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-col gap-3 mb-3">
