@@ -150,12 +150,29 @@ export function GuidePage() {
         </Section>
 
         <Section icon={Award} title="UKAG Awards — tracking children's progress">
-          <Step number={1} text="Tap Awards in Coach Zone." />
-          <Step number={2} text="Search for a child by name or browse by school." />
-          <Step number={3} text="Tap a child's name to view their skill profile." />
-          <Step number={4} text="Tick skills as they are demonstrated during sessions." />
-          <Step number={5} text="When enough skills are achieved, you can award the next UKAG level." />
+          <Step number={1} text="Tap Awards in Coach Zone, then select your school." />
+          <Step number={2} text="Switch between My Class (your children) and All Children (everyone at the school) using the tabs at the top." />
+          <Step number={3} text="In All Children, tap the Add to my class button next to any child to claim them — they will appear in your My Class list." />
+          <Step number={4} text="Or tap Add child to add a child manually — enter their first and last name and tap Add." />
+          <Step number={5} text="Tap a child's name to open their award tracker." />
+          <Step number={6} text="Choose an apparatus: Floor, Bars, Beam, or Rebound, to see the skill levels." />
+          <Step number={7} text="Tap any skill to mark it as achieved. Skills save automatically." />
+          <Step number={8} text="When a child completes all skills for a level, tap Award Level to sign it off. A certificate is recorded on their tracker." />
+          <Note text="You can add up to 24 children to your class per semester. A child must be in your class before you can sign off their level — use All Children to claim them first if needed." />
         </Section>
+
+        {isManager && (
+          <Section icon={Upload} title="Awards — uploading a class list (lead coaches)">
+            <Step number={1} text="Open a spreadsheet (Excel or Google Sheets) and create two columns: First Name and Last Name." />
+            <Step number={2} text="Enter each child on their own row. No other columns needed." />
+            <Step number={3} text="Save or export the file as CSV." />
+            <Step number={4} text="In Awards, select the school, then tap the green Upload list button." />
+            <Step number={5} text="Tap the upload area and choose your CSV file. A preview of the names appears." />
+            <Step number={6} text="Tap the Add children button to import. Duplicates are skipped automatically." />
+            <Step number={7} text="Coaches at that school can now go to All Children and tap Add to my class to claim their group." />
+            <Note text="Only lead coaches, area leads, and directors can upload lists. Coaches can always add children manually too." />
+          </Section>
+        )}
 
         <Section icon={Megaphone} title="Announcements">
           <Step number={1} text="Pinned announcements appear on your home screen automatically." />
