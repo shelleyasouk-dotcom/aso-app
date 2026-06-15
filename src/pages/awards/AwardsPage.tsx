@@ -102,7 +102,7 @@ export function AwardsPage() {
       .eq('semester_number', semester.semester_number)
       .order('last_name')
 
-    if (!isLead || viewMode === 'mine') {
+    if (viewMode === 'mine') {
       query = query.eq('added_by', profile.id)
     }
 
@@ -260,12 +260,12 @@ export function AwardsPage() {
 
           {selectedSchoolId && semester && (
             <>
-              {/* Lead view toggle — lead coaches can switch; directors/area leads always see all */}
-              {isLead && !isAreaLead && (
+              {/* View toggle — all roles can switch; area leads/directors default to "all" */}
+              {!isAreaLead && (
                 <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
                   {([
                     { id: 'mine', label: 'My Class', icon: UserCheck },
-                    { id: 'all', label: 'All Coaches', icon: Users },
+                    { id: 'all', label: 'All Children', icon: Users },
                   ] as const).map(tab => (
                     <button
                       key={tab.id}
@@ -413,7 +413,7 @@ export function AwardsPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {/* Group by coach when in "all" view */}
+                  {/* Group by coach when leads are in "all" view */}
                   {viewMode === 'all' && isLead ? (
                     (() => {
                       const byCoach: Record<string, { name: string; children: ClassChildWithProgress[] }> = {}
@@ -442,6 +442,19 @@ export function AwardsPage() {
                         </div>
                       ))
                     })()
+                  ) : viewMode === 'all' && !isLead ? (
+                    /* Non-leads in "all" view: flat list with "Assign to me" for unassigned children */
+                    children.map(child => (
+                      <ChildCard
+                        key={child.id}
+                        child={child}
+                        canRemove={false}
+                        onRemove={() => {}}
+                        onClick={() => navigate(`/awards/${child.id}`)}
+                        assignedToMe={child.added_by === profile?.id}
+                        onAssignToMe={child.added_by !== profile?.id ? () => reassignChild(child.id, profile!.id) : undefined}
+                      />
+                    ))
                   ) : (
                     children.map(child => (
                       <ChildCard
@@ -464,7 +477,7 @@ export function AwardsPage() {
 }
 
 function ChildCard({
-  child, canRemove, onRemove, onClick, coaches = [], onReassign,
+  child, canRemove, onRemove, onClick, coaches = [], onReassign, assignedToMe, onAssignToMe,
 }: {
   child: ClassChildWithProgress
   canRemove: boolean
@@ -472,10 +485,21 @@ function ChildCard({
   onClick: () => void
   coaches?: Profile[]
   onReassign?: (coachId: string) => void
+  assignedToMe?: boolean
+  onAssignToMe?: () => void
 }) {
   const [showAssign, setShowAssign] = useState(false)
+  const [claiming, setClaiming] = useState(false)
   const initials = `${child.first_name[0]}${child.last_name[0]}`.toUpperCase()
   const fullName = `${child.first_name} ${child.last_name}`
+  const coachName = (child.added_by_profile as any)?.full_name
+
+  async function handleClaim() {
+    if (!onAssignToMe) return
+    setClaiming(true)
+    await onAssignToMe()
+    setClaiming(false)
+  }
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-2 shadow-sm mb-1">
@@ -486,6 +510,9 @@ function ChildCard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-[#1a3a6b] text-sm">{fullName}</p>
+            {assignedToMe !== undefined && coachName && (
+              <p className="text-[10px] text-gray-400 mt-0.5">{assignedToMe ? 'My class' : coachName}</p>
+            )}
             <div className="flex gap-1.5 mt-1 flex-wrap">
               {APPARATUS_LIST.map(app => {
                 const level = child.progress[app]
@@ -505,6 +532,21 @@ function ChildCard({
           <ChevronRight size={16} className="text-gray-300 shrink-0" />
         </button>
         <div className="flex items-center gap-1 shrink-0">
+          {onAssignToMe && !assignedToMe && (
+            <button
+              onClick={e => { e.stopPropagation(); handleClaim() }}
+              disabled={claiming}
+              className="flex items-center gap-1 text-[10px] font-bold text-[#1a3a6b] bg-[#1a3a6b]/10 px-2.5 py-1.5 rounded-full hover:bg-[#1a3a6b]/20 transition-colors disabled:opacity-50"
+            >
+              {claiming ? <Loader2 size={10} className="animate-spin" /> : <UserCheck size={10} />}
+              Add to my class
+            </button>
+          )}
+          {assignedToMe === true && (
+            <span className="flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 px-2.5 py-1.5 rounded-full">
+              <CheckCircle size={10} /> Mine
+            </span>
+          )}
           {coaches.length > 0 && onReassign && (
             <button
               onClick={e => { e.stopPropagation(); setShowAssign(v => !v) }}
