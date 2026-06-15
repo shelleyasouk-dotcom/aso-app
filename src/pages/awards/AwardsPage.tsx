@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ChevronRight, Plus, X, Users, UserCheck,
   GraduationCap, Loader2, UserCog, Upload, CheckCircle,
@@ -20,10 +20,11 @@ const MAX_CHILDREN = 24
 export function AwardsPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [semester, setSemester] = useState<AcademicSemester | null>(null)
   const [schools, setSchools] = useState<School[]>([])
-  const [selectedSchoolId, setSelectedSchoolId] = useState('')
+  const [selectedSchoolId, setSelectedSchoolId] = useState(searchParams.get('school') ?? '')
   const [children, setChildren] = useState<ClassChildWithProgress[]>([])
   const [schoolCoaches, setSchoolCoaches] = useState<Profile[]>([])
   const [loading, setLoading] = useState(false)
@@ -45,8 +46,20 @@ export function AwardsPage() {
   const isAreaLead = profile?.role === 'area_lead' || profile?.role === 'director'
 
   // Directors/area leads see all coaches by default; coaches see their own class
-  const [viewMode, setViewMode] = useState<'mine' | 'all'>('mine')
-  useEffect(() => { if (isAreaLead) setViewMode('all') }, [isAreaLead])
+  const [viewMode, setViewMode] = useState<'mine' | 'all'>(
+    (searchParams.get('view') as 'mine' | 'all') ?? 'mine'
+  )
+  useEffect(() => { if (isAreaLead && !searchParams.get('view')) setViewMode('all') }, [isAreaLead])
+
+  // Keep URL in sync with selected school and view mode so back-navigation restores state
+  function selectSchool(id: string) {
+    setSelectedSchoolId(id)
+    setSearchParams(p => { p.set('school', id); return p }, { replace: true })
+  }
+  function selectViewMode(mode: 'mine' | 'all') {
+    setViewMode(mode)
+    setSearchParams(p => { p.set('view', mode); return p }, { replace: true })
+  }
 
   // Load semester + schools
   useEffect(() => {
@@ -60,7 +73,7 @@ export function AwardsPage() {
         .then(({ data }) => {
           const s = (data ?? []) as School[]
           setSchools(s)
-          if (s.length === 1) setSelectedSchoolId(s[0].id)
+          if (s.length === 1 && !searchParams.get('school')) selectSchool(s[0].id)
         })
     } else {
       supabase.from('staff_school_assignments')
@@ -69,7 +82,7 @@ export function AwardsPage() {
         .then(({ data }) => {
           const s = (data ?? []).map((a: any) => a.schools).filter(Boolean) as School[]
           setSchools(s)
-          if (s.length === 1) setSelectedSchoolId(s[0].id)
+          if (s.length === 1 && !searchParams.get('school')) selectSchool(s[0].id)
         })
     }
   }, [profile])
@@ -240,7 +253,7 @@ export function AwardsPage() {
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1.5">School</label>
               <select
                 value={selectedSchoolId}
-                onChange={e => setSelectedSchoolId(e.target.value)}
+                onChange={e => selectSchool(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white"
               >
                 <option value="">Select a school…</option>
@@ -269,7 +282,7 @@ export function AwardsPage() {
                   ] as const).map(tab => (
                     <button
                       key={tab.id}
-                      onClick={() => setViewMode(tab.id)}
+                      onClick={() => selectViewMode(tab.id)}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${viewMode === tab.id ? 'bg-white text-[#1a3a6b] shadow-sm' : 'text-gray-500'}`}
                     >
                       <tab.icon size={13} />
