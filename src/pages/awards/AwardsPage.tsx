@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronRight, Plus, X, Users, UserCheck,
-  GraduationCap, Loader2,
+  GraduationCap, Loader2, UserCog,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { APPARATUS_LIST, APPARATUS_LABELS } from '../../lib/skills'
 import type { Apparatus } from '../../lib/skills'
-import type { School, AcademicSemester, ClassChild } from '../../types'
+import type { School, AcademicSemester, ClassChild, Profile } from '../../types'
 
 interface ClassChildWithProgress extends ClassChild {
   progress: Record<Apparatus, number>
@@ -25,6 +25,7 @@ export function AwardsPage() {
   const [schools, setSchools] = useState<School[]>([])
   const [selectedSchoolId, setSelectedSchoolId] = useState('')
   const [children, setChildren] = useState<ClassChildWithProgress[]>([])
+  const [schoolCoaches, setSchoolCoaches] = useState<Profile[]>([])
   const [loading, setLoading] = useState(false)
 
   // Add child form
@@ -65,6 +66,17 @@ export function AwardsPage() {
         })
     }
   }, [profile])
+
+  // Load coaches at selected school (for lead reassign)
+  useEffect(() => {
+    if (!selectedSchoolId || !isLead) return
+    supabase.from('staff_school_assignments')
+      .select('staff:profiles(id, full_name, role)')
+      .eq('school_id', selectedSchoolId)
+      .then(({ data }) => {
+        setSchoolCoaches((data ?? []).map((d: any) => d.staff).filter(Boolean) as Profile[])
+      })
+  }, [selectedSchoolId, isLead])
 
   // Load children when school/semester/viewMode changes
   useEffect(() => {
@@ -132,6 +144,16 @@ export function AwardsPage() {
   async function removeChild(childId: string) {
     await supabase.from('class_children').delete().eq('id', childId)
     setChildren(prev => prev.filter(c => c.id !== childId))
+  }
+
+  async function reassignChild(childId: string, newCoachId: string) {
+    const coach = schoolCoaches.find(c => c.id === newCoachId)
+    await supabase.from('class_children').update({ added_by: newCoachId }).eq('id', childId)
+    setChildren(prev => prev.map(c =>
+      c.id === childId
+        ? { ...c, added_by: newCoachId, added_by_profile: coach ? { id: coach.id, full_name: coach.full_name } : c.added_by_profile }
+        : c
+    ))
   }
 
   const myCount = children.filter(c => c.added_by === profile?.id).length
@@ -293,6 +315,8 @@ export function AwardsPage() {
                               canRemove={child.added_by === profile?.id || isAreaLead}
                               onRemove={() => removeChild(child.id)}
                               onClick={() => navigate(`/awards/${child.id}`)}
+                              coaches={isLead ? schoolCoaches : []}
+                              onReassign={(newCoachId) => reassignChild(child.id, newCoachId)}
                             />
                           ))}
                         </div>
@@ -320,51 +344,80 @@ export function AwardsPage() {
 }
 
 function ChildCard({
-  child, canRemove, onRemove, onClick,
+  child, canRemove, onRemove, onClick, coaches = [], onReassign,
 }: {
   child: ClassChildWithProgress
   canRemove: boolean
   onRemove: () => void
   onClick: () => void
+  coaches?: Profile[]
+  onReassign?: (coachId: string) => void
 }) {
+  const [showAssign, setShowAssign] = useState(false)
   const initials = `${child.first_name[0]}${child.last_name[0]}`.toUpperCase()
   const fullName = `${child.first_name} ${child.last_name}`
 
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-sm">
-      <button onClick={onClick} className="flex items-center gap-3 flex-1 min-w-0 text-left">
-        <div className="w-10 h-10 bg-[#1a3a6b] rounded-full flex items-center justify-center shrink-0">
-          <span className="text-white font-bold text-sm">{initials}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-[#1a3a6b] text-sm">{fullName}</p>
-          <div className="flex gap-1.5 mt-1 flex-wrap">
-            {APPARATUS_LIST.map(app => {
-              const level = child.progress[app]
-              return (
-                <span
-                  key={app}
-                  className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                    level > 0
-                      ? 'bg-[#f5c518]/20 text-[#1a3a6b]'
-                      : 'bg-gray-100 text-gray-400'
-                  }`}
-                >
-                  {APPARATUS_LABELS[app]} {level > 0 ? `L${level}` : '–'}
-                </span>
-              )
-            })}
+    <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-2 shadow-sm mb-1">
+      <div className="flex items-center gap-3">
+        <button onClick={onClick} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+          <div className="w-10 h-10 bg-[#1a3a6b] rounded-full flex items-center justify-center shrink-0">
+            <span className="text-white font-bold text-sm">{initials}</span>
           </div>
-        </div>
-        <ChevronRight size={16} className="text-gray-300 shrink-0" />
-      </button>
-      {canRemove && (
-        <button
-          onClick={e => { e.stopPropagation(); onRemove() }}
-          className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors shrink-0"
-        >
-          <X size={14} />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-[#1a3a6b] text-sm">{fullName}</p>
+            <div className="flex gap-1.5 mt-1 flex-wrap">
+              {APPARATUS_LIST.map(app => {
+                const level = child.progress[app]
+                return (
+                  <span
+                    key={app}
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      level > 0 ? 'bg-[#f5c518]/20 text-[#1a3a6b]' : 'bg-gray-100 text-gray-400'
+                    }`}
+                  >
+                    {APPARATUS_LABELS[app]} {level > 0 ? `L${level}` : '–'}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+          <ChevronRight size={16} className="text-gray-300 shrink-0" />
         </button>
+        <div className="flex items-center gap-1 shrink-0">
+          {coaches.length > 0 && onReassign && (
+            <button
+              onClick={e => { e.stopPropagation(); setShowAssign(v => !v) }}
+              className={`p-1.5 rounded-lg transition-colors ${showAssign ? 'bg-[#1a3a6b]/10 text-[#1a3a6b]' : 'text-gray-300 hover:text-[#1a3a6b]'}`}
+              title="Assign to coach"
+            >
+              <UserCog size={14} />
+            </button>
+          )}
+          {canRemove && (
+            <button
+              onClick={e => { e.stopPropagation(); onRemove() }}
+              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {showAssign && coaches.length > 0 && onReassign && (
+        <div className="flex gap-2 pt-1 border-t border-gray-100">
+          <UserCog size={13} className="text-gray-400 mt-2 shrink-0" />
+          <select
+            defaultValue={child.added_by}
+            onChange={e => { onReassign(e.target.value); setShowAssign(false) }}
+            className="flex-1 border border-gray-200 rounded-xl px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20"
+          >
+            {coaches.map(c => (
+              <option key={c.id} value={c.id}>{c.full_name}</option>
+            ))}
+          </select>
+        </div>
       )}
     </div>
   )
