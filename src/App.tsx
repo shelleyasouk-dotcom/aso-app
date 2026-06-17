@@ -308,24 +308,24 @@ export default function App() {
             </ProtectedRoute>
           } />
 
-          {/* Incident reports — lead coaches create, area leads/directors review */}
+          {/* Incident reports — coaches create, area leads/directors review */}
           <Route path="/incidents" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
               <IncidentReportsPage />
             </ProtectedRoute>
           } />
           <Route path="/incidents/new" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
               <IncidentReportFormPage />
             </ProtectedRoute>
           } />
           <Route path="/incidents/:id" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
               <IncidentReportDetailPage />
             </ProtectedRoute>
           } />
           <Route path="/incidents/:id/edit" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
               <IncidentReportFormPage />
             </ProtectedRoute>
           } />
