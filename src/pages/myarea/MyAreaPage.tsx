@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import {
   Clock,
-  ClipboardList,
   Award,
   Settings,
   Users,
@@ -97,7 +96,6 @@ export function MyAreaPage() {
     { label: 'Leadership Course', description: 'Lead Coach certification', icon: Medal, path: '/course/leadership', color: 'bg-yellow-50 text-yellow-700' },
     { label: 'Apparatus CPD', description: 'Floor, Bars, Beam & Vault', icon: Dumbbell, path: '/course/apparatus', color: 'bg-rose-50 text-rose-700' },
     { label: 'Area Lead Course', description: 'Regional leadership programme', icon: GraduationCap, path: '/course/area-lead', color: 'bg-violet-50 text-violet-700' },
-    { label: 'Registers', description: 'Session attendance', icon: ClipboardList, path: '/registers', color: 'bg-yellow-50 text-[#1a3a6b]' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
     { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
     ...(role === 'lead_coach' ? [{ label: 'Staff Timesheets', description: 'View your team\'s hours', icon: Users, path: '/timesheets', color: 'bg-purple-50 text-purple-800' }] : []),

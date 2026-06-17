@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Clock, LogIn, LogOut, UserCircle, ReceiptText, FileText, Megaphone,
   ChevronDown, ChevronUp, ArrowLeft, CalendarOff, CalendarCheck,
-  ClipboardList, Award, Building2, UsersRound, FolderOpen, Bell,
+  Award, Building2, UsersRound, FolderOpen, Bell,
   BookOpen, GraduationCap, Medal, Dumbbell, ShieldAlert, Upload,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -224,23 +224,6 @@ export function GuidePage() {
               <Step number={3} text="Each module covers a different leadership topic with reading sections and a quiz." />
               <Step number={4} text="Pass all modules to earn the UKAG Lead Coach Award certificate, which is saved to your profile." />
               <Note text="Your area lead receives a notification when you complete the full course." />
-            </Section>
-
-            <Section icon={ClipboardList} title="Session registers — taking and viewing attendance">
-              <Step number={1} text="Tap Session Registers in Coach Zone." />
-              <Step number={2} text="Tap New Register, select the school and date, then tick the children present." />
-              <Step number={3} text="Tap Save Register — the record is stored and visible to your area lead." />
-              <Step number={4} text="Past registers appear in the list. Tap any to view the full attendance summary." />
-            </Section>
-
-            <Section icon={Upload} title="Importing a Wix register — adding children from a booking export">
-              <Step number={1} text="Export the participant list from your Wix booking session as a CSV file." />
-              <Step number={2} text="Tap Session Registers in Coach Zone, then tap the upload icon (top right of the page)." />
-              <Step number={3} text="Select the CSV file — the app reads the school name and start date from the filename automatically." />
-              <Step number={4} text="Confirm the school from the dropdown (the app suggests the closest match), set the start date, and choose how many weeks the course runs (default: 6)." />
-              <Step number={5} text="Tap Import — children are added or updated in the system and linked to a register for every session date." />
-              <Step number={6} text="Each session register is now ready to use. Open any register and tap a child's name to mark them present." />
-              <Note text="Re-importing the same file won't create duplicates — it updates any children already in the system and adds any new ones." />
             </Section>
 
             <Section icon={ShieldAlert} title="Incident reports — logging accidents and incidents">

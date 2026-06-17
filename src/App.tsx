@@ -31,10 +31,6 @@ import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { ContactMessagesPage } from './pages/messages/ContactMessagesPage'
 import { ClockInPage } from './pages/clockin/ClockInPage'
 import { TimesheetsPage } from './pages/clockin/TimesheetsPage'
-import { RegistersPage } from './pages/registers/RegistersPage'
-import { NewRegisterPage } from './pages/registers/NewRegisterPage'
-import { ViewRegisterPage } from './pages/registers/ViewRegisterPage'
-import { ImportRegisterPage } from './pages/registers/ImportRegisterPage'
 import { AwardsPage } from './pages/awards/AwardsPage'
 import { ChildSkillsPage } from './pages/awards/ChildSkillsPage'
 import { AdminPage } from './pages/admin/AdminPage'
@@ -147,28 +143,6 @@ export default function App() {
           } />
           <Route path="/awards/:id" element={
             <ProtectedRoute><ChildSkillsPage /></ProtectedRoute>
-          } />
-
-          {/* Coaches and above */}
-          <Route path="/registers" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
-              <RegistersPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/registers/new" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
-              <NewRegisterPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/registers/import" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
-              <ImportRegisterPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/registers/:id" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
-              <ViewRegisterPage />
-            </ProtectedRoute>
           } />
 
           {/* Director & Area Lead */}
