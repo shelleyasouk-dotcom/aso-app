@@ -21,6 +21,8 @@ import {
   Medal,
   CalendarDays,
   Dumbbell,
+  ClipboardCheck,
+  BarChart2,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -103,6 +105,8 @@ export function MyAreaPage() {
   ]
 
   const managementTiles: Tile[] = [
+    { label: 'Weekly Admin Report', description: 'Submit your weekly update', icon: ClipboardCheck, path: '/area-lead-report/new', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
+    { label: 'Report History', description: 'View submitted reports', icon: BarChart2, path: '/area-lead-reports', color: 'bg-indigo-50 text-indigo-700' },
     { label: 'Staff Timesheets', description: 'Payroll & all staff hours', icon: Users, path: '/timesheets', color: 'bg-purple-50 text-purple-800' },
     { label: 'Approve Expenses', description: 'Review & authorise claims', icon: ReceiptText, path: '/expenses/admin', color: 'bg-amber-50 text-amber-700' },
     { label: 'Coach Pool', description: 'Available coaches', icon: UsersRound, path: '/coach-pool', color: 'bg-violet-50 text-violet-700' },

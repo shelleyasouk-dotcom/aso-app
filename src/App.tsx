@@ -82,6 +82,8 @@ import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
 import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
 import { WeeklyReportsPage } from './pages/lessonplans/WeeklyReportsPage'
 import { LessonPlansAdminPage } from './pages/admin/LessonPlansAdminPage'
+import { AreaLeadWeeklyReportPage } from './pages/reports/AreaLeadWeeklyReportPage'
+import { AreaLeadReportsViewPage } from './pages/reports/AreaLeadReportsViewPage'
 import { UKAGLibraryPage } from './pages/ukag/UKAGLibraryPage'
 import { UKAGLevelPage } from './pages/ukag/UKAGLevelPage'
 import { LeadershipCoursePage } from './pages/course/LeadershipCoursePage'
@@ -164,6 +166,16 @@ export default function App() {
           } />
           <Route path="/weekly-reports" element={
             <ProtectedRoute><WeeklyReportsPage /></ProtectedRoute>
+          } />
+          <Route path="/area-lead-report/new" element={
+            <ProtectedRoute allowedRoles={['area_lead', 'director']}>
+              <AreaLeadWeeklyReportPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/area-lead-reports" element={
+            <ProtectedRoute allowedRoles={['area_lead', 'director']}>
+              <AreaLeadReportsViewPage />
+            </ProtectedRoute>
           } />
           <Route path="/ukag" element={
             <ProtectedRoute><UKAGLibraryPage /></ProtectedRoute>
