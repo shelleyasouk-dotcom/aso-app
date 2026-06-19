@@ -95,8 +95,7 @@ export function PortalClubDetailPage() {
   const { school, leadCoach, activeTerm, confirmedCount } = data
   const spotsLeft = activeTerm ? activeTerm.capacity - confirmedCount : 0
   const termWindow = activeTerm ? termWindowLabel(activeTerm) : null
-  const FALLBACK_BOOKING_URL = 'https://activeschool.classforkids.io/'
-  const bookingUrl = school.wix_booking_url || FALLBACK_BOOKING_URL
+  const bookingUrl = 'https://activeschool.classforkids.io'
 
   return (
     <PortalLayout>

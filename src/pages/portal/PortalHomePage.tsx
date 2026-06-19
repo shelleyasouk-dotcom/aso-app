@@ -243,22 +243,15 @@ export function PortalHomePage() {
                   <p className="text-sm font-extrabold text-[#1a3a6b]">from £67.50 <span className="text-xs font-normal text-gray-400">per child</span></p>
                   {camp.is_full ? (
                     <div className="mt-auto w-full text-center bg-gray-100 text-gray-400 font-semibold text-xs py-2.5 rounded-xl">Fully Booked</div>
-                  ) : camp.booking_url ? (
+                  ) : (
                     <a
-                      href={camp.booking_url}
+                      href="https://activeschool.classforkids.io/camps"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="mt-auto w-full flex items-center justify-center gap-1.5 bg-[#1a3a6b] text-white font-bold text-sm py-2.5 rounded-xl hover:bg-[#142f58] transition-colors"
                     >
                       <ExternalLink size={13} /> Book Now
                     </a>
-                  ) : (
-                    <button
-                      onClick={() => navigate('/portal/summer-camps')}
-                      className="mt-auto w-full flex items-center justify-center gap-1.5 bg-[#1a3a6b]/10 text-[#1a3a6b] font-bold text-sm py-2.5 rounded-xl hover:bg-[#1a3a6b]/20 transition-colors"
-                    >
-                      Find Out More <ChevronRight size={13} />
-                    </button>
                   )}
                 </div>
               ))}

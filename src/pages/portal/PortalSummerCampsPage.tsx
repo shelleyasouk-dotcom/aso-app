@@ -56,9 +56,7 @@ function groupByVenue(camps: HolidayCamp[]): VenueGroup[] {
 }
 
 function WeekRow({ camp, weekLabel, isEarlyBird }: { camp: HolidayCamp; weekLabel: string; isEarlyBird: boolean }) {
-  const bookingHref = camp.booking_url
-    ?? `mailto:${EMAIL}?subject=${encodeURIComponent(`Summer Camp Enquiry — ${camp.venue_name}`)}`
-  const isExternal = !!camp.booking_url
+  const CAMPS_URL = 'https://activeschool.classforkids.io/camps'
 
   return (
     <div className={`flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-xl border ${
@@ -90,12 +88,12 @@ function WeekRow({ camp, weekLabel, isEarlyBird }: { camp: HolidayCamp; weekLabe
           <span className="text-xs font-semibold bg-gray-100 text-gray-400 px-3 py-2 rounded-xl whitespace-nowrap">Fully booked</span>
         ) : (
           <a
-            href={bookingHref}
-            target={isExternal ? '_blank' : '_self'}
+            href={CAMPS_URL}
+            target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 bg-[#1a3a6b] text-white font-bold text-xs px-4 py-2.5 rounded-xl hover:bg-[#142f58] transition-colors whitespace-nowrap"
           >
-            {isExternal ? <><ExternalLink size={12} /> Book Now</> : <><Mail size={12} /> Enquire</>}
+            <ExternalLink size={12} /> Book Now
           </a>
         )}
       </div>
