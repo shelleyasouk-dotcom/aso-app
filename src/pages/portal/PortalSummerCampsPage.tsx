@@ -5,7 +5,8 @@ import { PortalLayout } from '../../components/layout/PortalLayout'
 import type { HolidayCamp } from '../../types'
 
 const EMAIL = 'info@activeschool.org.uk'
-const EARLY_BIRD_DEADLINE = new Date('2026-06-21T23:59:59')
+const EARLY_BIRD_DEADLINE = new Date('2026-06-27T23:59:59')
+const SEPT_PRIORITY_DEADLINE = new Date('2026-07-11T23:59:59')
 const EARLY_BIRD_PENCE = 6750
 const STANDARD_PENCE  = 7500
 
@@ -198,18 +199,52 @@ export function PortalSummerCampsPage() {
         </div>
       </section>
 
-      {/* Early bird banner */}
-      {isEarlyBird && (
-        <section className="bg-green-600 text-white py-3 px-4">
-          <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-center">
-            <Tag size={15} className="shrink-0" />
-            <p className="text-sm font-bold">
-              Early Bird Offer — save £7.50 per camp when you book before 21 June 2026
-            </p>
-            <span className="text-green-200 text-sm font-extrabold">£67.50 per child &nbsp;(was £75.00)</span>
+      {/* Discount codes */}
+      <section className="bg-[#f4f6f9] border-b border-gray-200 py-6 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 mb-4">
+            <Tag size={15} className="text-[#1a3a6b]" />
+            <p className="text-xs font-extrabold text-[#1a3a6b] uppercase tracking-wider">Discount Codes — use at checkout on ClassForKids</p>
           </div>
-        </section>
-      )}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+            {/* Early bird */}
+            {isEarlyBird && (
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
+                <p className="text-[10px] font-extrabold text-green-700 uppercase tracking-wide mb-1">Summer Camp Early Bird</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-extrabold text-green-800 text-xl tracking-widest bg-green-100 px-3 py-1 rounded-xl">WEF990</span>
+                </div>
+                <p className="text-xs text-green-700 leading-snug">Save £7.50 per camp — <strong>£67.50</strong> instead of £75.00</p>
+                <p className="text-[10px] text-green-600 mt-1.5">Expires 27 June 2026</p>
+              </div>
+            )}
+
+            {/* Priority September classes */}
+            {new Date() < SEPT_PRIORITY_DEADLINE && (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                <p className="text-[10px] font-extrabold text-blue-700 uppercase tracking-wide mb-1">Priority September Classes</p>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-extrabold text-blue-800 text-xl tracking-widest bg-blue-100 px-3 py-1 rounded-xl">BGF467</span>
+                </div>
+                <p className="text-xs text-blue-700 leading-snug">Book your September 2026 class early and get priority access</p>
+                <p className="text-[10px] text-blue-600 mt-1.5">Expires 11 July 2026</p>
+              </div>
+            )}
+
+            {/* Sibling discount */}
+            <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4">
+              <p className="text-[10px] font-extrabold text-purple-700 uppercase tracking-wide mb-1">Sibling Discount</p>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-extrabold text-purple-800 text-xl bg-purple-100 px-3 py-1 rounded-xl">5% off</span>
+              </div>
+              <p className="text-xs text-purple-700 leading-snug">Booking 2 or more children? Get 5% off — applied automatically at checkout</p>
+              <p className="text-[10px] text-purple-600 mt-1.5">No code needed</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
 
       {/* Pricing bar */}
       <section className="bg-[#1a3a6b] text-white py-5 px-4">
@@ -347,7 +382,9 @@ export function PortalSummerCampsPage() {
         <div className="flex flex-col gap-4">
           {[
             { q: 'Who can attend?', a: "Any child aged 4–11. Our camps are open to all — you don't need to be enrolled at an ASO partner school." },
-            { q: 'How does the early bird offer work?', a: 'Book any camp before 21st June 2026 and pay just £67.50 per child. After that date the standard price of £75.00 applies.' },
+            { q: 'How does the early bird offer work?', a: 'Use code WEF990 at checkout before 27 June 2026 and pay just £67.50 per child — saving £7.50. After that date the standard price of £75.00 applies.' },
+            { q: 'Is there a sibling discount?', a: 'Yes — book 2 or more children and 5% is automatically taken off at checkout. No code needed.' },
+            { q: 'Can I book September classes early?', a: 'Yes — use code BGF467 before 11 July 2026 to get priority access when September 2026 classes open.' },
             { q: 'What are the camp dates?', a: 'Week 1: 28–30 July · Week 2: 4–6 August · Week 3: 18–20 August. All camps run Tuesday to Thursday, 9:15am–12:15pm.' },
             { q: 'How do I book?', a: 'Click "Book Now" on your chosen venue and week. This takes you to our ClassForKids page where you can create an account and pay securely online.' },
             { q: 'What if we need to cancel?', a: 'Email us as soon as possible. We\'ll do our best to transfer you to another date or venue, or issue a credit.' },
@@ -374,7 +411,7 @@ export function PortalSummerCampsPage() {
               <div className="text-4xl mb-4">🎉</div>
               <h2 className="text-2xl font-bold mb-3">Ready to Book?</h2>
               {isEarlyBird && (
-                <p className="text-[#f5c518] font-bold text-sm mb-2">Early bird: £67.50 — offer ends 21 June 2026</p>
+                <p className="text-[#f5c518] font-bold text-sm mb-2">Early bird code <span className="tracking-widest">WEF990</span> — £67.50 per child, expires 27 June</p>
               )}
               <p className="text-white/70 text-sm mb-6 leading-relaxed">
                 Places are limited at each venue. Scroll up to pick your location and week.
