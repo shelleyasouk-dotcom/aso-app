@@ -261,7 +261,7 @@ export function PortalSummerCampsPage() {
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Choose Your Venue & Week</h2>
           <p className="text-gray-500 text-sm text-center mb-8">
-            Each camp runs Tue–Thu, 9:15am–12:15pm. Book directly through our Wix booking page.
+            Each camp runs Tue–Thu, 9:15am–12:15pm. Book securely through ClassForKids.
           </p>
 
           {loading ? (
@@ -351,7 +351,7 @@ export function PortalSummerCampsPage() {
             { q: 'Who can attend?', a: "Any child aged 4–11. Our camps are open to all — you don't need to be enrolled at an ASO partner school." },
             { q: 'How does the early bird offer work?', a: 'Book any camp before 21st June 2026 and pay just £67.50 per child. After that date the standard price of £75.00 applies.' },
             { q: 'What are the camp dates?', a: 'Week 1: 28–30 July · Week 2: 4–6 August · Week 3: 18–20 August. All camps run Tuesday to Thursday, 9:15am–12:15pm.' },
-            { q: 'How do I book?', a: 'Click "Book Now" on your chosen venue and week. This takes you to our Wix booking page where you can pay securely online.' },
+            { q: 'How do I book?', a: 'Click "Book Now" on your chosen venue and week. This takes you to our ClassForKids page where you can create an account and pay securely online.' },
             { q: 'What if we need to cancel?', a: 'Email us as soon as possible. We\'ll do our best to transfer you to another date or venue, or issue a credit.' },
             { q: 'Do children need any prior gymnastics experience?', a: 'Not at all. We start from Level 1 and coaches group children by ability. Complete beginners are very welcome.' },
           ].map(({ q, a }) => (

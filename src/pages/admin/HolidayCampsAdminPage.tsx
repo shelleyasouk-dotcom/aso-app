@@ -307,7 +307,7 @@ export function HolidayCampsAdminPage() {
 
         {/* How-to note */}
         <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-700 leading-relaxed">
-          <strong>How to add a holiday club:</strong> Click "Add Camp" → fill in the venue, dates, price and your Wix booking URL → Save. Then toggle it from <em>Draft</em> to <em>Live</em> when ready to go public. Mark as <em>Full</em> once Wix shows no availability.
+          <strong>How to add a holiday club:</strong> Click "Add Camp" → fill in the venue, dates, price and your ClassForKids booking URL → Save. Then toggle it from <em>Draft</em> to <em>Live</em> when ready to go public. Mark as <em>Full</em> once spaces sell out.
         </div>
       </div>
 
@@ -371,12 +371,12 @@ export function HolidayCampsAdminPage() {
               <div>
                 <Input
                   id="hc-url"
-                  label="Wix booking URL"
-                  placeholder="https://www.activeschool.org.uk/classes?category=..."
+                  label="ClassForKids booking URL"
+                  placeholder="https://activeschool.classforkids.io/class/..."
                   value={form.booking_url}
                   onChange={e => field('booking_url', e.target.value)}
                 />
-                <p className="text-xs text-gray-400 mt-1">Paste the full Wix category or class URL. Leave blank to show a contact-us button.</p>
+                <p className="text-xs text-gray-400 mt-1">Paste the ClassForKids class URL. Leave blank to show a contact-us button.</p>
               </div>
 
               <Input id="hc-order" label="Display order" type="number" placeholder="0" value={form.display_order} onChange={e => field('display_order', e.target.value)} />

@@ -77,8 +77,8 @@ function SchoolFormFields({ form, set }: { form: SchoolForm; set: (f: SchoolForm
         onChange={e => set({ ...form, session_time: e.target.value })}
       />
       <Input
-        label="Wix Booking URL"
-        placeholder="https://www.activeschool.org.uk/classes?category=..."
+        label="ClassForKids URL"
+        placeholder="https://activeschool.classforkids.io/class/..."
         value={form.wix_booking_url}
         onChange={e => set({ ...form, wix_booking_url: e.target.value })}
       />

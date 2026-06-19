@@ -93,7 +93,7 @@ export function PortalTermsPage() {
             <tbody>
               <TableRow cells={['Contact', 'Details']} header />
               <TableRow cells={['General Enquiries', 'info@activeschool.org.uk']} />
-              <TableRow cells={['Website', 'www.activeschool.org.uk']} />
+              <TableRow cells={['Booking', 'activeschool.classforkids.io']} />
               <TableRow cells={['Complaints', 'info@activeschool.org.uk']} />
               <TableRow cells={['Accounts & Billing', 'info@activeschool.org.uk']} />
             </tbody>
@@ -109,7 +109,7 @@ export function PortalTermsPage() {
             <p className="text-sm text-gray-600 leading-relaxed">Returning families receive priority booking at the end of each term. You will be contacted directly with details of how to re-enrol for the following half-term before spaces are opened to new families.</p>
           </SubSection>
           <SubSection title="2.3 Booking Platform">
-            <p className="text-sm text-gray-600 leading-relaxed">All bookings are managed through our online booking system at www.activeschool.org.uk, powered by Wix. You will need to create an account to register your child and complete all required forms.</p>
+            <p className="text-sm text-gray-600 leading-relaxed">All bookings are managed through ClassForKids at activeschool.classforkids.io. You will need to create a free ClassForKids account to register your child and complete all required forms.</p>
           </SubSection>
           <SubSection title="2.4 Registration Forms">
             <p className="text-sm text-gray-600 mb-2 leading-relaxed">As part of booking, you are required to complete:</p>
@@ -134,7 +134,7 @@ export function PortalTermsPage() {
             <p className="text-sm text-gray-600 leading-relaxed">Payment is required upfront at the start of each half-term block. Your place is not confirmed until payment is received in full.</p>
           </SubSection>
           <SubSection title="3.3 Payment Methods">
-            <p className="text-sm text-gray-600 mb-2 leading-relaxed">We accept the following payment methods via our Wix booking platform:</p>
+            <p className="text-sm text-gray-600 mb-2 leading-relaxed">We accept the following payment methods via ClassForKids:</p>
             <BulletList items={['Debit or credit card', 'PayPal']} />
             <Callout>We do not currently accept childcare vouchers. We will update families if this changes in future.</Callout>
           </SubSection>
@@ -291,7 +291,7 @@ export function PortalTermsPage() {
             ]} />
           </SubSection>
           <SubSection title="11.2 Where Data is Stored">
-            <p className="text-sm text-gray-600 leading-relaxed">Your data is stored securely within our Wix booking platform. We do not share your personal data with third parties without your consent, except where required by law or for safeguarding purposes.</p>
+            <p className="text-sm text-gray-600 leading-relaxed">Your data is stored securely within ClassForKids. We do not share your personal data with third parties without your consent, except where required by law or for safeguarding purposes.</p>
           </SubSection>
           <SubSection title="11.3 Your Rights">
             <p className="text-sm text-gray-600 leading-relaxed">You have the right to access, correct, or request deletion of your personal data at any time. To make a request, email info@activeschool.org.uk. We retain data in line with our GDPR policy and statutory obligations (typically 6 years).</p>
@@ -369,7 +369,7 @@ export function PortalTermsPage() {
           <div className="bg-[#1a3a6b] text-white rounded-xl p-6 text-center">
             <p className="font-bold text-lg mb-1">Thank you for choosing Active School Org.</p>
             <p className="text-white/70 text-sm">We look forward to welcoming your child to the team.</p>
-            <p className="text-white/50 text-xs mt-2">www.activeschool.org.uk | info@activeschool.org.uk</p>
+            <p className="text-white/50 text-xs mt-2">activeschool.classforkids.io | info@activeschool.org.uk</p>
           </div>
         </Section>
 
