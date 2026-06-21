@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import {
   School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText,
-  Building2, UsersRound, ShieldAlert, CalendarDays, CreditCard, Tag, Download,
+  Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
@@ -138,37 +138,16 @@ export function AdminPage() {
           ]}
         />
 
-        {/* Bookings & Finance */}
+        {/* Finance */}
         <TileGroup
-          title="Bookings & Finance"
+          title="Finance"
           tiles={[
-            {
-              label: 'Club Terms',
-              description: 'Manage term dates, capacity & booking windows',
-              icon: CalendarDays,
-              path: '/admin/club-terms',
-              color: 'bg-cyan-50 text-cyan-700',
-            },
-            {
-              label: 'Bookings',
-              description: 'View all parent bookings and revenue',
-              icon: CreditCard,
-              path: '/admin/bookings',
-              color: 'bg-emerald-50 text-emerald-700',
-            },
             {
               label: 'Expenses',
               description: 'Review and authorise staff expenses',
               icon: ReceiptText,
               path: '/expenses/admin',
               color: 'bg-orange-50 text-orange-700',
-            },
-            {
-              label: 'Discount Codes',
-              description: 'Create and manage discount codes for bookings',
-              icon: Tag,
-              path: '/admin/discount-codes',
-              color: 'bg-yellow-50 text-yellow-700',
             },
           ]}
         />

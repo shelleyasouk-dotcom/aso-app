@@ -11,18 +11,9 @@ import { PortalAboutPage } from './pages/portal/PortalAboutPage'
 import { PortalLoginPage } from './pages/portal/PortalLoginPage'
 import { PortalRegisterPage } from './pages/portal/PortalRegisterPage'
 import { PortalDashboardPage } from './pages/portal/PortalDashboardPage'
-import { PortalTermsPage } from './pages/portal/PortalTermsPage'
-import { PortalBookingPage } from './pages/portal/PortalBookingPage'
-import { PortalBookingConfirmedPage } from './pages/portal/PortalBookingConfirmedPage'
-import { PortalBasketPage } from './pages/portal/PortalBasketPage'
 import { PortalForSchoolsPage } from './pages/portal/PortalForSchoolsPage'
 import { PortalSummerCampsPage } from './pages/portal/PortalSummerCampsPage'
 import { PortalMyChildrenPage } from './pages/portal/PortalMyChildrenPage'
-import { BasketProvider } from './contexts/BasketContext'
-import { ClubTermsAdminPage } from './pages/admin/ClubTermsAdminPage'
-import { BookingsAdminPage } from './pages/admin/BookingsAdminPage'
-import { DiscountCodesAdminPage } from './pages/admin/DiscountCodesAdminPage'
-import { DataExportsPage } from './pages/admin/DataExportsPage'
 import { SchoolRosterPage } from './pages/school/SchoolRosterPage'
 
 import { LoginPage } from './pages/auth/LoginPage'
@@ -78,6 +69,7 @@ import { PortalCoachPoolJoinPage } from './pages/portal/PortalCoachPoolJoinPage'
 import { JobAdvertsAdminPage } from './pages/admin/JobAdvertsAdminPage'
 import { JobApplicationsAdminPage } from './pages/admin/JobApplicationsAdminPage'
 import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
+import { DataExportsPage } from './pages/admin/DataExportsPage'
 import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
 import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
 import { WeeklyReportsPage } from './pages/lessonplans/WeeklyReportsPage'
@@ -112,7 +104,6 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <BasketProvider>
         <StaffOnboardingModal />
         <PhotoPolicyModal />
         <Routes>
@@ -218,11 +209,6 @@ export default function App() {
           <Route path="/admin/staff" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <StaffAdminPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/discount-codes" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
-              <DiscountCodesAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/data-exports" element={
@@ -353,15 +339,10 @@ export default function App() {
           <Route path="/portal/summer-camps" element={<PortalSummerCampsPage />} />
           <Route path="/portal/login" element={<PortalLoginPage />} />
           <Route path="/portal/register" element={<PortalRegisterPage />} />
-          <Route path="/portal/terms" element={<PortalTermsPage />} />
-
           {/* Parent portal — protected (parent login required) */}
           <Route path="/portal/my-bookings" element={
             <ParentProtectedRoute><PortalDashboardPage /></ParentProtectedRoute>
           } />
-          <Route path="/portal/book/:termId" element={<PortalBookingPage />} />
-          <Route path="/portal/basket" element={<PortalBasketPage />} />
-          <Route path="/portal/booking-confirmed" element={<PortalBookingConfirmedPage />} />
           <Route path="/portal/my-children" element={
             <ParentProtectedRoute><PortalMyChildrenPage /></ParentProtectedRoute>
           } />
@@ -401,18 +382,6 @@ export default function App() {
             </ProtectedRoute>
           } />
 
-          {/* Admin — bookings & club terms */}
-          <Route path="/admin/club-terms" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
-              <ClubTermsAdminPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/bookings" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
-              <BookingsAdminPage />
-            </ProtectedRoute>
-          } />
-
           {/* Leadership course */}
           <Route path="/course/leadership" element={<ProtectedRoute><LeadershipCoursePage /></ProtectedRoute>} />
           <Route path="/course/leadership/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
@@ -427,7 +396,6 @@ export default function App() {
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-        </BasketProvider>
       </AuthProvider>
     </BrowserRouter>
   )

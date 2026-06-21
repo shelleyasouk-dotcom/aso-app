@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { Menu, X, LogOut, User, ChevronDown, ShoppingCart, Copy, Check, Tag, AlertTriangle } from 'lucide-react'
+import { Menu, X, LogOut, User, ChevronDown, Copy, Check, Tag, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { useBasket } from '../../contexts/BasketContext'
 
 // ─── Toggle to false once email is restored ───────────────────────────────────
 const EMAIL_DOWN = false
@@ -201,8 +200,6 @@ export function PortalLayout({ children }: PortalLayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [loginMenuOpen, setLoginMenuOpen] = useState(false)
-  const { items } = useBasket()
-
   const isParent = profile?.role === 'parent'
 
   function isActive(path: string, exact?: boolean) {
@@ -262,19 +259,6 @@ export function PortalLayout({ children }: PortalLayoutProps) {
 
           {/* Auth area */}
           <div className="ml-auto flex items-center gap-2">
-            {/* Basket */}
-            {items.length > 0 && (
-              <button
-                onClick={() => navigate('/portal/basket')}
-                className="relative p-2 rounded-lg bg-[#f5c518] text-[#1a3a6b] hover:bg-yellow-400 transition-colors"
-              >
-                <ShoppingCart size={18} />
-                <span className="absolute -top-1 -right-1 bg-[#1a3a6b] text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                  {items.length}
-                </span>
-              </button>
-            )}
-
             {/* User menu */}
             {profile ? (
               <div className="relative">
@@ -298,20 +282,12 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                       )}
                     </div>
                     {isParent && (
-                      <>
-                        <button
-                          onClick={() => { navigate('/portal/my-bookings'); setUserMenuOpen(false) }}
-                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 font-medium"
-                        >
-                          My Bookings
-                        </button>
-                        <button
-                          onClick={() => { navigate('/portal/my-children'); setUserMenuOpen(false) }}
-                          className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 font-medium"
-                        >
-                          My Children
-                        </button>
-                      </>
+                      <button
+                        onClick={() => { navigate('/portal/my-children'); setUserMenuOpen(false) }}
+                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 font-medium"
+                      >
+                        My Children
+                      </button>
                     )}
                     {!isParent && (
                       <button
@@ -467,7 +443,6 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                 <Link to="/portal/login"    className="text-white/60 hover:text-white text-sm transition-colors">Parent Login</Link>
                 <Link to="/portal/register" className="text-white/60 hover:text-white text-sm transition-colors">Create Account</Link>
                 <Link to="/portal/clubs"    className="text-white/60 hover:text-white text-sm transition-colors">Find a Club</Link>
-                <Link to="/portal/terms"    className="text-white/60 hover:text-white text-sm transition-colors">Terms &amp; Conditions</Link>
               </div>
             </div>
             <div>
