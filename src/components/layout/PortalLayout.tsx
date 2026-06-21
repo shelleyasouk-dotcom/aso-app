@@ -100,13 +100,14 @@ type NavItem =
 
 const NAV: NavItem[] = [
   { type: 'link', path: '/home', label: 'Home', exact: true },
-  { type: 'link', path: '/portal/clubs', label: 'Find Clubs' },
+  { type: 'link', path: '/portal/classes', label: 'Book a Class', badge: 'New' },
   {
     type: 'dropdown',
     label: 'Activities',
     items: [
-      { path: '/portal/summer-camps', label: 'Summer Camps', badge: 'New', desc: 'Holiday camps open to all children' },
-      { path: '/portal/sports',       label: 'Sports',                     desc: 'All the sports we coach' },
+      { path: '/portal/classes',      label: 'Book a Class',  badge: 'New', desc: 'Browse and book gymnastics classes' },
+      { path: '/portal/summer-camps', label: 'Summer Camps',  badge: '☀️',  desc: 'Holiday camps open to all children' },
+      { path: '/portal/sports',       label: 'Sports',                      desc: 'All the sports we coach' },
     ],
   },
   {
@@ -442,7 +443,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
               <div className="flex flex-col gap-2">
                 <Link to="/portal/login"    className="text-white/60 hover:text-white text-sm transition-colors">Parent Login</Link>
                 <Link to="/portal/register" className="text-white/60 hover:text-white text-sm transition-colors">Create Account</Link>
-                <Link to="/portal/clubs"    className="text-white/60 hover:text-white text-sm transition-colors">Find a Club</Link>
+                <Link to="/portal/classes"  className="text-white/60 hover:text-white text-sm transition-colors">Book a Class</Link>
               </div>
             </div>
             <div>

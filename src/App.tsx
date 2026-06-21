@@ -12,6 +12,7 @@ import { PortalLoginPage } from './pages/portal/PortalLoginPage'
 import { PortalRegisterPage } from './pages/portal/PortalRegisterPage'
 import { PortalDashboardPage } from './pages/portal/PortalDashboardPage'
 import { PortalForSchoolsPage } from './pages/portal/PortalForSchoolsPage'
+import { PortalClassesPage } from './pages/portal/PortalClassesPage'
 import { PortalSummerCampsPage } from './pages/portal/PortalSummerCampsPage'
 import { PortalMyChildrenPage } from './pages/portal/PortalMyChildrenPage'
 import { SchoolRosterPage } from './pages/school/SchoolRosterPage'
@@ -331,6 +332,7 @@ export default function App() {
           {/* Parent portal — public */}
           <Route path="/portal" element={<PortalHomePage />} />
           <Route path="/portal/clubs" element={<PortalClubsPage />} />
+          <Route path="/portal/classes" element={<PortalClassesPage />} />
           <Route path="/portal/clubs/:id" element={<PortalClubDetailPage />} />
           <Route path="/portal/sports" element={<PortalSportsPage />} />
           <Route path="/portal/affiliations" element={<PortalAffiliationsPage />} />
