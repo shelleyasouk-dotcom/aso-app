@@ -92,6 +92,44 @@ function EarlyBirdBanner() {
   )
 }
 
+// ─── Heat Warning Banner ──────────────────────────────────────────────────────
+
+const HEAT_WARNING_EXPIRES = new Date('2026-06-28T00:00:00')
+const HEAT_DISMISS_KEY = 'heat_warning_dismissed_v1'
+
+function HeatWarningBanner() {
+  const [dismissed, setDismissed] = useState(() => !!localStorage.getItem(HEAT_DISMISS_KEY))
+
+  if (dismissed || new Date() >= HEAT_WARNING_EXPIRES) return null
+
+  return (
+    <div className="bg-red-600 text-white px-4 py-3">
+      <div className="max-w-4xl mx-auto flex items-start gap-3">
+        <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm mb-1">🌡️ Extreme heat — update for this week's sessions</p>
+          <p className="text-sm text-white/90 leading-snug">
+            With temperatures forecast to reach 38°C this week, all sessions run indoors with a fully adapted, lower-intensity programme — floor work, beam, stretching and technique only. No running. Water breaks every 10 minutes.{' '}
+            <strong>Please make sure your child arrives with a full water bottle.</strong>{' '}
+            If a school confirms their hall is not safe, we will contact you directly.{' '}
+            Questions?{' '}
+            <a href="mailto:info@activeschool.org.uk" className="underline font-semibold hover:text-white/80">
+              Email info@activeschool.org.uk
+            </a>
+          </p>
+        </div>
+        <button
+          onClick={() => { setDismissed(true); localStorage.setItem(HEAT_DISMISS_KEY, '1') }}
+          className="shrink-0 text-white/70 hover:text-white transition-colors mt-0.5"
+          aria-label="Dismiss"
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Nav structure ────────────────────────────────────────────────────────────
 
 type NavItem =
@@ -211,6 +249,7 @@ export function PortalLayout({ children }: PortalLayoutProps) {
     <div className="min-h-screen bg-white flex flex-col">
       <EmailOutageBanner />
       <EarlyBirdBanner />
+      <HeatWarningBanner />
       {/* Header */}
       <header className="bg-[#1a3a6b] text-white sticky top-0 z-30 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
