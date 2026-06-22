@@ -5,10 +5,8 @@ import { PortalLayout } from '../../components/layout/PortalLayout'
 import type { HolidayCamp } from '../../types'
 
 const EMAIL = 'info@activeschool.org.uk'
-const EARLY_BIRD_DEADLINE = new Date('2026-06-27T23:59:59')
 const SEPT_PRIORITY_DEADLINE = new Date('2026-07-11T23:59:59')
-const EARLY_BIRD_PENCE = 6750
-const STANDARD_PENCE  = 7500
+const STANDARD_PENCE = 7500
 
 const WEEK_LABELS = ['Week 1', 'Week 2', 'Week 3']
 
@@ -56,7 +54,7 @@ function groupByVenue(camps: HolidayCamp[]): VenueGroup[] {
   return Array.from(map.values())
 }
 
-function WeekRow({ camp, weekLabel, isEarlyBird }: { camp: HolidayCamp; weekLabel: string; isEarlyBird: boolean }) {
+function WeekRow({ camp, weekLabel }: { camp: HolidayCamp; weekLabel: string }) {
   const CAMPS_URL = 'https://activeschool.classforkids.io/camps'
 
   return (
@@ -78,11 +76,8 @@ function WeekRow({ camp, weekLabel, isEarlyBird }: { camp: HolidayCamp; weekLabe
       <div className="flex items-center gap-3 shrink-0">
         <div className="text-right">
           <p className="font-extrabold text-[#1a3a6b] text-sm leading-none">
-            £{((isEarlyBird ? EARLY_BIRD_PENCE : STANDARD_PENCE) / 100).toFixed(2)}
+            £{(STANDARD_PENCE / 100).toFixed(2)}
           </p>
-          {isEarlyBird && (
-            <p className="text-[10px] text-green-600 font-semibold mt-0.5">Early bird</p>
-          )}
         </div>
 
         {camp.is_full ? (
@@ -102,7 +97,7 @@ function WeekRow({ camp, weekLabel, isEarlyBird }: { camp: HolidayCamp; weekLabe
   )
 }
 
-function VenueCard({ group, isEarlyBird }: { group: VenueGroup; isEarlyBird: boolean }) {
+function VenueCard({ group }: { group: VenueGroup }) {
   const hasBooking = group.weeks.some(w => !!w.booking_url)
   const availableCount = group.weeks.filter(w => !w.is_full).length
 
@@ -137,7 +132,7 @@ function VenueCard({ group, isEarlyBird }: { group: VenueGroup; isEarlyBird: boo
       {/* Week rows */}
       <div className="p-4 flex flex-col gap-2">
         {group.weeks.map((camp, i) => (
-          <WeekRow key={camp.id} camp={camp} weekLabel={WEEK_LABELS[i] ?? `Week ${i + 1}`} isEarlyBird={isEarlyBird} />
+          <WeekRow key={camp.id} camp={camp} weekLabel={WEEK_LABELS[i] ?? `Week ${i + 1}`} />
         ))}
       </div>
     </div>
@@ -149,7 +144,6 @@ function VenueCard({ group, isEarlyBird }: { group: VenueGroup; isEarlyBird: boo
 export function PortalSummerCampsPage() {
   const [camps, setCamps] = useState<HolidayCamp[]>([])
   const [loading, setLoading] = useState(true)
-  const isEarlyBird = new Date() < EARLY_BIRD_DEADLINE
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -166,6 +160,7 @@ export function PortalSummerCampsPage() {
       })
   }, [])
 
+  const isSeptPriority = new Date() < SEPT_PRIORITY_DEADLINE
   const venues = groupByVenue(camps)
   const totalOpen = camps.filter(c => !c.is_full).length
 
@@ -206,22 +201,10 @@ export function PortalSummerCampsPage() {
             <Tag size={15} className="text-[#1a3a6b]" />
             <p className="text-xs font-extrabold text-[#1a3a6b] uppercase tracking-wider">Discount Codes — use at checkout on ClassForKids</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-
-            {/* Early bird */}
-            {isEarlyBird && (
-              <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
-                <p className="text-[10px] font-extrabold text-green-700 uppercase tracking-wide mb-1">Summer Camp Early Bird</p>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-extrabold text-green-800 text-xl tracking-widest bg-green-100 px-3 py-1 rounded-xl">WEF990</span>
-                </div>
-                <p className="text-xs text-green-700 leading-snug">Save £7.50 per camp — <strong>£67.50</strong> instead of £75.00</p>
-                <p className="text-[10px] text-green-600 mt-1.5">Expires 27 June 2026</p>
-              </div>
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
             {/* Priority September classes */}
-            {new Date() < SEPT_PRIORITY_DEADLINE && (
+            {isSeptPriority && (
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
                 <p className="text-[10px] font-extrabold text-blue-700 uppercase tracking-wide mb-1">Priority September Classes</p>
                 <div className="flex items-center gap-2 mb-2">
@@ -250,12 +233,8 @@ export function PortalSummerCampsPage() {
       <section className="bg-[#1a3a6b] text-white py-5 px-4">
         <div className="max-w-4xl mx-auto flex flex-wrap justify-center gap-8 text-center">
           <div>
-            <p className="text-[#f5c518] font-extrabold text-2xl leading-none">
-              {isEarlyBird ? '£67.50' : '£75.00'}
-            </p>
-            <p className="text-white/60 text-xs mt-1">
-              {isEarlyBird ? 'Early bird price per child' : 'Standard price per child'}
-            </p>
+            <p className="text-[#f5c518] font-extrabold text-2xl leading-none">£75.00</p>
+            <p className="text-white/60 text-xs mt-1">Per child per camp</p>
           </div>
           <div className="w-px bg-white/10 hidden sm:block" />
           <div>
@@ -314,7 +293,7 @@ export function PortalSummerCampsPage() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {venues.map(group => (
-                <VenueCard key={group.venue_name} group={group} isEarlyBird={isEarlyBird} />
+                <VenueCard key={group.venue_name} group={group} />
               ))}
             </div>
           )}
@@ -382,7 +361,6 @@ export function PortalSummerCampsPage() {
         <div className="flex flex-col gap-4">
           {[
             { q: 'Who can attend?', a: "Any child aged 4–11. Our camps are open to all — you don't need to be enrolled at an ASO partner school." },
-            { q: 'How does the early bird offer work?', a: 'Use code WEF990 at checkout before 27 June 2026 and pay just £67.50 per child — saving £7.50. After that date the standard price of £75.00 applies.' },
             { q: 'Is there a sibling discount?', a: 'Yes — book 2 or more children and 5% is automatically taken off at checkout. No code needed.' },
             { q: 'Can I book September classes early?', a: 'Yes — use code BGF467 before 11 July 2026 to get priority access when September 2026 classes open.' },
             { q: 'What are the camp dates?', a: 'Week 1: 28–30 July · Week 2: 4–6 August · Week 3: 18–20 August. All camps run Tuesday to Thursday, 9:15am–12:15pm.' },
@@ -410,9 +388,6 @@ export function PortalSummerCampsPage() {
             <>
               <div className="text-4xl mb-4">🎉</div>
               <h2 className="text-2xl font-bold mb-3">Ready to Book?</h2>
-              {isEarlyBird && (
-                <p className="text-[#f5c518] font-bold text-sm mb-2">Early bird code <span className="tracking-widest">WEF990</span> — £67.50 per child, expires 27 June</p>
-              )}
               <p className="text-white/70 text-sm mb-6 leading-relaxed">
                 Places are limited at each venue. Scroll up to pick your location and week.
               </p>

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { Menu, X, LogOut, User, ChevronDown, Copy, Check, Tag, AlertTriangle } from 'lucide-react'
+import { Menu, X, LogOut, User, ChevronDown, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 
 // ─── Toggle to false once email is restored ───────────────────────────────────
@@ -30,62 +30,6 @@ function EmailOutageBanner() {
         className="shrink-0 text-white/70 hover:text-white"
         aria-label="Dismiss"
       >
-        <X size={16} />
-      </button>
-    </div>
-  )
-}
-
-// ─── Early Bird Banner ────────────────────────────────────────────────────────
-
-const EARLY_BIRD_EXPIRES = new Date('2026-06-27T23:59:59')
-const DISMISS_KEY = 'earlybird_banner_dismissed_v2'
-
-function EarlyBirdBanner() {
-  const [visible, setVisible] = useState(false)
-  const [copied, setCopied] = useState(false)
-
-  useEffect(() => {
-    if (new Date() < EARLY_BIRD_EXPIRES && !localStorage.getItem(DISMISS_KEY)) {
-      const t = setTimeout(() => setVisible(true), 600)
-      return () => clearTimeout(t)
-    }
-  }, [])
-
-  function dismiss() {
-    setVisible(false)
-    localStorage.setItem(DISMISS_KEY, '1')
-  }
-
-  async function copyCode() {
-    try {
-      await navigator.clipboard.writeText('WEF990')
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2500)
-    } catch {
-      setCopied(false)
-    }
-  }
-
-  if (!visible) return null
-
-  return (
-    <div className="bg-green-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 animate-[slideDown_0.4s_ease-out]">
-      <div className="flex items-center gap-2 flex-wrap justify-center flex-1 text-center sm:text-left">
-        <Tag size={14} className="shrink-0 hidden sm:block" />
-        <span className="text-sm font-semibold">
-          ☀️ Early Bird — save <strong>£7.50</strong> on Summer GymCamps (ends 27 June).
-          Use code:
-        </span>
-        <button
-          onClick={copyCode}
-          className="inline-flex items-center gap-1.5 bg-white text-green-700 font-extrabold text-sm px-3 py-1 rounded-lg hover:bg-green-50 transition-colors tracking-wide"
-        >
-          {copied ? <><Check size={13} /> Copied!</> : <><Copy size={13} /> WEF990</>}
-        </button>
-        <span className="text-green-200 text-xs hidden sm:inline">at checkout on ClassForKids</span>
-      </div>
-      <button onClick={dismiss} className="shrink-0 text-white/70 hover:text-white transition-colors" aria-label="Dismiss">
         <X size={16} />
       </button>
     </div>
@@ -248,7 +192,6 @@ export function PortalLayout({ children }: PortalLayoutProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <EmailOutageBanner />
-      <EarlyBirdBanner />
       <HeatWarningBanner />
       {/* Header */}
       <header className="bg-[#1a3a6b] text-white sticky top-0 z-30 shadow-lg">
