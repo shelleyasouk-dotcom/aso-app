@@ -39,7 +39,7 @@ function EmailOutageBanner() {
 // ─── Heat Warning Banner ──────────────────────────────────────────────────────
 
 const HEAT_WARNING_EXPIRES = new Date('2026-06-28T00:00:00')
-const HEAT_DISMISS_KEY = 'heat_warning_dismissed_v1'
+const HEAT_DISMISS_KEY = 'heat_warning_dismissed_v2'
 
 function HeatWarningBanner() {
   const [dismissed, setDismissed] = useState(() => !!localStorage.getItem(HEAT_DISMISS_KEY))
@@ -51,15 +51,11 @@ function HeatWarningBanner() {
       <div className="max-w-4xl mx-auto flex items-start gap-3">
         <AlertTriangle size={18} className="shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm mb-1">🌡️ Extreme heat — update for this week's sessions</p>
+          <p className="font-bold text-sm mb-1">🌡️ Extreme heat — session cancellations: Wednesday 24 &amp; Thursday 25 June</p>
           <p className="text-sm text-white/90 leading-snug">
-            With temperatures forecast to reach 38°C this week, all sessions run indoors with a fully adapted, lower-intensity programme — floor work, beam, stretching and technique only. No running. Water breaks every 10 minutes.{' '}
-            <strong>Please make sure your child arrives with a full water bottle.</strong>{' '}
-            If a school confirms their hall is not safe, we will contact you directly.{' '}
-            Questions?{' '}
-            <a href="mailto:info@activeschool.org.uk" className="underline font-semibold hover:text-white/80">
-              Email info@activeschool.org.uk
-            </a>
+            Due to the extreme heat across the UK, all ASO sessions on <strong>Wednesday 24 June</strong> and <strong>Thursday 25 June</strong> have been cancelled and rescheduled.
+            You will have received an email with details of your rescheduled session date.
+            Stay safe in the heat — we look forward to seeing you all next week! 🙂
           </p>
         </div>
         <button
