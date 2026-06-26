@@ -85,10 +85,19 @@ interface ClockRecord {
   location_override: string | null
   profiles: { full_name: string | null; email: string | null; role: string | null } | null
   schools: { name: string | null } | null
-  staff_employment: { pay_rate: number | null; pay_frequency: string | null }[] | null
 }
 
 // ─── Timesheet helpers ──────────────────────────────────────────────────────────
+
+const SESSION_RATES: Record<string, number> = {
+  lead_coach: 30,
+  assistant_coach: 15,
+  junior_coach: 10,
+}
+
+function sessionRate(role: string | null): number | null {
+  return role ? (SESSION_RATES[role] ?? null) : null
+}
 
 function hoursFromRecord(r: ClockRecord): number {
   if (!r.clock_out) return 0
@@ -384,8 +393,7 @@ export function DataExportsPage() {
       .select(`
         id, clock_in, clock_out, location_override,
         profiles!staff_id ( full_name, email, role ),
-        schools ( name ),
-        staff_employment ( pay_rate, pay_frequency )
+        schools ( name )
       `)
       .not('clock_out', 'is', null)
       .gte('clock_in', from)
@@ -407,7 +415,6 @@ export function DataExportsPage() {
     // Aggregate by staff member
     const map = new Map<string, {
       name: string; email: string; role: string
-      payRate: number | null; payFreq: string | null
       totalHours: number; sessions: number
     }>()
 
@@ -415,8 +422,6 @@ export function DataExportsPage() {
       const name  = r.profiles?.full_name ?? 'Unknown'
       const email = r.profiles?.email ?? ''
       const role  = r.profiles?.role ?? ''
-      const payRate = r.staff_employment?.[0]?.pay_rate ?? null
-      const payFreq = r.staff_employment?.[0]?.pay_frequency ?? null
       const hours = hoursFromRecord(r)
       const key = email || name
       const existing = map.get(key)
@@ -424,27 +429,22 @@ export function DataExportsPage() {
         existing.totalHours += hours
         existing.sessions++
       } else {
-        map.set(key, { name, email, role, payRate, payFreq, totalHours: hours, sessions: 1 })
+        map.set(key, { name, email, role, totalHours: hours, sessions: 1 })
       }
     }
 
     const rows = [...map.values()]
       .sort((a, b) => a.name.localeCompare(b.name))
       .map(s => {
-        const totalPay = s.payRate !== null && s.payFreq === 'hourly'
-          ? (s.totalHours * s.payRate).toFixed(2)
-          : s.payRate !== null && s.payFreq === 'per_session'
-            ? (s.sessions * s.payRate).toFixed(2)
-            : ''
+        const rate = sessionRate(s.role)
+        const totalPay = rate !== null ? (s.sessions * rate).toFixed(2) : ''
         return {
           'Staff Name': s.name,
           'Email': s.email,
           'Role': s.role,
-          'Pay Rate (£)': s.payRate ?? '',
-          'Pay Type': s.payFreq ?? '',
+          'Rate Per Session (£)': rate ?? '',
           'Sessions': s.sessions,
           'Total Hours': fmtHours(s.totalHours),
-          'Total Hours (decimal)': s.totalHours.toFixed(2),
           'Total Pay (£)': totalPay,
           'Period': `${periodStart} to ${periodEnd}`,
         }
@@ -466,26 +466,19 @@ export function DataExportsPage() {
       .sort((a, b) => (a.profiles?.full_name ?? '').localeCompare(b.profiles?.full_name ?? ''))
       .map(r => {
         const hours = hoursFromRecord(r)
-        const payRate = r.staff_employment?.[0]?.pay_rate ?? null
-        const payFreq = r.staff_employment?.[0]?.pay_frequency ?? null
-        const sessionPay = payRate !== null && payFreq === 'hourly'
-          ? (hours * payRate).toFixed(2)
-          : payRate !== null && payFreq === 'per_session'
-            ? payRate.toFixed(2)
-            : ''
+        const role = r.profiles?.role ?? ''
+        const rate = sessionRate(role)
         return {
           'Staff Name': r.profiles?.full_name ?? '',
           'Email': r.profiles?.email ?? '',
-          'Role': r.profiles?.role ?? '',
+          'Role': role,
           'Date': new Date(r.clock_in).toLocaleDateString('en-GB'),
           'Clock In': new Date(r.clock_in).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
           'Clock Out': r.clock_out ? new Date(r.clock_out).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '',
           'Duration': fmtHours(hours),
-          'Hours (decimal)': hours.toFixed(2),
           'Location': r.schools?.name ?? r.location_override ?? '',
-          'Pay Rate (£)': payRate ?? '',
-          'Pay Type': payFreq ?? '',
-          'Session Pay (£)': sessionPay,
+          'Rate Per Session (£)': rate ?? '',
+          'Session Pay (£)': rate !== null ? rate.toFixed(2) : '',
         }
       })
 
@@ -557,7 +550,7 @@ export function DataExportsPage() {
             <PayrollCard
               icon={<FileSpreadsheet size={22} />}
               title="Payroll Summary"
-              description="One row per staff member — total hours, pay rate, and amount due for the period. Ready for Xero entry or bank transfer, sorted A–Z."
+              description="One row per staff member — sessions worked and total pay (Lead £30 · Assistant £15 · Junior £10 per session). Ready for Xero or bank transfer, sorted A–Z."
               start={periodStart}
               end={periodEnd}
               onDownload={handleDownloadPayrollSummary}
@@ -566,7 +559,7 @@ export function DataExportsPage() {
             <PayrollCard
               icon={<Clock size={22} />}
               title="Timesheet Detail"
-              description="Every clock-in and clock-out session with duration, location, and session pay. Full audit trail sorted by staff name."
+              description="Every session with clock-in/out times, duration, location, and £ per session. Full audit trail sorted by staff name."
               start={periodStart}
               end={periodEnd}
               onDownload={handleDownloadPayrollDetail}
