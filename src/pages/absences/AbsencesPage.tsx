@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Check, X, ChevronLeft, ChevronRight, AlertTriangle, BookOpen } from 'lucide-react'
+import { Plus, Check, X, ChevronLeft, ChevronRight, AlertTriangle, BookOpen, Pencil, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -54,16 +54,46 @@ function isoDate(d: Date) {
 
 function AbsenceCard({
   absence, canReview, onApprove, onReject, showStaff,
+  canEdit, canDelete, onEdit, onDelete,
 }: {
   absence: Absence
   canReview: boolean
   showStaff: boolean
   onApprove: (id: string, note: string) => void
   onReject: (id: string, note: string) => void
+  canEdit?: boolean
+  canDelete?: boolean
+  onEdit?: (id: string, fields: { date_from: string; date_to: string; type: AbsenceType; reason: string; status: AbsenceStatus }) => Promise<void>
+  onDelete?: (id: string) => Promise<void>
 }) {
   const [reviewing, setReviewing] = useState(false)
   const [note, setNote] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [editForm, setEditForm] = useState({
+    date_from: absence.date_from,
+    date_to: absence.date_to,
+    type: absence.type,
+    reason: absence.reason ?? '',
+    status: absence.status,
+  })
   const s = STATUS_CONFIG[absence.status]
+
+  async function saveEdit() {
+    if (!onEdit) return
+    setSaving(true)
+    await onEdit(absence.id, editForm)
+    setSaving(false)
+    setEditing(false)
+  }
+
+  async function confirmDelete() {
+    if (!onDelete) return
+    setDeleting(true)
+    await onDelete(absence.id)
+    setDeleting(false)
+  }
 
   return (
     <div className={`bg-white rounded-2xl border-l-4 ${s.border} shadow-sm overflow-hidden`}>
@@ -73,67 +103,110 @@ function AbsenceCard({
             <span className="text-gray-400 font-normal text-xs ml-2">{ROLE_LABELS[absence.staff.role]}</span>
           </p>
         )}
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5 mb-1">
-              {typeChip(absence.type)}
-              {statusChip(absence.status)}
-              <span className="text-xs text-gray-400">{dayCount(absence.date_from, absence.date_to)}</span>
+
+        {!editing ? (
+          <>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                  {typeChip(absence.type)}
+                  {statusChip(absence.status)}
+                  <span className="text-xs text-gray-400">{dayCount(absence.date_from, absence.date_to)}</span>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {formatDate(absence.date_from)}
+                  {absence.date_from !== absence.date_to && ` – ${formatDate(absence.date_to)}`}
+                </p>
+                {absence.reason && (
+                  <p className="text-xs text-gray-600 mt-1 leading-relaxed">{absence.reason}</p>
+                )}
+                {absence.reviewer_note && (
+                  <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5 mt-2 leading-relaxed">
+                    <span className="font-semibold">Note: </span>{absence.reviewer_note}
+                  </p>
+                )}
+              </div>
+              {(canEdit || canDelete) && (
+                <div className="flex gap-1.5 shrink-0">
+                  {canEdit && (
+                    <button onClick={() => { setEditForm({ date_from: absence.date_from, date_to: absence.date_to, type: absence.type, reason: absence.reason ?? '', status: absence.status }); setEditing(true) }}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-[#1a3a6b] hover:bg-[#1a3a6b]/8 transition-colors">
+                      <Pencil size={14} />
+                    </button>
+                  )}
+                  {canDelete && (
+                    <button onClick={confirmDelete} disabled={deleting}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
-            <p className="text-xs text-gray-500">
-              {formatDate(absence.date_from)}
-              {absence.date_from !== absence.date_to && ` – ${formatDate(absence.date_to)}`}
-            </p>
-            {absence.reason && (
-              <p className="text-xs text-gray-600 mt-1 leading-relaxed">{absence.reason}</p>
-            )}
-            {absence.reviewer_note && (
-              <p className="text-xs text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5 mt-2 leading-relaxed">
-                <span className="font-semibold">Note: </span>{absence.reviewer_note}
-              </p>
-            )}
-          </div>
-        </div>
 
-        {/* Approval buttons */}
-        {canReview && absence.status === 'pending' && !reviewing && (
-          <div className="flex gap-2 mt-3">
-            <button
-              onClick={() => setReviewing(true)}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-green-500 text-white text-xs font-semibold"
-            >
-              <Check size={13} /> Approve
-            </button>
-            <button
-              onClick={() => { setReviewing(true) }}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-500 text-white text-xs font-semibold"
-            >
-              <X size={13} /> Reject
-            </button>
-          </div>
-        )}
+            {/* Approval buttons */}
+            {canReview && absence.status === 'pending' && !reviewing && (
+              <div className="flex gap-2 mt-3">
+                <button onClick={() => setReviewing(true)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-green-500 text-white text-xs font-semibold">
+                  <Check size={13} /> Approve
+                </button>
+                <button onClick={() => setReviewing(true)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-500 text-white text-xs font-semibold">
+                  <X size={13} /> Reject
+                </button>
+              </div>
+            )}
 
-        {canReview && absence.status === 'pending' && reviewing && (
-          <div className="mt-3 flex flex-col gap-2">
-            <textarea
-              placeholder="Add a note (optional)…"
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              rows={2}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 resize-none"
-            />
+            {canReview && absence.status === 'pending' && reviewing && (
+              <div className="mt-3 flex flex-col gap-2">
+                <textarea placeholder="Add a note (optional)…" value={note}
+                  onChange={e => setNote(e.target.value)} rows={2}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 resize-none" />
+                <div className="flex gap-2">
+                  <button onClick={() => { setReviewing(false); setNote('') }}
+                    className="flex-1 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600">Cancel</button>
+                  <button onClick={() => onApprove(absence.id, note)}
+                    className="flex-1 py-2 rounded-xl bg-green-500 text-white text-xs font-semibold flex items-center justify-center gap-1">
+                    <Check size={12} /> Approve</button>
+                  <button onClick={() => onReject(absence.id, note)}
+                    className="flex-1 py-2 rounded-xl bg-red-500 text-white text-xs font-semibold flex items-center justify-center gap-1">
+                    <X size={12} /> Reject</button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          /* ── Inline edit form ── */
+          <div className="flex flex-col gap-3">
+            <p className="text-xs font-bold text-[#1a3a6b] uppercase tracking-wide">Edit Absence</p>
+            <Select label="Type" value={editForm.type}
+              onChange={e => setEditForm({ ...editForm, type: e.target.value as AbsenceType })}>
+              {ABSENCE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </Select>
+            <Input label="Start Date" type="date" value={editForm.date_from}
+              onChange={e => setEditForm({ ...editForm, date_from: e.target.value })} />
+            <Input label="End Date" type="date" value={editForm.date_to}
+              onChange={e => setEditForm({ ...editForm, date_to: e.target.value })} />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-gray-700">Reason</label>
+              <textarea value={editForm.reason} rows={2}
+                onChange={e => setEditForm({ ...editForm, reason: e.target.value })}
+                placeholder="Brief description…"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 resize-none" />
+            </div>
+            <Select label="Status" value={editForm.status}
+              onChange={e => setEditForm({ ...editForm, status: e.target.value as AbsenceStatus })}>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </Select>
             <div className="flex gap-2">
-              <button onClick={() => { setReviewing(false); setNote('') }}
-                className="flex-1 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600">
-                Cancel
-              </button>
-              <button onClick={() => onApprove(absence.id, note)}
-                className="flex-1 py-2 rounded-xl bg-green-500 text-white text-xs font-semibold flex items-center justify-center gap-1">
-                <Check size={12} /> Approve
-              </button>
-              <button onClick={() => onReject(absence.id, note)}
-                className="flex-1 py-2 rounded-xl bg-red-500 text-white text-xs font-semibold flex items-center justify-center gap-1">
-                <X size={12} /> Reject
+              <button onClick={() => setEditing(false)}
+                className="flex-1 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600">Cancel</button>
+              <button onClick={saveEdit} disabled={saving}
+                className="flex-1 py-2 rounded-xl bg-[#1a3a6b] text-white text-xs font-semibold">
+                {saving ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -391,6 +464,26 @@ export function AbsencesPage() {
     setSubmitting(false)
   }
 
+  // ── Edit absence ──────────────────────────────────────────────────────────
+  async function editAbsence(id: string, fields: { date_from: string; date_to: string; type: AbsenceType; reason: string; status: AbsenceStatus }) {
+    await supabase.from('absences').update({
+      date_from: fields.date_from,
+      date_to: fields.date_to || fields.date_from,
+      type: fields.type,
+      reason: fields.reason.trim() || null,
+      status: fields.status,
+    }).eq('id', id)
+    await loadMine()
+    await loadTeam()
+  }
+
+  // ── Delete absence ─────────────────────────────────────────────────────────
+  async function deleteAbsence(id: string) {
+    await supabase.from('absences').delete().eq('id', id)
+    await loadMine()
+    await loadTeam()
+  }
+
   // ── Approve / Reject ───────────────────────────────────────────────────────
   async function reviewAbsence(id: string, status: 'approved' | 'rejected', note: string) {
     if (!profile) return
@@ -508,7 +601,11 @@ export function AbsencesPage() {
               <div className="flex flex-col gap-3">
                 {myAbsences.map(a => (
                   <AbsenceCard key={a.id} absence={a} canReview={false} showStaff={false}
-                    onApprove={() => {}} onReject={() => {}} />
+                    onApprove={() => {}} onReject={() => {}}
+                    canEdit={a.status === 'pending'}
+                    canDelete={a.status === 'pending'}
+                    onEdit={editAbsence}
+                    onDelete={deleteAbsence} />
                 ))}
               </div>
             )}
@@ -536,7 +633,11 @@ export function AbsencesPage() {
                         (profile?.role === 'area_lead' && a.staff?.area === profile?.area)
                       }
                       onApprove={(id, note) => reviewAbsence(id, 'approved', note)}
-                      onReject={(id, note) => reviewAbsence(id, 'rejected', note)} />
+                      onReject={(id, note) => reviewAbsence(id, 'rejected', note)}
+                      canEdit={isManager}
+                      canDelete={isManager}
+                      onEdit={editAbsence}
+                      onDelete={deleteAbsence} />
                   ))}
                 </div>
               </>
@@ -549,7 +650,11 @@ export function AbsencesPage() {
                 <div className="flex flex-col gap-3">
                   {teamAbsences.filter(a => a.status !== 'pending').map(a => (
                     <AbsenceCard key={a.id} absence={a} canReview={false} showStaff
-                      onApprove={() => {}} onReject={() => {}} />
+                      onApprove={() => {}} onReject={() => {}}
+                      canEdit={isManager}
+                      canDelete={isManager}
+                      onEdit={editAbsence}
+                      onDelete={deleteAbsence} />
                   ))}
                 </div>
               </>
