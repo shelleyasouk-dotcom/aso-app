@@ -71,6 +71,8 @@ import { JobAdvertsAdminPage } from './pages/admin/JobAdvertsAdminPage'
 import { JobApplicationsAdminPage } from './pages/admin/JobApplicationsAdminPage'
 import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
 import { DataExportsPage } from './pages/admin/DataExportsPage'
+import { SchoolHealthScorePage } from './pages/admin/SchoolHealthScorePage'
+import { LessonsLearnedPage } from './pages/admin/LessonsLearnedPage'
 import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
 import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
 import { WeeklyReportsPage } from './pages/lessonplans/WeeklyReportsPage'
@@ -215,6 +217,18 @@ export default function App() {
           <Route path="/admin/data-exports" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <DataExportsPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/school-health-scores" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+              <SchoolHealthScorePage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/lessons-learned" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+              <LessonsLearnedPage />
             </ProtectedRoute>
           } />
 

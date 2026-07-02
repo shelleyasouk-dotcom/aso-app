@@ -3,6 +3,7 @@ import {
   School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText,
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
+  HeartPulse, BookMarked,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -218,6 +219,27 @@ export function AdminPage() {
               icon: Tent,
               path: '/admin/holiday-camps',
               color: 'bg-amber-50 text-amber-700',
+            },
+          ]}
+        />
+
+        {/* Operations */}
+        <TileGroup
+          title="Operations"
+          tiles={[
+            {
+              label: 'School Health Scores',
+              description: 'RAG rating for every school — spot problems early',
+              icon: HeartPulse,
+              path: '/admin/school-health-scores',
+              color: 'bg-rose-50 text-rose-700',
+            },
+            {
+              label: 'Lessons Learned',
+              description: 'Log of significant failures and the processes changed',
+              icon: BookMarked,
+              path: '/admin/lessons-learned',
+              color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]',
             },
           ]}
         />
