@@ -6,9 +6,10 @@ import type { Role } from '../../types'
 interface ProtectedRouteProps {
   children: React.ReactNode
   allowedRoles?: Role[]
+  allowFlag?: keyof import('../../types').Profile
 }
 
-export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, allowedRoles, allowFlag }: ProtectedRouteProps) {
   const { user, profile, loading } = useAuth()
   const location = useLocation()
 
@@ -34,7 +35,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/dashboard" replace />
   }
 
-  if (allowedRoles && !allowedRoles.includes(profile.role)) {
+  const flagAllows = allowFlag ? !!profile[allowFlag] : false
+  if (allowedRoles && !allowedRoles.includes(profile.role) && !flagAllows) {
     return <Navigate to="/dashboard" replace />
   }
 

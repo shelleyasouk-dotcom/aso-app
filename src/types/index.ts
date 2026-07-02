@@ -14,6 +14,7 @@ export interface Profile {
   safeguarding_expiry?: string
   first_aid_expiry?: string
   can_clock_anywhere?: boolean
+  can_post_announcements?: boolean
   school_id?: string | null
   created_at: string
 }

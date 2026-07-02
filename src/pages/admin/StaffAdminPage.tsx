@@ -26,7 +26,7 @@ interface AssignPanel {
   selected: Set<string>
 }
 
-type EditForm = { full_name: string; email: string; role: Role; areas: string[]; can_clock_anywhere: boolean }
+type EditForm = { full_name: string; email: string; role: Role; areas: string[]; can_clock_anywhere: boolean; can_post_announcements: boolean }
 
 interface StaffCardProps {
   member: StaffWithAssignments
@@ -122,6 +122,24 @@ function StaffCard({ member, canManage, canAssignSchools, editingId, editForm, e
               <p className="text-xs text-gray-400">Allows clock-in from any or custom location</p>
             </div>
           </div>
+          <div className="flex items-center gap-3 py-2">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={editForm.can_post_announcements}
+              onClick={() => setEditForm({ ...editForm, can_post_announcements: !editForm.can_post_announcements })}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 focus:outline-none ${editForm.can_post_announcements ? 'bg-[#1a3a6b]' : 'bg-gray-200'}`}
+            >
+              <span
+                className="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
+                style={{ transform: editForm.can_post_announcements ? 'translateX(20px)' : 'translateX(0)' }}
+              />
+            </button>
+            <div>
+              <p className="text-sm font-semibold text-gray-700">Can post announcements</p>
+              <p className="text-xs text-gray-400">Allows posting staff announcements regardless of role</p>
+            </div>
+          </div>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => setEditingId(null)} className="flex-1">Cancel</Button>
             <Button onClick={() => onSaveEdit(member.id)} disabled={saving} className="flex-1">
@@ -194,7 +212,7 @@ export function StaffAdminPage() {
   const [showForm, setShowForm] = useState(false)
   const [assignPanel, setAssignPanel] = useState<AssignPanel | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState<EditForm>({ full_name: '', email: '', role: 'lead_coach', areas: [], can_clock_anywhere: false })
+  const [editForm, setEditForm] = useState<EditForm>({ full_name: '', email: '', role: 'lead_coach', areas: [], can_clock_anywhere: false, can_post_announcements: false })
   const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'lead_coach' as Role })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -287,6 +305,7 @@ export function StaffAdminPage() {
         ? member.areas
         : member.area ? [member.area] : [],
       can_clock_anywhere: member.can_clock_anywhere ?? false,
+      can_post_announcements: member.can_post_announcements ?? false,
     })
     setAssignPanel(null)
   }
@@ -304,6 +323,7 @@ export function StaffAdminPage() {
       area: areas[0] ?? null,
       areas: areas.length > 0 ? areas : null,
       can_clock_anywhere: editForm.can_clock_anywhere,
+      can_post_announcements: editForm.can_post_announcements,
     }).eq('id', id)
     if (error) {
       setEditError(error.message)

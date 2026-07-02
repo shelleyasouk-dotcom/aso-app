@@ -158,7 +158,7 @@ export function MyAreaPage() {
           />
         )}
 
-        {role === 'media_tech' && (
+        {(role === 'media_tech' || profile.can_post_announcements) && !isAreaLead && (
           <TileSection
             title="Communications"
             tiles={[
