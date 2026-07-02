@@ -196,7 +196,7 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/admin/announcements" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
               <AnnouncementsAdminPage />
             </ProtectedRoute>
           } />

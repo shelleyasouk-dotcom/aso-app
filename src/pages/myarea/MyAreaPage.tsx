@@ -158,6 +158,15 @@ export function MyAreaPage() {
           />
         )}
 
+        {role === 'media_tech' && (
+          <TileSection
+            title="Communications"
+            tiles={[
+              { label: 'Announcements', description: 'Post & manage staff updates', icon: Megaphone, path: '/admin/announcements', color: 'bg-pink-50 text-pink-700' },
+            ]}
+          />
+        )}
+
         <div className="pt-4 border-t border-gray-200 flex flex-col gap-3">
           <button
             onClick={() => navigate('/guide')}
