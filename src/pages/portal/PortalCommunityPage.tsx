@@ -3,6 +3,7 @@ import {
   Heart, Users, Star, Briefcase, ChevronRight, Globe, HandHeart
 } from 'lucide-react'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { FeedbackSection } from '../../components/portal/FeedbackSection'
 
 const IMPACT_STATS = [
   { value: '5,000+', label: 'Children coached every term' },
@@ -224,6 +225,9 @@ export function PortalCommunityPage() {
           </div>
         </div>
       </section>
+
+      {/* Parent feedback */}
+      <FeedbackSection />
 
       {/* What coaches say (placeholder) */}
       <section className="bg-gray-50 py-14 px-4">

@@ -73,6 +73,7 @@ import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
 import { DataExportsPage } from './pages/admin/DataExportsPage'
 import { SchoolHealthScorePage } from './pages/admin/SchoolHealthScorePage'
 import { LessonsLearnedPage } from './pages/admin/LessonsLearnedPage'
+import { FeedbackAnalyticsPage } from './pages/admin/FeedbackAnalyticsPage'
 import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
 import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
 import { WeeklyReportsPage } from './pages/lessonplans/WeeklyReportsPage'
@@ -229,6 +230,12 @@ export default function App() {
           <Route path="/admin/lessons-learned" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
               <LessonsLearnedPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin/feedback" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <FeedbackAnalyticsPage />
             </ProtectedRoute>
           } />
 

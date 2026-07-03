@@ -3,7 +3,7 @@ import {
   School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText,
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
-  HeartPulse, BookMarked,
+  HeartPulse, BookMarked, Star,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -254,6 +254,13 @@ export function AdminPage() {
               icon: Download,
               path: '/admin/data-exports',
               color: 'bg-slate-50 text-slate-700',
+            },
+            {
+              label: 'Parent Feedback',
+              description: 'Star ratings and comments from parents on the community hub',
+              icon: Star,
+              path: '/admin/feedback',
+              color: 'bg-yellow-50 text-yellow-600',
             },
           ]}
         />
