@@ -8,11 +8,13 @@ import { Layout } from '../../components/layout/Layout'
 
 interface FeedbackRow {
   id: string
+  reviewer_type: 'parent' | 'school' | null
   fun_rating: number
   safety_rating: number
   inclusion_rating: number
   development_rating: number
   professionalism_rating: number
+  communications_rating: number
   overall_rating: number
   comment: string | null
   reviewer_name: string | null
@@ -92,6 +94,9 @@ export function FeedbackAnalyticsPage() {
   const inclusion = avg(rows, 'inclusion_rating')
   const development = avg(rows, 'development_rating')
   const professionalism = avg(rows, 'professionalism_rating')
+  const communications = avg(rows, 'communications_rating')
+  const parentCount = rows.filter(r => !r.reviewer_type || r.reviewer_type === 'parent').length
+  const schoolCount = rows.filter(r => r.reviewer_type === 'school').length
 
   const withComments = rows.filter(r => r.comment)
 
@@ -119,10 +124,14 @@ export function FeedbackAnalyticsPage() {
                 <div className="flex-1 border-l border-white/20 pl-4">
                   <div className="flex items-center gap-2 mb-2">
                     <TrendingUp size={14} className="text-[#f5c518]" />
-                    <span className="text-sm font-semibold text-white/80">Overall parent rating</span>
+                    <span className="text-sm font-semibold text-white/80">Overall rating</span>
+                  </div>
+                  <div className="flex gap-3 text-xs text-white/60 mb-1">
+                    <span>👪 {parentCount} parent{parentCount !== 1 ? 's' : ''}</span>
+                    <span>🏫 {schoolCount} school{schoolCount !== 1 ? 's' : ''}</span>
                   </div>
                   <p className="text-xs text-white/50 leading-relaxed">
-                    Average across fun, safety, inclusion, development, and professionalism ratings from {count} parent{count !== 1 ? 's' : ''}.
+                    Average across 6 categories from all reviewers.
                   </p>
                 </div>
               </div>
@@ -136,6 +145,7 @@ export function FeedbackAnalyticsPage() {
                   { label: '🤝 Inclusion', value: inclusion },
                   { label: '📈 Development', value: development },
                   { label: '⭐ Professionalism', value: professionalism },
+                  { label: '📣 Communications', value: communications },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center gap-3">
                     <span className="text-xs text-white/70 w-36 shrink-0">{label}</span>
@@ -160,6 +170,7 @@ export function FeedbackAnalyticsPage() {
                 <ScoreBar label="🤝 Inclusion" value={inclusion} />
                 <ScoreBar label="📈 Development" value={development} />
                 <ScoreBar label="⭐ Professionalism" value={professionalism} />
+                <ScoreBar label="📣 Communications" value={communications} />
               </div>
             </div>
 
@@ -179,6 +190,7 @@ export function FeedbackAnalyticsPage() {
                           <div className="flex items-center gap-2 mt-2">
                             <StarBar value={r.overall_rating} size={12} />
                             <span className="text-xs text-gray-400">
+                              {r.reviewer_type === 'school' ? '🏫' : '👪'}{' '}
                               {r.reviewer_name ?? 'Anonymous'}
                               {r.school_name ? ` · ${r.school_name}` : ''}
                               {' · '}{new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -211,6 +223,7 @@ export function FeedbackAnalyticsPage() {
                     <thead>
                       <tr className="border-b border-gray-100 text-gray-400 text-left">
                         <th className="px-4 py-2.5 font-semibold">Date</th>
+                        <th className="px-4 py-2.5 font-semibold">Type</th>
                         <th className="px-4 py-2.5 font-semibold">Name</th>
                         <th className="px-4 py-2.5 font-semibold">School</th>
                         <th className="px-4 py-2.5 font-semibold">Overall</th>
@@ -219,6 +232,7 @@ export function FeedbackAnalyticsPage() {
                         <th className="px-4 py-2.5 font-semibold">Inclusion</th>
                         <th className="px-4 py-2.5 font-semibold">Dev</th>
                         <th className="px-4 py-2.5 font-semibold">Prof</th>
+                        <th className="px-4 py-2.5 font-semibold">Comms</th>
                         {isDirector && <th className="px-4 py-2.5" />}
                       </tr>
                     </thead>
@@ -228,6 +242,7 @@ export function FeedbackAnalyticsPage() {
                           <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
                             {new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                           </td>
+                          <td className="px-4 py-2.5 text-gray-500">{r.reviewer_type === 'school' ? '🏫' : '👪'}</td>
                           <td className="px-4 py-2.5 text-gray-700">{r.reviewer_name ?? '—'}</td>
                           <td className="px-4 py-2.5 text-gray-700">{r.school_name ?? '—'}</td>
                           <td className="px-4 py-2.5 font-bold text-[#1a3a6b]">{r.overall_rating}</td>
@@ -236,6 +251,7 @@ export function FeedbackAnalyticsPage() {
                           <td className="px-4 py-2.5 text-gray-600">{r.inclusion_rating}</td>
                           <td className="px-4 py-2.5 text-gray-600">{r.development_rating}</td>
                           <td className="px-4 py-2.5 text-gray-600">{r.professionalism_rating}</td>
+                          <td className="px-4 py-2.5 text-gray-600">{r.communications_rating}</td>
                           {isDirector && (
                             <td className="px-4 py-2.5">
                               <button

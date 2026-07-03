@@ -12,6 +12,7 @@ interface FeedbackStats {
   inclusion: number
   development: number
   professionalism: number
+  communications: number
 }
 
 // ─── Star picker ──────────────────────────────────────────────────────────────
@@ -59,12 +60,15 @@ function StarDisplay({ value, size = 14 }: { value: number; size?: number }) {
 // ─── Questions ────────────────────────────────────────────────────────────────
 
 const QUESTIONS = [
-  { key: 'fun',             label: '🎉 Fun',             question: 'How fun did your child find the sessions?' },
-  { key: 'safety',          label: '🛡️ Safety',          question: 'How safe and well looked-after did your child feel?' },
-  { key: 'inclusion',       label: '🤝 Inclusion',       question: 'Did your child feel welcome and included?' },
-  { key: 'development',     label: '📈 Development',     question: 'Has your child learned and improved their skills?' },
-  { key: 'professionalism', label: '⭐ Professionalism', question: 'How professional and supportive were the coaches?' },
+  { key: 'fun',             label: '🎉 Fun',              question: 'How fun did your child find the sessions?' },
+  { key: 'safety',          label: '🛡️ Safety',           question: 'How safe and well looked-after did your child feel?' },
+  { key: 'inclusion',       label: '🤝 Inclusion',        question: 'Did your child feel welcome and included?' },
+  { key: 'development',     label: '📈 Development',      question: 'Has your child learned and improved their skills?' },
+  { key: 'professionalism', label: '⭐ Professionalism',  question: 'How professional and supportive were the coaches?' },
+  { key: 'communications',  label: '📣 Communications',   question: 'How well did we keep you informed and communicate with you?' },
 ]
+
+const RATING_KEYS = ['fun', 'safety', 'inclusion', 'development', 'professionalism', 'communications'] as const
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -74,11 +78,13 @@ export function FeedbackSection() {
   const [submitted, setSubmitted] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
+    reviewer_type: 'parent' as 'parent' | 'school',
     fun: 0,
     safety: 0,
     inclusion: 0,
     development: 0,
     professionalism: 0,
+    communications: 0,
     overall: 0,
     comment: '',
     reviewer_name: '',
@@ -91,10 +97,10 @@ export function FeedbackSection() {
   async function loadStats() {
     const { data } = await supabase
       .from('parent_feedback')
-      .select('fun_rating, safety_rating, inclusion_rating, development_rating, professionalism_rating, overall_rating')
+      .select('fun_rating, safety_rating, inclusion_rating, development_rating, professionalism_rating, communications_rating, overall_rating')
     if (!data || data.length === 0) return
     const count = data.length
-    type RatingKey = 'fun_rating' | 'safety_rating' | 'inclusion_rating' | 'development_rating' | 'professionalism_rating' | 'overall_rating'
+    type RatingKey = 'fun_rating' | 'safety_rating' | 'inclusion_rating' | 'development_rating' | 'professionalism_rating' | 'communications_rating' | 'overall_rating'
     const avg = (key: RatingKey) => data.reduce((sum, r) => sum + (r[key] ?? 0), 0) / count
     setStats({
       count,
@@ -104,29 +110,30 @@ export function FeedbackSection() {
       inclusion: avg('inclusion_rating'),
       development: avg('development_rating'),
       professionalism: avg('professionalism_rating'),
+      communications: avg('communications_rating'),
     })
   }
 
   function setRating(key: string, val: number) {
-    setForm(f => ({ ...f, [key]: val }))
-    // auto-calculate overall as mean of the 5 category ratings
     const updated = { ...form, [key]: val }
-    const vals = [updated.fun, updated.safety, updated.inclusion, updated.development, updated.professionalism].filter(v => v > 0)
+    const vals = RATING_KEYS.map(k => updated[k]).filter(v => v > 0)
     const mean = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
-    setForm(f => ({ ...f, [key]: val, overall: mean }))
+    setForm({ ...updated, overall: mean })
   }
 
   async function submit() {
-    const filled = [form.fun, form.safety, form.inclusion, form.development, form.professionalism].filter(v => v > 0)
-    if (filled.length < 5) { setError('Please rate all 5 areas before submitting.'); return }
+    const filled = RATING_KEYS.map(k => form[k]).filter(v => v > 0)
+    if (filled.length < 6) { setError('Please rate all 6 areas before submitting.'); return }
     setSaving(true)
     setError(null)
     const { error: err } = await supabase.from('parent_feedback').insert({
+      reviewer_type: form.reviewer_type,
       fun_rating: form.fun,
       safety_rating: form.safety,
       inclusion_rating: form.inclusion,
       development_rating: form.development,
       professionalism_rating: form.professionalism,
+      communications_rating: form.communications,
       overall_rating: form.overall,
       comment: form.comment.trim() || null,
       reviewer_name: form.reviewer_name.trim() || null,
@@ -145,13 +152,13 @@ export function FeedbackSection() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-[#f5c518]/20 text-[#f5c518] text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-            <Star size={14} className="fill-[#f5c518]" /> Parent Reviews
+            <Star size={14} className="fill-[#f5c518]" /> Reviews
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">
             How are we doing?
           </h2>
           <p className="text-white/70 text-sm leading-relaxed max-w-md mx-auto">
-            Your feedback shapes everything we do. Tell us how your child's experience has been — it only takes two minutes.
+            Your feedback shapes everything we do. Whether you're a parent or a school — tell us about your experience. It only takes two minutes.
           </p>
         </div>
 
@@ -171,6 +178,7 @@ export function FeedbackSection() {
                   { label: '🤝 Inclusion', val: stats.inclusion },
                   { label: '📈 Development', val: stats.development },
                   { label: '⭐ Professionalism', val: stats.professionalism },
+                  { label: '📣 Communications', val: stats.communications },
                 ].map(({ label, val }) => (
                   <div key={label} className="flex items-center gap-2">
                     <span className="text-white/70 text-xs w-28">{label}</span>
@@ -205,6 +213,27 @@ export function FeedbackSection() {
           <div className="bg-white rounded-2xl p-6 flex flex-col gap-5">
             <h3 className="font-extrabold text-[#1a3a6b] text-lg">Rate your experience</h3>
 
+            {/* Reviewer type */}
+            <div>
+              <p className="text-sm font-bold text-gray-800 mb-2">I am a…</p>
+              <div className="flex gap-3">
+                {(['parent', 'school'] as const).map(type => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, reviewer_type: type }))}
+                    className={`flex-1 py-2.5 rounded-xl border-2 text-sm font-bold transition-colors capitalize ${
+                      form.reviewer_type === type
+                        ? 'border-[#1a3a6b] bg-[#1a3a6b] text-white'
+                        : 'border-gray-200 text-gray-600 hover:border-[#1a3a6b]/40'
+                    }`}
+                  >
+                    {type === 'parent' ? '👪 Parent / Carer' : '🏫 School'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {QUESTIONS.map(q => (
               <div key={q.key}>
                 <p className="text-sm font-bold text-gray-800 mb-1">{q.label}</p>
@@ -223,7 +252,7 @@ export function FeedbackSection() {
                   rows={3}
                   value={form.comment}
                   onChange={e => setForm(f => ({ ...f, comment: e.target.value }))}
-                  placeholder="Tell us about your child's experience…"
+                  placeholder="Tell us about your experience…"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 resize-none"
                 />
               </div>
@@ -234,7 +263,7 @@ export function FeedbackSection() {
                     type="text"
                     value={form.reviewer_name}
                     onChange={e => setForm(f => ({ ...f, reviewer_name: e.target.value }))}
-                    placeholder="e.g. Sarah (parent)"
+                    placeholder="e.g. Sarah"
                     className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20"
                   />
                 </div>
