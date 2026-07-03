@@ -93,6 +93,7 @@ const NAV: NavItem[] = [
     label: 'About',
     items: [
       { path: '/portal/about',        label: 'About ASO',    desc: 'Our story, values & team' },
+      { path: '/portal/community',    label: 'Community',    desc: 'Reviews, values & get involved' },
       { path: '/portal/for-schools',  label: 'For Schools',  desc: 'Partner with us' },
       { path: '/portal/affiliations', label: 'Affiliations', desc: 'Our governing bodies' },
       { path: '/portal/contact',      label: 'Contact Us',   desc: 'Get in touch with our team' },
