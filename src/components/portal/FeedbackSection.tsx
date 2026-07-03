@@ -59,13 +59,22 @@ function StarDisplay({ value, size = 14 }: { value: number; size?: number }) {
 
 // ─── Questions ────────────────────────────────────────────────────────────────
 
-const QUESTIONS = [
-  { key: 'fun',             label: '🎉 Fun',              question: 'How fun did your child find the sessions?' },
-  { key: 'safety',          label: '🛡️ Safety',           question: 'How safe and well looked-after did your child feel?' },
-  { key: 'inclusion',       label: '🤝 Inclusion',        question: 'Did your child feel welcome and included?' },
-  { key: 'development',     label: '📈 Development',      question: 'Has your child learned and improved their skills?' },
-  { key: 'professionalism', label: '⭐ Professionalism',  question: 'How professional and supportive were the coaches?' },
-  { key: 'communications',  label: '📣 Communications',   question: 'How well did we keep you informed and communicate with you?' },
+const PARENT_QUESTIONS = [
+  { key: 'fun',             label: '🎉 Fun',             question: 'How fun did your child find the sessions?' },
+  { key: 'safety',          label: '🛡️ Safety',          question: 'How safe and well looked-after did your child feel?' },
+  { key: 'inclusion',       label: '🤝 Inclusion',       question: 'Did your child feel welcome and included, regardless of ability?' },
+  { key: 'development',     label: '📈 Development',     question: 'Has your child learned new skills and improved over time?' },
+  { key: 'professionalism', label: '⭐ Professionalism', question: 'How professional and supportive were the coaches?' },
+  { key: 'communications',  label: '📣 Communications',  question: 'How well did we keep you informed about sessions, changes and updates?' },
+]
+
+const SCHOOL_QUESTIONS = [
+  { key: 'fun',             label: '🎉 Pupil Engagement',      question: 'How engaged and enthused have the children been during sessions?' },
+  { key: 'safety',          label: '🛡️ Safety & Safeguarding', question: 'How confident are you in our safeguarding standards and duty of care?' },
+  { key: 'inclusion',       label: '🤝 Inclusion',             question: 'How well do our sessions cater for all children, regardless of ability or background?' },
+  { key: 'development',     label: '📈 Pupil Progress',        question: 'Have you seen children grow in confidence, skill and physical literacy?' },
+  { key: 'professionalism', label: '⭐ Professionalism',       question: 'How professional, reliable and well-prepared have our coaches been?' },
+  { key: 'communications',  label: '📣 Communications',        question: 'How well have we communicated with you and your school staff throughout our partnership?' },
 ]
 
 const RATING_KEYS = ['fun', 'safety', 'inclusion', 'development', 'professionalism', 'communications'] as const
@@ -234,7 +243,7 @@ export function FeedbackSection() {
               </div>
             </div>
 
-            {QUESTIONS.map(q => (
+            {(form.reviewer_type === 'school' ? SCHOOL_QUESTIONS : PARENT_QUESTIONS).map(q => (
               <div key={q.key}>
                 <p className="text-sm font-bold text-gray-800 mb-1">{q.label}</p>
                 <p className="text-xs text-gray-500 mb-2">{q.question}</p>
@@ -252,7 +261,7 @@ export function FeedbackSection() {
                   rows={3}
                   value={form.comment}
                   onChange={e => setForm(f => ({ ...f, comment: e.target.value }))}
-                  placeholder="Tell us about your experience…"
+                  placeholder={form.reviewer_type === 'school' ? 'Tell us about your experience as a school partner…' : 'Tell us about your child\'s experience…'}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 resize-none"
                 />
               </div>
