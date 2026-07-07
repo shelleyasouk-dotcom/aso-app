@@ -240,7 +240,7 @@ export function PortalHomePage() {
                     <Calendar size={11} className="text-[#1a3a6b] shrink-0" />
                     <span className="text-xs">3 weeks · 28 Jul – 20 Aug 2026</span>
                   </div>
-                  <p className="text-sm font-extrabold text-[#1a3a6b]">from £67.50 <span className="text-xs font-normal text-gray-400">per child</span></p>
+                  <p className="text-sm font-extrabold text-[#1a3a6b]">from £75.00 <span className="text-xs font-normal text-gray-400">per child</span></p>
                   {camp.is_full ? (
                     <div className="mt-auto w-full text-center bg-gray-100 text-gray-400 font-semibold text-xs py-2.5 rounded-xl">Fully Booked</div>
                   ) : (
