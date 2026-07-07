@@ -74,6 +74,8 @@ import { DataExportsPage } from './pages/admin/DataExportsPage'
 import { SchoolHealthScorePage } from './pages/admin/SchoolHealthScorePage'
 import { LessonsLearnedPage } from './pages/admin/LessonsLearnedPage'
 import { FeedbackAnalyticsPage } from './pages/admin/FeedbackAnalyticsPage'
+import { OnboardingAdminPage } from './pages/admin/OnboardingAdminPage'
+import { CoachOnboardingPage } from './pages/onboarding/CoachOnboardingPage'
 import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
 import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
 import { WeeklyReportsPage } from './pages/lessonplans/WeeklyReportsPage'
@@ -237,6 +239,17 @@ export default function App() {
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <FeedbackAnalyticsPage />
             </ProtectedRoute>
+          } />
+
+          <Route path="/admin/onboarding" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <OnboardingAdminPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Coach onboarding — all staff */}
+          <Route path="/onboarding" element={
+            <ProtectedRoute><CoachOnboardingPage /></ProtectedRoute>
           } />
 
           {/* Change password — all staff */}

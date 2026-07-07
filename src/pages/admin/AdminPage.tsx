@@ -3,7 +3,7 @@ import {
   School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText,
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
-  HeartPulse, BookMarked, Star,
+  HeartPulse, BookMarked, Star, ListChecks,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -93,6 +93,20 @@ export function AdminPage() {
               icon: ShieldAlert,
               path: '/incidents',
               color: 'bg-red-50 text-red-700',
+            },
+          ]}
+        />
+
+        {/* Onboarding */}
+        <TileGroup
+          title="Onboarding"
+          tiles={[
+            {
+              label: 'Coach Onboarding',
+              description: 'Track certificate uploads, handbook sign-off and contract signing for new coaches',
+              icon: ListChecks,
+              path: '/admin/onboarding',
+              color: 'bg-emerald-50 text-emerald-700',
             },
           ]}
         />
