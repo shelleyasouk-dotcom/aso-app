@@ -35,6 +35,12 @@ export function ProtectedRoute({ children, allowedRoles, allowFlag }: ProtectedR
     return <Navigate to="/dashboard" replace />
   }
 
+  // New coaches must complete onboarding before accessing anything else
+  const onboardingPaths = ['/onboarding']
+  if (profile.onboarding_required && !onboardingPaths.some(p => location.pathname.startsWith(p))) {
+    return <Navigate to="/onboarding" replace />
+  }
+
   const flagAllows = allowFlag ? !!profile[allowFlag] : false
   if (allowedRoles && !allowedRoles.includes(profile.role) && !flagAllows) {
     return <Navigate to="/dashboard" replace />
