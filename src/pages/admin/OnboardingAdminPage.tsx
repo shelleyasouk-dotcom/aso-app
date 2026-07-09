@@ -15,9 +15,11 @@ interface CoachWithOnboarding {
   full_name: string
   role: string
   area: string | null
+  onboarding_required: boolean
   onboarding: {
     id: string
     handbook_read_at: string | null
+    safeguarding_quiz_passed_at: string | null
     safeguarding_cert_url: string | null
     safeguarding_cert_name: string | null
     safeguarding_cert_uploaded_at: string | null
@@ -27,6 +29,7 @@ interface CoachWithOnboarding {
     first_aid_cert_name: string | null
     first_aid_cert_uploaded_at: string | null
     first_aid_verified_at: string | null
+    coaching_quiz_passed_at: string | null
     coaching_resources_read_at: string | null
     profile_completed_at: string | null
     placement_offer_url: string | null
@@ -120,6 +123,13 @@ function CoachRow({ coach, onRefresh, managerId }: {
   const offerRef = useRef<HTMLInputElement>(null)
   const o = coach.onboarding
 
+  async function patchProfile(fields: Record<string, unknown>) {
+    setSaving(true)
+    await supabase.from('profiles').update(fields).eq('id', coach.id)
+    setSaving(false)
+    onRefresh()
+  }
+
   const pct = progressPct(o)
   const isComplete = o?.contract_verified_at != null
   const hasIssues = o && (
@@ -180,6 +190,7 @@ function CoachRow({ coach, onRefresh, managerId }: {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-bold text-[#1a3a6b] text-sm leading-tight">{coach.full_name}</p>
+            {coach.onboarding_required && <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Onboarding</span>}
             {hasIssues && <AlertCircle size={13} className="text-amber-500" />}
             {isComplete && <CheckCircle2 size={13} className="text-green-500" />}
           </div>
@@ -243,7 +254,7 @@ function CoachRow({ coach, onRefresh, managerId }: {
               </div>
 
               {/* Toggles */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <p className="text-xs font-extrabold text-gray-400 uppercase tracking-wide">Settings</p>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <div
@@ -254,6 +265,17 @@ function CoachRow({ coach, onRefresh, managerId }: {
                   <span className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
                     <HeartPulse size={14} className="text-rose-500" /> First aid required
                   </span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div
+                    onClick={() => patchProfile({ onboarding_required: !coach.onboarding_required })}
+                    className={`w-10 h-6 rounded-full transition-colors flex items-center px-0.5 cursor-pointer ${coach.onboarding_required ? 'bg-amber-500' : 'bg-gray-200'}`}>
+                    <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${coach.onboarding_required ? 'translate-x-4' : ''}`} />
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-gray-700 block">Onboarding gate active</span>
+                    <span className="text-xs text-gray-400">When on, coach is locked to /onboarding until complete</span>
+                  </div>
                 </label>
               </div>
 
@@ -324,7 +346,7 @@ export function OnboardingAdminPage() {
     setLoading(true)
     const { data: staff } = await supabase
       .from('profiles')
-      .select('id, full_name, role, area')
+      .select('id, full_name, role, area, onboarding_required')
       .in('role', [...COACHING_ROLES, 'director'])
       .order('full_name')
 
@@ -336,6 +358,7 @@ export function OnboardingAdminPage() {
 
     setCoaches((staff ?? []).map(s => ({
       ...s,
+      onboarding_required: s.onboarding_required ?? false,
       onboarding: onboardingMap[s.id] ?? null,
     })))
     setLoading(false)
