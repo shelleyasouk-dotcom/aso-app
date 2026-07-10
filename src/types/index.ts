@@ -15,7 +15,10 @@ export interface Profile {
   first_aid_expiry?: string
   can_clock_anywhere?: boolean
   can_post_announcements?: boolean
+  can_approve_safeguarding?: boolean
+  can_issue_contracts?: boolean
   onboarding_required?: boolean
+  onboarding_status?: string
   school_id?: string | null
   created_at: string
 }
