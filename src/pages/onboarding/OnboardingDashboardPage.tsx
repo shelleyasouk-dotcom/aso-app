@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle2, AlertCircle, Clock, PauseCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { CheckCircle2, AlertCircle, Clock, PauseCircle, ChevronRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -103,6 +104,7 @@ function StageIcon({ num, status }: { num: number; status: StageStatus }) {
 
 export function OnboardingDashboardPage() {
   const { profile } = useAuth()
+  const navigate = useNavigate()
   const [enrollment, setEnrollment] = useState<Enrollment | null | undefined>(undefined)
   const [stages, setStages] = useState<Stage[]>([])
   const [assignments, setAssignments] = useState<TaskAssignment[]>([])
@@ -258,9 +260,10 @@ export function OnboardingDashboardPage() {
             {stages.map((stage, i) => {
               const status = deriveStageStatus(stage.id, assignments)
               return (
-                <div
+                <button
                   key={stage.id}
-                  className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3"
+                  onClick={() => navigate(`/onboarding/stage/${stage.id}`)}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3 w-full text-left active:scale-[0.98] transition-transform"
                 >
                   <div className="shrink-0 w-5 flex items-center justify-center">
                     <StageIcon num={i + 1} status={status} />
@@ -279,10 +282,11 @@ export function OnboardingDashboardPage() {
                       <p className="text-xs text-gray-400 mt-0.5 leading-snug line-clamp-2">{stage.description}</p>
                     )}
                   </div>
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center gap-1.5">
                     <StageStatusChip status={status} />
+                    <ChevronRight size={14} className="text-gray-300" />
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>

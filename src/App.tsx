@@ -77,6 +77,7 @@ import { FeedbackAnalyticsPage } from './pages/admin/FeedbackAnalyticsPage'
 import { OnboardingAdminPage } from './pages/admin/OnboardingAdminPage'
 import { CoachOnboardingPage } from './pages/onboarding/CoachOnboardingPage'
 import { OnboardingDashboardPage } from './pages/onboarding/OnboardingDashboardPage'
+import { OnboardingStagePage } from './pages/onboarding/OnboardingStagePage'
 import { LessonPlansPage } from './pages/lessonplans/LessonPlansPage'
 import { LessonPlanDetailPage } from './pages/lessonplans/LessonPlanDetailPage'
 import { WeeklyReportsPage } from './pages/lessonplans/WeeklyReportsPage'
@@ -251,6 +252,9 @@ export default function App() {
           {/* Staff onboarding dashboard — new system */}
           <Route path="/onboarding" element={
             <ProtectedRoute><OnboardingDashboardPage /></ProtectedRoute>
+          } />
+          <Route path="/onboarding/stage/:stageId" element={
+            <ProtectedRoute><OnboardingStagePage /></ProtectedRoute>
           } />
           {/* Legacy onboarding wizard — kept for coaches enrolled before v2 */}
           <Route path="/onboarding/legacy" element={
