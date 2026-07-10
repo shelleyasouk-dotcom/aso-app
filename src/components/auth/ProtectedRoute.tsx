@@ -35,9 +35,12 @@ export function ProtectedRoute({ children, allowedRoles, allowFlag }: ProtectedR
     return <Navigate to="/dashboard" replace />
   }
 
-  // New coaches must complete onboarding before accessing anything else
+  // Gate staff who are undergoing onboarding (legacy boolean OR new status string)
   const onboardingPaths = ['/onboarding']
-  if (profile.onboarding_required && !onboardingPaths.some(p => location.pathname.startsWith(p))) {
+  const needsOnboarding =
+    profile.onboarding_required === true ||
+    (profile.onboarding_status != null && !['not_required', 'active'].includes(profile.onboarding_status))
+  if (needsOnboarding && !onboardingPaths.some(p => location.pathname.startsWith(p))) {
     return <Navigate to="/onboarding" replace />
   }
 
