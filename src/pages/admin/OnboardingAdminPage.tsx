@@ -210,6 +210,7 @@ function EnrollModal({ unenrolled, actorId, onDone, onCancel }: {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<UnenrolledProfile | null>(null)
   const [saving, setSaving] = useState(false)
+  const [enrollError, setEnrollError] = useState<string | null>(null)
 
   const filtered = unenrolled.filter(p =>
     p.full_name.toLowerCase().includes(search.toLowerCase())
@@ -218,6 +219,7 @@ function EnrollModal({ unenrolled, actorId, onDone, onCancel }: {
   async function enroll() {
     if (!selected) return
     setSaving(true)
+    setEnrollError(null)
     const now = new Date().toISOString()
 
     const { data: enrollment, error } = await supabase
@@ -233,7 +235,11 @@ function EnrollModal({ unenrolled, actorId, onDone, onCancel }: {
       .select('id')
       .single()
 
-    if (error || !enrollment) { setSaving(false); return }
+    if (error || !enrollment) {
+      setEnrollError(error?.message ?? 'Insert failed — check Supabase RLS policies on onboarding_enrollments.')
+      setSaving(false)
+      return
+    }
 
     await Promise.all([
       supabase.from('profiles').update({ onboarding_status: 'not_started' }).eq('id', selected.id),
@@ -287,6 +293,12 @@ function EnrollModal({ unenrolled, actorId, onDone, onCancel }: {
             </button>
           ))}
         </div>
+        {enrollError && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+            <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-red-700">{enrollError}</p>
+          </div>
+        )}
         <div className="flex gap-2 pt-1 border-t border-gray-100">
           <button onClick={onCancel} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600">
             Cancel
@@ -606,7 +618,7 @@ export function OnboardingAdminPage() {
       supabase
         .from('profiles')
         .select('id, full_name, role, area')
-        .not('role', 'in', '("parent","school")')
+        .not('role', 'in', '(parent,school)')
         .order('full_name'),
     ])
 
