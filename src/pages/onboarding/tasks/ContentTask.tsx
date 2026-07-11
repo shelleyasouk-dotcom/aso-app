@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, Download, Info, AlertTriangle, Lightbulb, Star, FileText, ArrowRight } from 'lucide-react'
+import { CheckCircle2, Download, Info, AlertTriangle, Lightbulb, Star, FileText, ArrowRight, ExternalLink } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import type { TaskComponentProps, ContentBlock, ContentJson } from '../../../types/onboarding'
 
@@ -135,16 +135,24 @@ function ContentBlockRenderer({ block, ackStates, onAckChange, readOnly, onNavig
         </label>
       )
 
-    case 'cta_button':
+    case 'cta_button': {
+      const isExternal = block.route.startsWith('http')
       return (
         <button
-          onClick={() => onNavigate?.(block.route)}
+          onClick={() => {
+            if (isExternal) {
+              window.open(block.route, '_blank', 'noopener,noreferrer')
+            } else {
+              onNavigate?.(block.route)
+            }
+          }}
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#1a3a6b] text-white text-sm font-bold"
         >
           {block.label}
-          <ArrowRight size={15} />
+          {isExternal ? <ExternalLink size={15} /> : <ArrowRight size={15} />}
         </button>
       )
+    }
 
     default:
       return null
