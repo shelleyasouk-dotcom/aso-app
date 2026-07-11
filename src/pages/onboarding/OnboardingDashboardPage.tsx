@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, AlertCircle, Clock, PauseCircle, ChevronRight } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Clock, PauseCircle, ChevronRight, ArrowRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -234,6 +234,25 @@ export function OnboardingDashboardPage() {
           <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3 mb-4">
             <CheckCircle2 size={18} className="text-green-600 shrink-0" />
             <p className="text-sm font-bold text-green-800">Onboarding complete — you have full access to the app.</p>
+          </div>
+        )}
+
+        {pct >= 100 && enrollment?.status !== 'active' && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-4 mb-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 size={18} className="text-green-600 shrink-0" />
+              <p className="text-sm font-bold text-green-800">Training complete!</p>
+            </div>
+            <p className="text-xs text-green-700 leading-relaxed">
+              You have completed all your training modules. The final step is to fill in your profile details and sign your employment contract.
+            </p>
+            <button
+              onClick={() => navigate('/profile')}
+              className="w-full py-3 bg-[#1a3a6b] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2"
+            >
+              Complete my profile &amp; sign contract
+              <ArrowRight size={15} />
+            </button>
           </div>
         )}
 

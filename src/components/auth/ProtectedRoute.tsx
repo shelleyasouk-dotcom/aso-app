@@ -36,7 +36,8 @@ export function ProtectedRoute({ children, allowedRoles, allowFlag }: ProtectedR
   }
 
   // Gate staff who are undergoing onboarding (legacy boolean OR new status string)
-  const onboardingPaths = ['/onboarding']
+  // /profile is also allowed so staff can complete their profile and sign their contract
+  const onboardingPaths = ['/onboarding', '/profile']
   const needsOnboarding =
     profile.onboarding_required === true ||
     (profile.onboarding_status != null && !['not_required', 'active'].includes(profile.onboarding_status))

@@ -1355,6 +1355,7 @@ function ContractSection({ staffId, staffRole, isDirector }: {
   staffRole: string
   isDirector: boolean
 }) {
+  const navigate = useNavigate()
   const [contract, setContract] = useState<StaffContract | null>(null)
   const [signedAt, setSignedAt] = useState<string | null>(null)
   const [signedVersion, setSignedVersion] = useState<string | null>(null)
@@ -1382,12 +1383,30 @@ function ContractSection({ staffId, staffRole, isDirector }: {
   async function sign() {
     if (!contract || !agreed) return
     setSigning(true); setSignError(null)
+    const now = new Date().toISOString()
     const { error } = await supabase.from('profiles').update({
-      contract_signed_at: new Date().toISOString(),
+      contract_signed_at: now,
       contract_version: contract.version,
     }).eq('id', staffId)
     if (error) { setSignError(error.message); setSigning(false); return }
-    setSignedAt(new Date().toISOString())
+
+    // If this staff member is in active onboarding, signing their contract completes it
+    const { data: profStatus } = await supabase
+      .from('profiles')
+      .select('onboarding_required')
+      .eq('id', staffId)
+      .single()
+
+    if (profStatus?.onboarding_required) {
+      await supabase.from('profiles').update({
+        onboarding_required: false,
+        onboarding_status: 'active',
+      }).eq('id', staffId)
+      navigate('/dashboard')
+      return
+    }
+
+    setSignedAt(now)
     setSignedVersion(contract.version)
     setSigning(false)
   }
