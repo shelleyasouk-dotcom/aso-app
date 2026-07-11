@@ -21,7 +21,7 @@ SET
 WHERE
   -- Only quiz-type tasks
   task_id IN (
-    SELECT id FROM onboarding_tasks WHERE task_type = 'quiz'
+    SELECT id FROM onboarding_tasks WHERE type = 'quiz'
   )
   -- Only assignments that were auto-passed with 0 questions (perfect score, 0 attempts logged)
   AND status = 'completed'
