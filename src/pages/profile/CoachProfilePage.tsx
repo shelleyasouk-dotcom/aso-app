@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X, Lock, User, IdCard, ScrollText, CheckCircle2, ChevronDown } from 'lucide-react'
-import { useParams } from 'react-router-dom'
+import { Plus, Trash2, FileText, FolderOpen, Eye, Download, X, Lock, User, IdCard, ScrollText, CheckCircle2, ChevronDown, ArrowLeft } from 'lucide-react'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -221,6 +221,9 @@ function ComplianceRow({ label, status, note, last }: {
 export function CoachProfilePage() {
   const { profile: viewer, refreshProfile } = useAuth()
   const { id: staffId } = useParams<{ id?: string }>()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const fromOnboarding = !!(location.state as { fromOnboarding?: boolean } | null)?.fromOnboarding
 
   const [subject, setSubject] = useState<Profile | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | undefined>()
@@ -553,6 +556,18 @@ export function CoachProfilePage() {
 
   return (
     <Layout title={isOwnProfile ? 'My Profile' : subject.full_name} showBack>
+
+      {fromOnboarding && (
+        <div className="px-4 pt-3 pb-0 max-w-lg mx-auto w-full">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1.5 text-sm font-semibold text-[#1a3a6b]"
+          >
+            <ArrowLeft size={14} />
+            Back to onboarding task
+          </button>
+        </div>
+      )}
 
       {/* ── Full-screen ID overlay ── */}
       {showFullId && (

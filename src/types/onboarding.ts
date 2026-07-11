@@ -13,11 +13,12 @@ export interface DownloadableBlock  extends BaseBlock { type: 'downloadable_file
 export interface DividerBlock       extends BaseBlock { type: 'divider' }
 export interface ScenarioBlock      extends BaseBlock { type: 'scenario';         title?: string; context: string; question?: string }
 export interface AcknowledgementBlock extends BaseBlock { type: 'acknowledgement'; prompt: string }
+export interface CtaButtonBlock     extends BaseBlock { type: 'cta_button';    label: string; route: string }
 
 export type ContentBlock =
   | HeadingBlock | ParagraphBlock | BulletListBlock | NumberedListBlock
   | ImageBlock | VideoBlock | CalloutBlock | DownloadableBlock
-  | DividerBlock | ScenarioBlock | AcknowledgementBlock
+  | DividerBlock | ScenarioBlock | AcknowledgementBlock | CtaButtonBlock
 // Note: ContentJson.blocks may contain future unknown types at runtime.
 // The renderer's default case handles them gracefully; TypeScript trusts the cast.
 

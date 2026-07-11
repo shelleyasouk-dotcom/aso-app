@@ -19,6 +19,7 @@ export function OnboardingTaskPage() {
   const [task, setTask] = useState<OnboardingTask | null>(null)
   const [assignment, setAssignment] = useState<OnboardingTaskAssignment | null>(null)
   const [enrollment, setEnrollment] = useState<OnboardingEnrollment | null>(null)
+  const [nextTaskId, setNextTaskId] = useState<string | null>(null)
   const [locked, setLocked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -53,6 +54,15 @@ export function OnboardingTaskPage() {
 
     setTask(taskRow as OnboardingTask)
     setEnrollment(enrollRow as OnboardingEnrollment)
+
+    // Compute next task in this stage for auto-advance
+    const { data: stageTasks } = await supabase
+      .from('onboarding_tasks')
+      .select('id')
+      .eq('stage_id', taskRow.stage_id)
+      .order('display_order', { ascending: true })
+    const idx = (stageTasks ?? []).findIndex(t => t.id === taskId)
+    setNextTaskId(idx >= 0 && idx < (stageTasks ?? []).length - 1 ? (stageTasks![idx + 1].id) : null)
 
     // Check prerequisites
     const { data: prereqs } = await supabase
@@ -108,6 +118,14 @@ export function OnboardingTaskPage() {
     navigate(`/onboarding/stage/${stageId}`)
   }
 
+  function handleComplete() {
+    if (nextTaskId) {
+      navigate(`/onboarding/stage/${stageId}/task/${nextTaskId}`)
+    } else {
+      goBack()
+    }
+  }
+
   if (loading) return (
     <div className="min-h-screen bg-[#f5f7fc] flex items-center justify-center">
       <div className="w-7 h-7 border-[3px] border-[#1a3a6b] border-t-transparent rounded-full animate-spin" />
@@ -150,7 +168,7 @@ export function OnboardingTaskPage() {
     task, assignment, enrollment,
     profileName: profile!.full_name,
     profileId: profile!.id,
-    onComplete: goBack,
+    onComplete: handleComplete,
     onRefresh: load,
   }
 

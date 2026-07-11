@@ -54,33 +54,56 @@ export function DeclarationTask({ task, assignment, profileName, onComplete, onR
     onComplete()
   }
 
+  const declarationText = task.declaration_text ?? ''
+
   if (assignment.status === 'completed') {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-4 text-center">
-        <CheckCircle2 size={56} className="text-green-500" />
-        <h2 className="text-xl font-bold text-gray-800">Declaration signed</h2>
-        <div className="text-sm text-gray-500 flex flex-col gap-1">
-          <p>
-            Signed on{' '}
-            {new Date(assignment.declaration_signed_at!).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
-          </p>
-          <p>Signed as: {assignment.declaration_name}</p>
+      <>
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 pt-5 pb-4 max-w-lg mx-auto w-full flex flex-col gap-5">
+
+            <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3.5">
+              <CheckCircle2 size={18} className="text-green-500 shrink-0" />
+              <div>
+                <p className="text-sm font-bold text-green-800">Declaration signed</p>
+                <p className="text-xs text-green-700 mt-0.5">
+                  Signed as {assignment.declaration_name} on{' '}
+                  {new Date(assignment.declaration_signed_at!).toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Declaration</p>
+              {declarationText.length > 0 ? (
+                declarationText.split('\n').map((line, i) => (
+                  <p key={i} className="text-sm text-gray-700 leading-relaxed">
+                    {line || <br />}
+                  </p>
+                ))
+              ) : (
+                <p className="text-sm text-gray-400 italic">No declaration text available.</p>
+              )}
+            </div>
+
+          </div>
         </div>
-        <button
-          onClick={() => onComplete()}
-          className="mt-2 px-6 py-2.5 rounded-2xl bg-[#1a3a6b] text-white text-sm font-bold"
-        >
-          Back to stage
-        </button>
-      </div>
+
+        <div className="sticky bottom-0 bg-[#f5f7fc] border-t border-gray-100 px-4 py-3 pb-safe-bottom">
+          <button
+            onClick={onComplete}
+            className="w-full py-3 rounded-2xl font-bold text-sm bg-[#1a3a6b] text-white"
+          >
+            Continue
+          </button>
+        </div>
+      </>
     )
   }
-
-  const declarationText = task.declaration_text ?? ''
 
   return (
     <>

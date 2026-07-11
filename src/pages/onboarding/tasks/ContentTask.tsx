@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { CheckCircle2, Download, Info, AlertTriangle, Lightbulb, Star, FileText } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { CheckCircle2, Download, Info, AlertTriangle, Lightbulb, Star, FileText, ArrowRight } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
 import type { TaskComponentProps, ContentBlock, ContentJson } from '../../../types/onboarding'
 
@@ -9,9 +10,11 @@ interface ContentBlockRendererProps {
   block: ContentBlock
   ackStates: Record<string, boolean>
   onAckChange: (id: string, checked: boolean) => void
+  readOnly?: boolean
+  onNavigate?: (route: string) => void
 }
 
-function ContentBlockRenderer({ block, ackStates, onAckChange }: ContentBlockRendererProps) {
+function ContentBlockRenderer({ block, ackStates, onAckChange, readOnly, onNavigate }: ContentBlockRendererProps) {
   switch (block.type) {
     case 'heading': {
       const { level, text } = block
@@ -120,15 +123,27 @@ function ContentBlockRenderer({ block, ackStates, onAckChange }: ContentBlockRen
 
     case 'acknowledgement':
       return (
-        <label className="flex items-start gap-3 cursor-pointer">
+        <label className={`flex items-start gap-3 ${readOnly ? 'cursor-default' : 'cursor-pointer'}`}>
           <input
             type="checkbox"
-            checked={ackStates[block.id] ?? false}
-            onChange={e => onAckChange(block.id, e.target.checked)}
+            checked={readOnly ? true : (ackStates[block.id] ?? false)}
+            onChange={readOnly ? undefined : e => onAckChange(block.id, e.target.checked)}
+            disabled={readOnly}
             className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-[#1a3a6b] shrink-0"
           />
           <span className="text-sm text-gray-700 leading-relaxed">{block.prompt}</span>
         </label>
+      )
+
+    case 'cta_button':
+      return (
+        <button
+          onClick={() => onNavigate?.(block.route)}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-[#1a3a6b] text-white text-sm font-bold"
+        >
+          {block.label}
+          <ArrowRight size={15} />
+        </button>
       )
 
     default:
@@ -139,6 +154,7 @@ function ContentBlockRenderer({ block, ackStates, onAckChange }: ContentBlockRen
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskComponentProps) {
+  const navigate = useNavigate()
   const contentJson: ContentJson | null = task.content_json
   const blocks: ContentBlock[] = contentJson?.blocks ?? []
 
@@ -185,6 +201,10 @@ export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskCom
     setAckStates(prev => ({ ...prev, [id]: checked }))
   }
 
+  function navigateToRoute(route: string) {
+    navigate(route, { state: { fromOnboarding: true } })
+  }
+
   const allAcksChecked =
     Object.keys(ackStates).length === 0 ||
     Object.values(ackStates).every(v => v)
@@ -204,29 +224,6 @@ export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskCom
     onComplete()
   }
 
-  // ── Completed + up-to-date: show completion screen ─────────────────────────
-  if (isCompleted && versionCurrent) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-green-50 flex items-center justify-center">
-          <CheckCircle2 size={28} className="text-green-500" />
-        </div>
-        <div>
-          <p className="font-bold text-[#1a3a6b] text-base">Completed</p>
-          <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-            You've read and acknowledged this module.
-          </p>
-        </div>
-        <button
-          onClick={onComplete}
-          className="text-sm font-bold text-[#1a3a6b]"
-        >
-          ← Back to stage
-        </button>
-      </div>
-    )
-  }
-
   // ── No content placeholder ──────────────────────────────────────────────────
   if (!contentJson || blocks.length === 0) {
     return (
@@ -235,6 +232,39 @@ export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskCom
           <Star size={20} className="text-gray-300" />
         </div>
         <p className="text-sm text-gray-400 leading-relaxed">No content yet.</p>
+      </div>
+    )
+  }
+
+  // ── Completed + up-to-date: read-only content view ─────────────────────────
+  if (isCompleted && versionCurrent) {
+    return (
+      <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="px-4 pt-5 pb-4 max-w-lg mx-auto w-full flex flex-col gap-4 flex-1">
+          <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-2xl px-4 py-3">
+            <CheckCircle2 size={15} className="text-green-500 shrink-0" />
+            <p className="text-sm text-green-800 font-medium">You've completed this module</p>
+          </div>
+          {blocks.map(block => (
+            <ContentBlockRenderer
+              key={block.id}
+              block={block}
+              ackStates={{}}
+              onAckChange={() => {}}
+              readOnly
+              onNavigate={navigateToRoute}
+            />
+          ))}
+        </div>
+        <div className="sticky bottom-0 bg-[#f5f7fc] border-t border-gray-100 px-4 py-3 pb-safe-bottom">
+          <button
+            onClick={onComplete}
+            className="w-full rounded-2xl py-3.5 text-sm font-bold bg-[#1a3a6b] text-white flex items-center justify-center gap-2"
+          >
+            <CheckCircle2 size={16} />
+            Continue
+          </button>
+        </div>
       </div>
     )
   }
@@ -259,6 +289,7 @@ export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskCom
             block={block}
             ackStates={ackStates}
             onAckChange={handleAckChange}
+            onNavigate={navigateToRoute}
           />
         ))}
 
