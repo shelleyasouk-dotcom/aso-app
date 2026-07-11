@@ -248,7 +248,7 @@ export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskCom
   if (isCompleted && versionCurrent) {
     return (
       <div className="flex-1 overflow-y-auto flex flex-col">
-        <div className="px-4 pt-5 pb-4 max-w-lg mx-auto w-full flex flex-col gap-4 flex-1">
+        <div className="px-4 pt-5 pb-28 max-w-lg mx-auto w-full flex flex-col gap-4 flex-1">
           <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-2xl px-4 py-3">
             <CheckCircle2 size={15} className="text-green-500 shrink-0" />
             <p className="text-sm text-green-800 font-medium">You've completed this module</p>
@@ -280,7 +280,7 @@ export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskCom
   // ── Content view (normal or re-read) ────────────────────────────────────────
   return (
     <div className="flex-1 overflow-y-auto flex flex-col">
-      <div className="px-4 pt-5 pb-4 max-w-lg mx-auto w-full flex flex-col gap-4 flex-1">
+      <div className="px-4 pt-5 pb-28 max-w-lg mx-auto w-full flex flex-col gap-4 flex-1">
 
         {needsReRead && (
           <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">

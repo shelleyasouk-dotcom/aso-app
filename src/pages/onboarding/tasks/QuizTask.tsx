@@ -53,6 +53,11 @@ export function QuizTask({ task, assignment, onComplete, onRefresh }: TaskCompon
       setDrawError(error?.message ?? 'Failed to load quiz. Please try again.')
       return
     }
+    if (!data.questions || data.questions.length === 0) {
+      setQuizState({ phase: 'idle' })
+      setDrawError('No questions are available for this quiz yet. Please try again later.')
+      return
+    }
     setQuizState({
       phase: 'answering',
       attemptId: data.attempt_id,
