@@ -308,9 +308,14 @@ export function QuizTask({ task, assignment, onComplete, onRefresh }: TaskCompon
                       <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-3">
                         {item.question}
                       </p>
+                      {!item.correct && item.selected_option !== null && (
+                        <p className="text-xs text-red-500 mt-1.5">
+                          <span className="font-semibold">Your answer:</span> {item.selected_option}
+                        </p>
+                      )}
                       {item.correct_option !== null && (
-                        <p className="text-xs text-gray-500 mt-1.5">
-                          <span className="font-semibold">Correct answer:</span> {item.correct_option}
+                        <p className={`text-xs mt-1 ${item.correct ? 'text-green-600' : 'text-green-700'}`}>
+                          <span className="font-semibold">{item.correct ? 'Correct:' : 'Correct answer:'}</span> {item.correct_option}
                         </p>
                       )}
                       {item.explanation && (

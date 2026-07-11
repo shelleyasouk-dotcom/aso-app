@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {
   CheckCircle2, AlertCircle, Clock, PauseCircle, ChevronDown, ChevronUp,
-  UserPlus, X, Search,
+  UserPlus, X, Search, FileText, ThumbsUp, ThumbsDown, ExternalLink,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -32,11 +32,22 @@ interface Stage {
   display_order: number
 }
 
+interface PendingDocument {
+  assignmentId: string
+  taskTitle: string
+  docTitle: string
+  fileName: string
+  filePath: string
+  docId: string
+}
+
 interface TaskAssignment {
   id: string
   task_id: string
   status: string
-  task: { stage_id: string } | null
+  document_id: string | null
+  task: { stage_id: string; title: string; required_doc_label: string | null } | null
+  document: { id: string; title: string; file_name: string; file_path: string } | null
 }
 
 interface UnenrolledProfile {
@@ -199,6 +210,51 @@ function RecommendModal({ name, onConfirm, onCancel }: {
   )
 }
 
+// ─── Reject document modal ────────────────────────────────────────────────────
+
+function RejectDocModal({ docTitle, onConfirm, onCancel }: {
+  docTitle: string
+  onConfirm: (reason: string) => void
+  onCancel: () => void
+}) {
+  const [reason, setReason] = useState('')
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4 pb-safe-bottom">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-5 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <p className="font-bold text-[#1a3a6b]">Reject document</p>
+          <button onClick={onCancel}><X size={18} className="text-gray-400" /></button>
+        </div>
+        <p className="text-xs text-gray-500 leading-relaxed">
+          Rejecting <span className="font-semibold">{docTitle}</span>. The staff member will be asked to re-upload.
+        </p>
+        <div>
+          <label className="text-xs font-bold text-gray-500 block mb-1">Reason (shown to staff member)</label>
+          <textarea
+            rows={3}
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            placeholder="e.g. Document is unclear or expired. Please re-upload."
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600">
+            Cancel
+          </button>
+          <button
+            disabled={!reason.trim()}
+            onClick={() => onConfirm(reason.trim())}
+            className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold disabled:opacity-50"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Enroll modal ─────────────────────────────────────────────────────────────
 
 function EnrollModal({ unenrolled, actorId, onDone, onCancel }: {
@@ -331,6 +387,8 @@ function StaffRow({ staff, stages, actorId, actorRole, onRefresh }: {
   const [saving, setSaving] = useState(false)
   const [showHold, setShowHold] = useState(false)
   const [showRecommend, setShowRecommend] = useState(false)
+  const [rejectingDoc, setRejectingDoc] = useState<PendingDocument | null>(null)
+  const [docAction, setDocAction] = useState<string | null>(null)
 
   const e = staff.enrollment
   const isDirector = actorRole === 'director'
@@ -340,10 +398,31 @@ function StaffRow({ staff, stages, actorId, actorRole, onRefresh }: {
     setLoadingAssign(true)
     const { data } = await supabase
       .from('onboarding_task_assignments')
-      .select('id, task_id, status, task:onboarding_tasks!task_id(stage_id)')
+      .select(`
+        id, task_id, status, document_id,
+        task:onboarding_tasks!task_id(stage_id, title, required_doc_label),
+        document:staff_documents!document_id(id, title, file_name, file_path)
+      `)
       .eq('enrollment_id', e.id)
     setAssignments((data as unknown as TaskAssignment[]) ?? [])
     setLoadingAssign(false)
+  }
+
+  async function viewDocument(filePath: string) {
+    const { data } = await supabase.storage.from('coach-files').createSignedUrl(filePath, 3600)
+    if (data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  async function reviewDocument(assignmentId: string, action: 'approved' | 'rejected', rejectionReason?: string) {
+    setDocAction(assignmentId)
+    await supabase.rpc('review_onboarding_document', {
+      p_assignment_id: assignmentId,
+      p_action: action,
+      p_rejection_reason: rejectionReason ?? null,
+    })
+    setDocAction(null)
+    await loadAssignments()
+    onRefresh()
   }
 
   function toggle() {
@@ -467,6 +546,16 @@ function StaffRow({ staff, stages, actorId, actorRole, onRefresh }: {
           onCancel={() => setShowRecommend(false)}
         />
       )}
+      {rejectingDoc && (
+        <RejectDocModal
+          docTitle={rejectingDoc.docTitle}
+          onConfirm={reason => {
+            reviewDocument(rejectingDoc.assignmentId, 'rejected', reason)
+            setRejectingDoc(null)
+          }}
+          onCancel={() => setRejectingDoc(null)}
+        />
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <button className="w-full flex items-center gap-3 px-4 py-3.5 text-left" onClick={toggle}>
@@ -518,6 +607,86 @@ function StaffRow({ staff, stages, actorId, actorRole, onRefresh }: {
                 </div>
               )}
             </div>
+
+            {/* Documents pending review */}
+            {(() => {
+              const pending = assignments.filter(
+                a => a.status === 'awaiting_review' && a.document_id && a.document
+              )
+              const reviewed = assignments.filter(
+                a => (a.status === 'approved' || a.status === 'rejected') && a.document_id && a.document
+              )
+              if (pending.length === 0 && reviewed.length === 0) return null
+              return (
+                <div>
+                  <p className="text-[11px] font-extrabold text-gray-400 uppercase tracking-wide mb-2">Documents</p>
+                  <div className="flex flex-col gap-2">
+                    {pending.map(a => {
+                      const docTitle = a.document!.title || a.task?.required_doc_label || a.task?.title || 'Document'
+                      const pd: PendingDocument = {
+                        assignmentId: a.id,
+                        taskTitle: a.task?.title ?? '',
+                        docTitle,
+                        fileName: a.document!.file_name,
+                        filePath: a.document!.file_path,
+                        docId: a.document!.id,
+                      }
+                      const isActing = docAction === a.id
+                      return (
+                        <div key={a.id} className="border border-amber-200 bg-amber-50 rounded-xl px-3 py-2.5 flex flex-col gap-2">
+                          <div className="flex items-start gap-2">
+                            <FileText size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-gray-800 leading-tight">{docTitle}</p>
+                              <p className="text-[11px] text-gray-500 truncate">{a.document!.file_name}</p>
+                            </div>
+                            <button
+                              onClick={() => viewDocument(a.document!.file_path)}
+                              className="text-[#1a3a6b] shrink-0"
+                            >
+                              <ExternalLink size={13} />
+                            </button>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <button
+                              disabled={isActing}
+                              onClick={() => reviewDocument(a.id, 'approved')}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-green-600 text-white rounded-lg text-[11px] font-bold disabled:opacity-50"
+                            >
+                              <ThumbsUp size={11} />Approve
+                            </button>
+                            <button
+                              disabled={isActing}
+                              onClick={() => setRejectingDoc(pd)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-[11px] font-bold disabled:opacity-50"
+                            >
+                              <ThumbsDown size={11} />Reject
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                    {reviewed.map(a => {
+                      const docTitle = a.document!.title || a.task?.required_doc_label || a.task?.title || 'Document'
+                      const approved = a.status === 'approved'
+                      return (
+                        <div key={a.id} className={`border rounded-xl px-3 py-2 flex items-center gap-2 ${
+                          approved ? 'border-green-200 bg-green-50' : 'border-red-100 bg-red-50'
+                        }`}>
+                          {approved
+                            ? <CheckCircle2 size={13} className="text-green-500 shrink-0" />
+                            : <AlertCircle size={13} className="text-red-400 shrink-0" />}
+                          <p className="text-xs text-gray-700 flex-1 min-w-0 truncate">{docTitle}</p>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                            approved ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'
+                          }`}>{approved ? 'Approved' : 'Rejected'}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* Recommendation badge */}
             {e.activation_recommended_by && e.status !== 'active' && (

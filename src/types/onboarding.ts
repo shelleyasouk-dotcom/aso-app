@@ -113,7 +113,8 @@ export interface QuizFeedbackItem {
   question: string
   correct: boolean
   explanation: string | null
-  correct_option: string | null  // only when show_correct_answers=true
+  correct_option: string | null
+  selected_option: string | null
 }
 
 export interface SubmitQuizResult {
