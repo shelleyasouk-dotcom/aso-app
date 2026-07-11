@@ -1356,6 +1356,7 @@ function ContractSection({ staffId, staffRole, isDirector }: {
   isDirector: boolean
 }) {
   const navigate = useNavigate()
+  const { refreshProfile } = useAuth()
   const [contract, setContract] = useState<StaffContract | null>(null)
   const [signedAt, setSignedAt] = useState<string | null>(null)
   const [signedVersion, setSignedVersion] = useState<string | null>(null)
@@ -1398,10 +1399,28 @@ function ContractSection({ staffId, staffRole, isDirector }: {
       .single()
 
     if (profStatus?.onboarding_required) {
+      const activatedAt = new Date().toISOString()
       await supabase.from('profiles').update({
         onboarding_required: false,
         onboarding_status: 'active',
       }).eq('id', staffId)
+      // Mark the enrollment as active so the onboarding page shows completed
+      const { data: enrollment } = await supabase
+        .from('onboarding_enrollments')
+        .select('id')
+        .eq('staff_id', staffId)
+        .eq('enrollment_type', 'initial')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (enrollment) {
+        await supabase.from('onboarding_enrollments').update({
+          status: 'active',
+          activated_at: activatedAt,
+        }).eq('id', enrollment.id)
+      }
+      // Refresh the local profile so ProtectedRoute sees the new status
+      await refreshProfile()
       navigate('/dashboard')
       return
     }

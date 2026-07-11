@@ -231,13 +231,25 @@ export function OnboardingDashboardPage() {
         )}
 
         {enrollment?.status === 'active' && (
-          <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-2xl px-4 py-3 mb-4">
-            <CheckCircle2 size={18} className="text-green-600 shrink-0" />
-            <p className="text-sm font-bold text-green-800">Onboarding complete — you have full access to the app.</p>
+          <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-4 mb-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 size={18} className="text-green-600 shrink-0" />
+              <p className="text-sm font-bold text-green-800">Onboarding complete</p>
+            </div>
+            <p className="text-xs text-green-700 leading-relaxed">
+              You have completed your onboarding and have full access to the app. Your stages and documents are shown below for your records.
+            </p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-full py-3 bg-[#1a3a6b] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2"
+            >
+              Go to Dashboard
+              <ArrowRight size={15} />
+            </button>
           </div>
         )}
 
-        {pct >= 100 && enrollment?.status !== 'active' && (
+        {pct >= 100 && enrollment?.status !== 'active' && enrollment?.status !== 'on_hold' && (
           <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-4 mb-4 flex flex-col gap-3">
             <div className="flex items-center gap-2.5">
               <CheckCircle2 size={18} className="text-green-600 shrink-0" />
