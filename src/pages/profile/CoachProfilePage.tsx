@@ -1389,14 +1389,20 @@ function ContractSection({ staffId, staffRole, isDirector }: {
     }).eq('id', staffId)
     if (error) { setSignError(error.message); setSigning(false); return }
 
-    // If this staff member is in active onboarding, signing their contract completes it
+    // If this staff member is still gated by onboarding, signing their contract completes it.
+    // Mirrors the same check used in ProtectedRoute.
     const { data: profStatus } = await supabase
       .from('profiles')
-      .select('onboarding_required')
+      .select('onboarding_required, onboarding_status')
       .eq('id', staffId)
       .single()
 
-    if (profStatus?.onboarding_required) {
+    const stillInOnboarding =
+      profStatus?.onboarding_required === true ||
+      (profStatus?.onboarding_status != null &&
+        !['not_required', 'active'].includes(profStatus.onboarding_status))
+
+    if (stillInOnboarding) {
       const activatedAt = new Date().toISOString()
       await supabase.from('profiles').update({
         onboarding_required: false,
