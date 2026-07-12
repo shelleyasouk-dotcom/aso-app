@@ -134,6 +134,25 @@ export function OnboardingDashboardPage() {
     ])
 
     const enroll: Enrollment | null = enrollRows?.[0] ?? null
+
+    // Auto-activate: if training is 100% complete and the account is still gated,
+    // unlock it now so the user can access the full app immediately.
+    if (enroll && enroll.learning_completion_pct >= 100 &&
+        !['active', 'not_required'].includes(enroll.status)) {
+      const now = new Date().toISOString()
+      await Promise.all([
+        supabase.from('profiles').update({
+          onboarding_required: false,
+          onboarding_status: 'active',
+        }).eq('id', profile.id),
+        supabase.from('onboarding_enrollments').update({
+          status: 'active',
+          activated_at: now,
+        }).eq('id', enroll.id),
+      ])
+      enroll.status = 'active'
+    }
+
     setEnrollment(enroll)
     setStages(stageRows ?? [])
 
@@ -237,34 +256,24 @@ export function OnboardingDashboardPage() {
               <p className="text-sm font-bold text-green-800">Onboarding complete</p>
             </div>
             <p className="text-xs text-green-700 leading-relaxed">
-              You have completed your onboarding and have full access to the app. Your stages and documents are shown below for your records.
+              You have full access to the app. Your completed stages are shown below for your records.
             </p>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="w-full py-3 bg-[#1a3a6b] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2"
-            >
-              Go to Dashboard
-              <ArrowRight size={15} />
-            </button>
-          </div>
-        )}
-
-        {pct >= 100 && enrollment?.status !== 'active' && enrollment?.status !== 'on_hold' && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-4 mb-4 flex flex-col gap-3">
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2 size={18} className="text-green-600 shrink-0" />
-              <p className="text-sm font-bold text-green-800">Training complete!</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => window.location.replace('/dashboard')}
+                className="flex-1 py-3 bg-[#1a3a6b] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2"
+              >
+                Go to Home
+                <ArrowRight size={15} />
+              </button>
+              <button
+                onClick={() => window.location.replace('/profile')}
+                className="flex-1 py-3 bg-white border border-[#1a3a6b] text-[#1a3a6b] font-bold text-sm rounded-xl flex items-center justify-center gap-2"
+              >
+                My Profile
+                <ArrowRight size={15} />
+              </button>
             </div>
-            <p className="text-xs text-green-700 leading-relaxed">
-              You have completed all your training modules. The final step is to fill in your profile details and sign your employment contract.
-            </p>
-            <button
-              onClick={() => navigate('/profile')}
-              className="w-full py-3 bg-[#1a3a6b] text-white font-bold text-sm rounded-xl flex items-center justify-center gap-2"
-            >
-              Complete my profile &amp; sign contract
-              <ArrowRight size={15} />
-            </button>
           </div>
         )}
 
