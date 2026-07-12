@@ -1355,8 +1355,6 @@ function ContractSection({ staffId, staffRole, isDirector }: {
   staffRole: string
   isDirector: boolean
 }) {
-  const navigate = useNavigate()
-  const { refreshProfile } = useAuth()
   const [contract, setContract] = useState<StaffContract | null>(null)
   const [signedAt, setSignedAt] = useState<string | null>(null)
   const [signedVersion, setSignedVersion] = useState<string | null>(null)
@@ -1419,9 +1417,9 @@ function ContractSection({ staffId, staffRole, isDirector }: {
           activated_at: activatedAt,
         }).eq('id', enrollment.id)
       }
-      // Refresh the local profile so ProtectedRoute sees the new status
-      await refreshProfile()
-      navigate('/dashboard')
+      // Hard-navigate so the app reloads with fresh profile data from the DB.
+      // A soft navigate() would read stale React state and bounce back to /onboarding.
+      window.location.replace('/dashboard')
       return
     }
 
