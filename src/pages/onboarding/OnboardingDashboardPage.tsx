@@ -136,7 +136,9 @@ export function OnboardingDashboardPage() {
     const enroll: Enrollment | null = enrollRows?.[0] ?? null
 
     // Auto-activate: if training is 100% complete and the account is still gated,
-    // unlock it now so the user can access the full app immediately.
+    // unlock it and hard-redirect to the main app.
+    // Hard redirect (window.location.replace) is essential — a soft navigate()
+    // reads the stale in-memory profile and ProtectedRoute bounces them back.
     if (enroll && enroll.learning_completion_pct >= 100 &&
         !['active', 'not_required'].includes(enroll.status)) {
       const now = new Date().toISOString()
@@ -150,7 +152,8 @@ export function OnboardingDashboardPage() {
           activated_at: now,
         }).eq('id', enroll.id),
       ])
-      enroll.status = 'active'
+      window.location.replace('/dashboard')
+      return
     }
 
     setEnrollment(enroll)
