@@ -3,7 +3,7 @@ import {
   School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText,
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
-  HeartPulse, BookMarked, Star, ListChecks,
+  HeartPulse, BookMarked, Star, ListChecks, ContactRound,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -212,6 +212,13 @@ export function AdminPage() {
               icon: UsersRound,
               path: '/coach-pool',
               color: 'bg-violet-50 text-violet-700',
+            },
+            {
+              label: 'Export Contacts',
+              description: 'Download staff & coach pool contacts as a Brevo CSV',
+              icon: ContactRound,
+              path: '/admin/contact-export',
+              color: 'bg-emerald-50 text-emerald-700',
             },
           ]}
         />
