@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, ShieldCheck } from 'lucide-react'
+import { ChevronDown, ChevronRight, ShieldCheck, Printer } from 'lucide-react'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 
 type ContentItem =
@@ -762,6 +762,12 @@ export function SchoolPoliciesPage() {
             authorities when commissioning or approving after-school enrichment provision from Active
             School Organisation Ltd.
           </p>
+          <button
+            onClick={() => window.print()}
+            className="mt-3 flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors"
+          >
+            <Printer size={14} /> Save as PDF / Print
+          </button>
         </div>
 
         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">

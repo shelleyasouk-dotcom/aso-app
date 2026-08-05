@@ -167,13 +167,27 @@ export function AdminPage() {
           ]}
         />
 
-        {/* Safeguarding */}
+        {/* School Portal */}
         <TileGroup
-          title="Safeguarding"
+          title="School Portal"
           tiles={[
             {
+              label: 'Shared Documents',
+              description: 'Upload policies, insurance & guidance visible to all schools',
+              icon: FileText,
+              path: '/admin/school-shared-docs',
+              color: 'bg-blue-50 text-blue-700',
+            },
+            {
+              label: 'School Portals',
+              description: 'Per-school docs, partnership agreements, registers & portal accounts',
+              icon: School,
+              path: '/admin/area-schools',
+              color: 'bg-indigo-50 text-indigo-700',
+            },
+            {
               label: 'Safeguarding & Contacts',
-              description: 'Manage ASO DSL/DDSL info and useful contacts shown to schools',
+              description: 'ASO DSL/DDSL details and useful contacts shown to schools',
               icon: ShieldCheck,
               path: '/admin/org-contacts',
               color: 'bg-green-50 text-green-700',

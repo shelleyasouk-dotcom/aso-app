@@ -77,7 +77,9 @@ import { FeedbackAnalyticsPage } from './pages/admin/FeedbackAnalyticsPage'
 import { OnboardingAdminPage } from './pages/admin/OnboardingAdminPage'
 import { ContactExportPage } from './pages/admin/ContactExportPage'
 import { OrgContactsAdminPage } from './pages/admin/OrgContactsAdminPage'
+import { SchoolSharedDocsAdminPage } from './pages/admin/SchoolSharedDocsAdminPage'
 import { SchoolContactsPage } from './pages/school/SchoolContactsPage'
+import { SchoolCoachesPage } from './pages/school/SchoolCoachesPage'
 import { CoachOnboardingPage } from './pages/onboarding/CoachOnboardingPage'
 import { OnboardingDashboardPage } from './pages/onboarding/OnboardingDashboardPage'
 import { OnboardingStagePage } from './pages/onboarding/OnboardingStagePage'
@@ -263,6 +265,11 @@ export default function App() {
               <OrgContactsAdminPage />
             </ProtectedRoute>
           } />
+          <Route path="/admin/school-shared-docs" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <SchoolSharedDocsAdminPage />
+            </ProtectedRoute>
+          } />
 
           {/* Staff onboarding dashboard — new system */}
           <Route path="/onboarding" element={
@@ -357,6 +364,9 @@ export default function App() {
           } />
           <Route path="/school-portal/contacts" element={
             <ProtectedRoute><SchoolContactsPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/coaches" element={
+            <ProtectedRoute><SchoolCoachesPage /></ProtectedRoute>
           } />
 
           {/* Admin: school portal view */}

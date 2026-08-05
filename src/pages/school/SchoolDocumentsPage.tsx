@@ -8,13 +8,14 @@ import type { SchoolDocument } from '../../types'
 
 const CATEGORY_LABELS: Record<string, string> = {
   policy:              'ASO Policies & Procedures',
+  insurance:           'Insurance & Certification',
   letter_of_assurance: 'Letter of Assurance',
   partnership:         'Partnership Agreement',
   guidance:            'Guidance & Resources',
   other:               'Other Documents',
 }
 
-const CATEGORY_ORDER = ['policy', 'letter_of_assurance', 'partnership', 'guidance', 'other']
+const CATEGORY_ORDER = ['policy', 'insurance', 'letter_of_assurance', 'partnership', 'guidance', 'other']
 
 function formatBytes(bytes: number | null): string {
   if (!bytes) return ''
