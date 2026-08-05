@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle2, AlertCircle, Clock, PauseCircle, ChevronRight, ArrowRight } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Clock, PauseCircle, ChevronRight, ArrowRight, LogOut } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -103,7 +103,7 @@ function StageIcon({ num, status }: { num: number; status: StageStatus }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function OnboardingDashboardPage() {
-  const { profile } = useAuth()
+  const { profile, signOut } = useAuth()
   const navigate = useNavigate()
   const [enrollment, setEnrollment] = useState<Enrollment | null | undefined>(undefined)
   const [stages, setStages] = useState<Stage[]>([])
@@ -200,12 +200,21 @@ export function OnboardingDashboardPage() {
               <p className="text-white/50 text-[11px] leading-tight">Staff Onboarding</p>
             </div>
           </div>
-          {enrollment && (
-            <div className="text-right">
-              <p className="text-white/50 text-[11px]">Progress</p>
-              <p className="text-white font-extrabold text-base leading-tight">{pct}%</p>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {enrollment && (
+              <div className="text-right">
+                <p className="text-white/50 text-[11px]">Progress</p>
+                <p className="text-white font-extrabold text-base leading-tight">{pct}%</p>
+              </div>
+            )}
+            <button
+              onClick={signOut}
+              className="p-2 rounded-lg hover:bg-white/10 active:bg-white/20 transition-colors"
+              title="Sign out"
+            >
+              <LogOut size={18} className="text-white/70" />
+            </button>
+          </div>
         </div>
         {/* Progress bar */}
         {enrollment && (
