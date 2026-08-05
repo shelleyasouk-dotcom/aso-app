@@ -213,7 +213,7 @@ export function StaffAdminPage() {
   const [assignPanel, setAssignPanel] = useState<AssignPanel | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<EditForm>({ full_name: '', email: '', role: 'lead_coach', areas: [], can_clock_anywhere: false, can_post_announcements: false })
-  const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'lead_coach' as Role })
+  const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'lead_coach' as Role, enrollOnboarding: true })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -287,8 +287,23 @@ export function StaffAdminPage() {
     }
 
     if (!error && data.user) {
+      // Enrol in onboarding if requested — runs as director so RLS passes
+      if (form.enrollOnboarding) {
+        await supabase.from('profiles').update({
+          onboarding_required: true,
+          onboarding_status: 'not_started',
+        }).eq('id', data.user.id)
+
+        await supabase.from('onboarding_enrollments').insert({
+          staff_id: data.user.id,
+          status: 'not_started',
+          enrollment_type: 'initial',
+          enrolled_at: new Date().toISOString(),
+        })
+      }
+
       await loadData()
-      setForm({ email: '', full_name: '', password: '', role: 'lead_coach' })
+      setForm({ email: '', full_name: '', password: '', role: 'lead_coach', enrollOnboarding: true })
       setShowForm(false)
     }
     setSaving(false)
@@ -428,10 +443,37 @@ export function StaffAdminPage() {
               <Select
                 label="Role"
                 value={form.role}
-                onChange={e => setForm({ ...form, role: e.target.value as Role })}
+                onChange={e => {
+                  const role = e.target.value as Role
+                  const isCoach = ['lead_coach', 'assistant_coach', 'junior_coach'].includes(role)
+                  setForm({ ...form, role, enrollOnboarding: isCoach })
+                }}
               >
                 {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
               </Select>
+              <button
+                type="button"
+                onClick={() => setForm(f => ({ ...f, enrollOnboarding: !f.enrollOnboarding }))}
+                className={`flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl border-2 text-left transition-colors ${
+                  form.enrollOnboarding
+                    ? 'border-[#1a3a6b] bg-[#1a3a6b]/5'
+                    : 'border-gray-200 bg-white'
+                }`}
+              >
+                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                  form.enrollOnboarding ? 'bg-[#1a3a6b] border-[#1a3a6b]' : 'border-gray-300'
+                }`}>
+                  {form.enrollOnboarding && <Check size={12} className="text-white" />}
+                </div>
+                <div className="flex-1">
+                  <p className={`text-sm font-semibold ${form.enrollOnboarding ? 'text-[#1a3a6b]' : 'text-gray-500'}`}>
+                    Enrol in onboarding
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    They'll see onboarding tasks on first login
+                  </p>
+                </div>
+              </button>
               <div className="flex gap-2">
                 <Button variant="secondary" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
                 <Button onClick={inviteStaff} disabled={saving} className="flex-1">
