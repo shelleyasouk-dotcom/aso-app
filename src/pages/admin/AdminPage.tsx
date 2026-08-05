@@ -3,7 +3,7 @@ import {
   School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText,
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
-  HeartPulse, BookMarked, Star, ListChecks, ContactRound,
+  HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -163,6 +163,20 @@ export function AdminPage() {
               icon: ReceiptText,
               path: '/expenses/admin',
               color: 'bg-orange-50 text-orange-700',
+            },
+          ]}
+        />
+
+        {/* Safeguarding */}
+        <TileGroup
+          title="Safeguarding"
+          tiles={[
+            {
+              label: 'Safeguarding & Contacts',
+              description: 'Manage ASO DSL/DDSL info and useful contacts shown to schools',
+              icon: ShieldCheck,
+              path: '/admin/org-contacts',
+              color: 'bg-green-50 text-green-700',
             },
           ]}
         />

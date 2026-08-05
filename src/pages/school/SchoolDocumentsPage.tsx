@@ -117,9 +117,14 @@ export function SchoolDocumentsPage() {
     const bucket = doc.school_id ? 'school-docs' : 'school-shared-docs'
     const { data, error } = await supabase.storage
       .from(bucket)
-      .createSignedUrl(doc.file_path, 300)
+      .createSignedUrl(doc.file_path, 300, { download: doc.file_name })
     if (!error && data?.signedUrl) {
-      window.open(data.signedUrl, '_blank')
+      const a = document.createElement('a')
+      a.href = data.signedUrl
+      a.download = doc.file_name
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
     }
     setDownloading(null)
   }
