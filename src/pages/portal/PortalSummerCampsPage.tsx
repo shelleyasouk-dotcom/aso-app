@@ -172,16 +172,19 @@ export function PortalSummerCampsPage() {
         <div className="max-w-3xl mx-auto text-center">
           <div className="text-6xl mb-4">☀️</div>
           <div className="inline-flex items-center gap-2 bg-white/30 text-[#7c3c00] text-sm font-extrabold px-4 py-1.5 rounded-full mb-5 uppercase tracking-wide">
-            Summer 2026 · Gymnastics Camps
+            Summer 2026 · Final Gymnastics Camp
+          </div>
+          <div className="inline-flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-extrabold px-3 py-1.5 rounded-full mb-3 uppercase tracking-wide">
+            🔔 Last Chance — Limited Places Remaining
           </div>
           <h1 className="text-3xl sm:text-5xl font-extrabold text-[#1a3a6b] mb-4 leading-tight">
-            ASO Summer<br />GymCamps 2026
+            ASO Summer<br />GymCamp 2026
           </h1>
           <p className="text-[#7c3c00] text-base leading-relaxed mb-2 max-w-xl mx-auto">
-            Six venues across Hampshire, Wiltshire, Dorset and Bristol. Open to <strong>all children aged 4–11</strong> — no school connection required.
+            One last camp remaining — <strong>Hamworthy / Twin Sails, Poole, Dorset</strong>. Open to all children aged 4–11 — no school connection required.
           </p>
           <p className="text-[#7c3c00]/80 font-semibold text-sm mb-8">
-            📅 28 Jul – 20 Aug 2026 &nbsp;·&nbsp; 🕘 9:15am – 12:15pm &nbsp;·&nbsp; 3 days per week
+            📅 11–13 August 2026 &nbsp;·&nbsp; 🕘 9:15am – 12:15pm &nbsp;·&nbsp; Tuesday to Thursday
           </p>
           {totalOpen > 0 && (
             <button
@@ -243,8 +246,8 @@ export function PortalSummerCampsPage() {
           </div>
           <div className="w-px bg-white/10 hidden sm:block" />
           <div>
-            <p className="text-white font-extrabold text-lg leading-none">6 venues</p>
-            <p className="text-white/60 text-xs mt-1">Hampshire · Wiltshire · Dorset · Bristol</p>
+            <p className="text-white font-extrabold text-lg leading-none">1 venue</p>
+            <p className="text-white/60 text-xs mt-1">Poole, Dorset</p>
           </div>
           <div className="w-px bg-white/10 hidden sm:block" />
           <div>
@@ -271,9 +274,9 @@ export function PortalSummerCampsPage() {
       {/* Venue booking grid */}
       <section id="venues" className="bg-gray-50 py-12 px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Choose Your Venue & Week</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Last Remaining Camp</h2>
           <p className="text-gray-500 text-sm text-center mb-8">
-            Each camp runs Tue–Thu, 9:15am–12:15pm. Book securely through ClassForKids.
+            Hamworthy / Twin Sails, Poole — 11–13 August, 9:15am–12:15pm. Book securely through ClassForKids.
           </p>
 
           {loading ? (
@@ -360,12 +363,12 @@ export function PortalSummerCampsPage() {
         <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">Questions</h2>
         <div className="flex flex-col gap-4">
           {[
-            { q: 'Who can attend?', a: "Any child aged 4–11. Our camps are open to all — you don't need to be enrolled at an ASO partner school." },
+            { q: 'Who can attend?', a: "Any child aged 4–11. Our camp is open to all — you don't need to be enrolled at an ASO partner school." },
             { q: 'Is there a sibling discount?', a: 'Yes — book 2 or more children and 5% is automatically taken off at checkout. No code needed.' },
-            { q: 'Can I book September classes early?', a: 'Yes — use code BGF467 before 11 July 2026 to get priority access when September 2026 classes open.' },
-            { q: 'What are the camp dates?', a: 'Week 1: 28–30 July · Week 2: 4–6 August · Week 3: 18–20 August. All camps run Tuesday to Thursday, 9:15am–12:15pm.' },
-            { q: 'How do I book?', a: 'Click "Book Now" on your chosen venue and week. This takes you to our ClassForKids page where you can create an account and pay securely online.' },
-            { q: 'What if we need to cancel?', a: 'Email us as soon as possible. We\'ll do our best to transfer you to another date or venue, or issue a credit.' },
+            { q: 'What are the camp dates?', a: 'Tuesday 11 – Thursday 13 August 2026, 9:15am–12:15pm. This is our final camp of the summer — places are very limited.' },
+            { q: 'Where is the camp?', a: 'Hamworthy / Twin Sails schools, Poole, Dorset. Full venue details will be confirmed on booking.' },
+            { q: 'How do I book?', a: 'Click "Book Now" below. This takes you to our ClassForKids page where you can create an account and pay securely online.' },
+            { q: 'What if we need to cancel?', a: 'Email us as soon as possible. We\'ll do our best to issue a credit for a future term or venue.' },
             { q: 'Do children need any prior gymnastics experience?', a: 'Not at all. We start from Level 1 and coaches group children by ability. Complete beginners are very welcome.' },
           ].map(({ q, a }) => (
             <div key={q} className="bg-white border border-gray-200 rounded-xl p-5">

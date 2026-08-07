@@ -205,15 +205,15 @@ export function PortalHomePage() {
           {/* Heading */}
           <div className="text-center mb-8">
             <div className="text-5xl mb-3">☀️</div>
-            <div className="inline-flex items-center gap-1.5 bg-[#f5c518] text-[#1a3a6b] text-[10px] font-extrabold px-3 py-1.5 rounded-full mb-3 uppercase tracking-wide">
-              Summer 2026 · Booking Now Open
+            <div className="inline-flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-extrabold px-3 py-1.5 rounded-full mb-3 uppercase tracking-wide">
+              🔔 Last Chance — Summer 2026
             </div>
             <h2 className="text-3xl font-extrabold text-[#1a3a6b] leading-tight mb-2">
-              ASO Summer Holiday Gymnastics Camps
+              ASO Summer Holiday Gymnastics Camp
             </h2>
             <p className="text-[#7c3c00] text-sm max-w-xl mx-auto leading-relaxed">
-              Six venues across England — <strong>open to all children aged 4–11</strong>, no school connection required.
-              UKAG Award Pathway sessions every day.
+              One camp remaining — <strong>Poole, Dorset, 11–13 August</strong>. Open to all children aged 4–11, no school connection required.
+              Don't miss out — limited places left!
             </p>
           </div>
 
@@ -238,7 +238,7 @@ export function PortalHomePage() {
                   </div>
                   <div className="flex items-center gap-1.5 text-gray-500">
                     <Calendar size={11} className="text-[#1a3a6b] shrink-0" />
-                    <span className="text-xs">3 weeks · 28 Jul – 20 Aug 2026</span>
+                    <span className="text-xs">11–13 August 2026 · Tue–Thu</span>
                   </div>
                   <p className="text-sm font-extrabold text-[#1a3a6b]">from £75.00 <span className="text-xs font-normal text-gray-400">per child</span></p>
                   {camp.is_full ? (
@@ -257,25 +257,16 @@ export function PortalHomePage() {
               ))}
             </div>
           ) : (
-            /* Venue list before DB is populated */
+            /* Fallback — only the last remaining camp */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
-              {[
-                { venue: "Pilgrim's Cross", city: 'Andover', region: 'Hampshire' },
-                { venue: "St Martin's CE Primary School", city: 'Salisbury', region: 'Wiltshire' },
-                { venue: 'Overton CE Primary School', city: 'Basingstoke', region: 'Hampshire' },
-                { venue: 'Sholing Junior School', city: 'Southampton', region: 'Hampshire' },
-                { venue: 'Twin Sails Infant School', city: 'Poole', region: 'Dorset' },
-                { venue: 'Hotwells Primary School', city: 'Bristol', region: 'Bristol' },
-              ].map(v => (
-                <div key={v.venue} className="bg-white rounded-2xl border-2 border-[#f5c518]/60 p-4 flex items-center gap-3">
-                  <span className="text-2xl shrink-0">☀️</span>
-                  <div>
-                    <p className="text-[10px] font-extrabold text-[#1a3a6b]/50 uppercase tracking-widest">{v.region}</p>
-                    <p className="font-bold text-gray-900 text-sm leading-tight">{v.venue}</p>
-                    <p className="text-xs text-gray-400">{v.city}</p>
-                  </div>
+              <div className="bg-white rounded-2xl border-2 border-red-400 p-4 flex items-center gap-3">
+                <span className="text-2xl shrink-0">☀️</span>
+                <div>
+                  <p className="text-[10px] font-extrabold text-red-600 uppercase tracking-widest">Last Chance · Dorset</p>
+                  <p className="font-bold text-gray-900 text-sm leading-tight">Hamworthy / Twin Sails Schools</p>
+                  <p className="text-xs text-gray-400">Poole · 11–13 August</p>
                 </div>
-              ))}
+              </div>
             </div>
           )}
 
@@ -283,11 +274,11 @@ export function PortalHomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => navigate('/portal/summer-camps')}
-              className="flex items-center gap-2 bg-[#1a3a6b] text-white font-bold px-7 py-3 rounded-xl hover:bg-[#142f58] transition-colors"
+              className="flex items-center gap-2 bg-red-600 text-white font-bold px-7 py-3 rounded-xl hover:bg-red-700 transition-colors"
             >
-              View All Camps & Book <ChevronRight size={16} />
+              Book Last Remaining Places <ChevronRight size={16} />
             </button>
-            <p className="text-xs text-[#7c3c00]">Ages 4–11 · All abilities welcome · UKAG Award Pathway</p>
+            <p className="text-xs text-[#7c3c00]">Poole, Dorset · 11–13 Aug · Ages 4–11</p>
           </div>
         </div>
       </section>
