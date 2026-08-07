@@ -49,7 +49,7 @@ export function PortalContactPage() {
 
     // Send email notification + notify directors (run in parallel, don't block on failures)
     await Promise.allSettled([
-      supabase.functions.invoke('send-contact-email', {
+      supabase.functions.invoke('bright-worker', {
         body: {
           name: form.name.trim(),
           email: form.email.trim(),
