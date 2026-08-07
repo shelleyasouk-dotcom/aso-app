@@ -47,24 +47,35 @@ export function PortalContactPage() {
       return
     }
 
-    // Notify all directors via the notifications table
-    const { data: directors } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'director')
-
-    if (directors && directors.length > 0) {
-      await supabase.from('notifications').insert(
-        directors.map((d: { id: string }) => ({
-          user_id: d.id,
-          title: `New message from ${form.name.trim()}`,
-          body: form.message.trim().slice(0, 100) + (form.message.trim().length > 100 ? '…' : ''),
-          type: 'contact_message',
-          related_id: null,
-          read: false,
-        }))
-      )
-    }
+    // Send email notification + notify directors (run in parallel, don't block on failures)
+    await Promise.allSettled([
+      supabase.functions.invoke('send-contact-email', {
+        body: {
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim() || null,
+          enquiry_type: form.enquiry_type,
+          message: form.message.trim(),
+        },
+      }),
+      supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'director')
+        .then(({ data: directors }) => {
+          if (!directors || directors.length === 0) return
+          return supabase.from('notifications').insert(
+            directors.map((d: { id: string }) => ({
+              user_id: d.id,
+              title: `New message from ${form.name.trim()}`,
+              body: form.message.trim().slice(0, 100) + (form.message.trim().length > 100 ? '…' : ''),
+              type: 'contact_message',
+              related_id: null,
+              read: false,
+            }))
+          )
+        }),
+    ])
 
     setSubmitted(true)
     setSubmitting(false)
