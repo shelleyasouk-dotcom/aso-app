@@ -73,6 +73,7 @@ import { PortalNewsletterPage } from './pages/portal/PortalNewsletterPage'
 import { BlogAdminPage } from './pages/admin/BlogAdminPage'
 import { BlogPostEditorPage } from './pages/admin/BlogPostEditorPage'
 import { NewsletterAdminPage } from './pages/admin/NewsletterAdminPage'
+import { AdBannersAdminPage } from './pages/admin/AdBannersAdminPage'
 import { JobAdvertsAdminPage } from './pages/admin/JobAdvertsAdminPage'
 import { JobApplicationsAdminPage } from './pages/admin/JobApplicationsAdminPage'
 import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
@@ -484,6 +485,11 @@ export default function App() {
           <Route path="/admin/newsletters" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
               <NewsletterAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/ad-banners" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <AdBannersAdminPage />
             </ProtectedRoute>
           } />
 

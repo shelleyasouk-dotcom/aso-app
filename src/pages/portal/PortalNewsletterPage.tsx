@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Mail, ExternalLink, Calendar } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { AdBanner } from '../../components/ui/AdBanner'
 import { useSEO } from '../../hooks/useSEO'
 
 interface Newsletter {
@@ -48,6 +49,11 @@ export function PortalNewsletterPage() {
           </p>
         </div>
       </section>
+
+      {/* Ad banner */}
+      <div className="max-w-3xl mx-auto px-4 pt-6">
+        <AdBanner placement="newsletter_archive" />
+      </div>
 
       {/* Content */}
       <section className="max-w-3xl mx-auto px-4 py-10">

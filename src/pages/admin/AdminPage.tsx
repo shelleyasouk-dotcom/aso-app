@@ -4,7 +4,7 @@ import {
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
-  Newspaper, Mail,
+  Newspaper, Mail, RectangleHorizontal,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -269,6 +269,13 @@ export function AdminPage() {
               icon: Mail,
               path: '/admin/newsletters',
               color: 'bg-violet-50 text-violet-700',
+            },
+            {
+              label: 'Advertising Banners',
+              description: 'Upload and manage paid banner ads shown on the homepage, blog and newsletter pages',
+              icon: RectangleHorizontal,
+              path: '/admin/ad-banners',
+              color: 'bg-yellow-50 text-yellow-700',
             },
           ]}
         />

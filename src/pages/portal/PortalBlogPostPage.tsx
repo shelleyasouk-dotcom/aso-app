@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Tag } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
+import { AdBanner } from '../../components/ui/AdBanner'
 import { useSEO } from '../../hooks/useSEO'
 import type { ContentBlock } from '../admin/BlogPostEditorPage'
 
@@ -221,8 +222,11 @@ export function PortalBlogPostPage() {
           ))}
         </div>
 
+        {/* Ad banner */}
+        <AdBanner placement="blog" className="mt-10" />
+
         {/* Share + back */}
-        <div className="mt-12 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mt-8 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <button
             onClick={() => navigate('/portal/blog')}
             className="flex items-center gap-1 text-sm text-[#1a3a6b] font-semibold hover:underline"

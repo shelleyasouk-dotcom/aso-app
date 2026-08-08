@@ -4,6 +4,7 @@ import { Search, MapPin, Trophy, Users, ChevronRight, CheckCircle, Calendar, Ext
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
+import { AdBanner } from '../../components/ui/AdBanner'
 import { useSEO } from '../../hooks/useSEO'
 import type { HolidayCamp } from '../../types'
 
@@ -545,6 +546,11 @@ export function PortalHomePage() {
           </div>
         </div>
       </section>
+
+      {/* Sponsored banner */}
+      <div className="max-w-4xl mx-auto px-4 pb-8">
+        <AdBanner placement="homepage" />
+      </div>
     </PortalLayout>
   )
 }
