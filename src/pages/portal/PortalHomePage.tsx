@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, MapPin, Trophy, Users, ChevronRight, CheckCircle, Calendar, ExternalLink } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
 import type { HolidayCamp } from '../../types'
 
 const SUPABASE_URL = 'https://yhsxtjttoxzhmbeenhow.supabase.co'
@@ -515,7 +516,7 @@ export function PortalHomePage() {
           </div>
 
           {/* Perks strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             {[
               { emoji: '🏅', label: 'Funded DBS check' },
               { emoji: '📚', label: 'UKAG CPD & training' },
@@ -527,6 +528,14 @@ export function PortalHomePage() {
                 <p className="text-white/80 text-xs font-semibold leading-tight">{p.label}</p>
               </div>
             ))}
+          </div>
+          <div className="text-center">
+            <p className="text-white/50 text-xs mb-3">Know a great coach? Share our vacancies!</p>
+            <ShareFacebookButton
+              url="https://www.activeschool.org.uk/portal/careers"
+              hashtag="ASOCareers"
+              label="Share on Facebook"
+            />
           </div>
         </div>
       </section>

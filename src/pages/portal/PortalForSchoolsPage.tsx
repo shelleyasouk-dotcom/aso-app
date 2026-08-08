@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight, CheckCircle, Mail } from 'lucide-react'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
 
 const AUDIENCES = [
   {
@@ -203,13 +204,20 @@ export function PortalForSchoolsPage() {
           <p className="text-white/70 text-sm mb-6 leading-relaxed">
             Get in touch and we'll put together a proposal tailored to your school, trust, or authority — no obligation, no cost.
           </p>
-          <a
-            href="mailto:info@activeschoolorganisation.co.uk"
-            className="inline-flex items-center gap-2 bg-[#f5c518] text-[#1a3a6b] font-bold px-8 py-3 rounded-xl hover:bg-yellow-400 transition-colors"
-          >
-            <Mail size={16} />
-            Contact Us to Partner
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a
+              href="mailto:info@activeschoolorganisation.co.uk"
+              className="inline-flex items-center gap-2 bg-[#f5c518] text-[#1a3a6b] font-bold px-8 py-3 rounded-xl hover:bg-yellow-400 transition-colors"
+            >
+              <Mail size={16} />
+              Contact Us to Partner
+            </a>
+            <ShareFacebookButton
+              url="https://www.activeschool.org.uk/portal/for-schools"
+              hashtag="ASOPartnership"
+              label="Share this page"
+            />
+          </div>
         </div>
       </section>
 

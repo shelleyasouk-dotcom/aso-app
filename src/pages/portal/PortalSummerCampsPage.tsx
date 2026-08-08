@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { MapPin, Calendar, Clock, ChevronRight, Mail, CheckCircle, ExternalLink, Tag } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
 import type { HolidayCamp } from '../../types'
 
 const EMAIL = 'info@activeschool.org.uk'
@@ -394,12 +395,19 @@ export function PortalSummerCampsPage() {
               <p className="text-white/70 text-sm mb-6 leading-relaxed">
                 Places are limited at each venue. Scroll up to pick your location and week.
               </p>
-              <button
-                onClick={() => document.getElementById('venues')?.scrollIntoView({ behavior: 'smooth' })}
-                className="inline-flex items-center gap-2 bg-[#f5c518] text-[#1a3a6b] font-bold px-8 py-3 rounded-xl hover:bg-yellow-400 transition-colors"
-              >
-                Book a Place <ChevronRight size={16} />
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  onClick={() => document.getElementById('venues')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="inline-flex items-center gap-2 bg-[#f5c518] text-[#1a3a6b] font-bold px-8 py-3 rounded-xl hover:bg-yellow-400 transition-colors"
+                >
+                  Book a Place <ChevronRight size={16} />
+                </button>
+                <ShareFacebookButton
+                  url="https://www.activeschool.org.uk/portal/summer-camps"
+                  hashtag="ASOGymCamps"
+                  label="Share with a friend"
+                />
+              </div>
             </>
           ) : (
             <>

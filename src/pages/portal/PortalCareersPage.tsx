@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, MapPin, Clock, Briefcase, ChevronRight, Filter, Users } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -299,7 +300,7 @@ export function PortalCareersPage() {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl font-bold mb-2">Why Work for ASO?</h2>
           <p className="text-white/60 text-sm mb-8">We're a passionate, people-first organisation that invests in our coaches.</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10">
             {[
               { emoji: '🏅', title: 'Fully funded DBS', desc: 'We cover your DBS check so you can start straight away.' },
               { emoji: '📚', title: 'CPD & Training', desc: 'Regular training days and qualifications support.' },
@@ -314,6 +315,14 @@ export function PortalCareersPage() {
                 <p className="text-white/60 text-xs leading-relaxed">{item.desc}</p>
               </div>
             ))}
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-white/50 text-xs">Know someone who'd be a great coach? Share these vacancies!</p>
+            <ShareFacebookButton
+              url="https://www.activeschool.org.uk/portal/careers"
+              hashtag="ASOCareers"
+              label="Share these vacancies"
+            />
           </div>
         </div>
       </section>
