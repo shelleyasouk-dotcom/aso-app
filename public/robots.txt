@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /portal/
+Allow: /portal/clubs
+Allow: /portal/sports
+Allow: /portal/affiliations
+Allow: /portal/about
+Allow: /portal/for-schools
+Allow: /portal/summer-camps
+Allow: /portal/contact
+Allow: /portal/careers
+Allow: /portal/coach-pool
+Allow: /portal/community
+
+Disallow: /admin/
+Disallow: /school-portal/
+Disallow: /registers/
+Disallow: /incidents/
+Disallow: /expenses/
+Disallow: /documents/
+Disallow: /crm/
+Disallow: /coach-pool/
+Disallow: /portal/login
+Disallow: /portal/register
+Disallow: /portal/my-bookings
+Disallow: /portal/my-children
+Disallow: /onboarding/
+
+Sitemap: https://www.activeschool.org.uk/sitemap.xml

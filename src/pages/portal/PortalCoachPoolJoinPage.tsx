@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { CheckCircle, Users, Send, ArrowLeft } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { useSEO } from '../../hooks/useSEO'
 
 const inputCls = 'w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/30 focus:border-[#1a3a6b]'
 const textareaCls = inputCls + ' resize-none'
@@ -50,6 +51,11 @@ const DBS_OPTIONS = [
 ]
 
 export function PortalCoachPoolJoinPage() {
+  useSEO({
+    title: 'Join the Coach Pool — Register Your Interest',
+    description: 'No gymnastics coaching vacancy near you right now? Join the ASO coach pool and we\'ll contact you when a local placement opens up. Register your interest today.',
+    url: 'https://www.activeschool.org.uk/portal/coach-pool',
+  })
   const navigate = useNavigate()
   const [form, setForm] = useState<FormState>(EMPTY)
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})

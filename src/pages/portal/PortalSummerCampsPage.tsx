@@ -3,6 +3,7 @@ import { MapPin, Calendar, Clock, ChevronRight, Mail, CheckCircle, ExternalLink,
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
+import { useSEO } from '../../hooks/useSEO'
 import type { HolidayCamp } from '../../types'
 
 const EMAIL = 'info@activeschool.org.uk'
@@ -143,6 +144,11 @@ function VenueCard({ group }: { group: VenueGroup }) {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export function PortalSummerCampsPage() {
+  useSEO({
+    title: 'Summer Gymnastics Camps 2026 — Poole, Dorset',
+    description: 'Last chance — ASO Summer GymCamp 2026 at Hamworthy/Twin Sails, Poole. 11–13 August. Ages 4–11, all abilities welcome. UKAG Award Pathway. Book now on ClassForKids.',
+    url: 'https://www.activeschool.org.uk/portal/summer-camps',
+  })
   const [camps, setCamps] = useState<HolidayCamp[]>([])
   const [loading, setLoading] = useState(true)
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Mail, AlertTriangle, CheckCircle, Send } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { useSEO } from '../../hooks/useSEO'
 
 // ─── Toggle this to false once email is restored ──────────────────────────────
 const EMAIL_DOWN = false
@@ -15,6 +16,11 @@ const ENQUIRY_TYPES = [
 ]
 
 export function PortalContactPage() {
+  useSEO({
+    title: 'Contact Us',
+    description: 'Get in touch with Active School Organisation. Questions about gymnastics clubs, school partnerships, summer camps, or coaching roles — we\'re happy to help.',
+    url: 'https://www.activeschool.org.uk/portal/contact',
+  })
   const [form, setForm] = useState({ name: '', email: '', phone: '', enquiry_type: '', message: '' })
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)

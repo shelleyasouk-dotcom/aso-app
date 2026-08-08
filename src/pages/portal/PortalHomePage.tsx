@@ -4,6 +4,7 @@ import { Search, MapPin, Trophy, Users, ChevronRight, CheckCircle, Calendar, Ext
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
+import { useSEO } from '../../hooks/useSEO'
 import type { HolidayCamp } from '../../types'
 
 const SUPABASE_URL = 'https://yhsxtjttoxzhmbeenhow.supabase.co'
@@ -48,6 +49,11 @@ const HOW_IT_WORKS = [
 ]
 
 export function PortalHomePage() {
+  useSEO({
+    title: 'Gymnastics & Trampolining for Schools',
+    description: 'ASO delivers UKAG-affiliated gymnastics and trampolining enrichment programmes in primary and secondary schools across England. DBS-checked coaches, ages 4–14.',
+    url: 'https://www.activeschool.org.uk/portal',
+  })
   const navigate = useNavigate()
   const [regions, setRegions] = useState<string[]>([])
   const [search, setSearch] = useState('')

@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronRight, CheckCircle, Mail } from 'lucide-react'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
+import { useSEO } from '../../hooks/useSEO'
 
 const AUDIENCES = [
   {
@@ -84,6 +85,11 @@ const FAQS = [
 ]
 
 export function PortalForSchoolsPage() {
+  useSEO({
+    title: 'Bring Gymnastics to Your School — School Partnerships',
+    description: 'Partner with ASO to deliver UKAG-affiliated gymnastics and trampolining in your school. We handle coaching, registers, equipment and reporting. No obligation enquiry.',
+    url: 'https://www.activeschool.org.uk/portal/for-schools',
+  })
   const navigate = useNavigate()
 
   return (

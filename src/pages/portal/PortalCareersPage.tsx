@@ -4,6 +4,7 @@ import { Search, MapPin, Clock, Briefcase, ChevronRight, Filter, Users } from 'l
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
 import { ShareFacebookButton } from '../../components/ui/ShareFacebookButton'
+import { useSEO } from '../../hooks/useSEO'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -114,6 +115,11 @@ function JobCard({ job }: { job: JobAdvert }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function PortalCareersPage() {
+  useSEO({
+    title: 'Coaching Jobs & Vacancies',
+    description: 'Join the ASO coaching team. We\'re hiring gymnastics and trampolining coaches across England. Funded DBS, competitive pay, local placements. Apply today.',
+    url: 'https://www.activeschool.org.uk/portal/careers',
+  })
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [jobs, setJobs] = useState<JobAdvert[]>([])

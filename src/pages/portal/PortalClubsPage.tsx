@@ -3,9 +3,15 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Search, MapPin, Calendar, Clock, ChevronRight, SlidersHorizontal } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { useSEO } from '../../hooks/useSEO'
 import type { School } from '../../types'
 
 export function PortalClubsPage() {
+  useSEO({
+    title: 'Find a Gymnastics Club Near You',
+    description: 'Search for ASO gymnastics and trampolining clubs at schools near you. Find your child\'s club, check session times, and track their UKAG Award Pathway progress.',
+    url: 'https://www.activeschool.org.uk/portal/clubs',
+  })
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [schools, setSchools] = useState<School[]>([])

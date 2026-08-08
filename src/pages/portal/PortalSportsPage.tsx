@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { ChevronRight, CheckCircle } from 'lucide-react'
 import { PortalLayout } from '../../components/layout/PortalLayout'
+import { useSEO } from '../../hooks/useSEO'
 
 const PROGRAMMES = [
   {
@@ -40,6 +41,11 @@ const PROGRAMMES = [
 ]
 
 export function PortalSportsPage() {
+  useSEO({
+    title: 'Gymnastics & Trampolining Programmes — UKAG Award Pathway',
+    description: 'ASO delivers UKAG Level 1–6 gymnastics and trampolining for primary and secondary schools. Curriculum-aligned, equipment provided, qualified coaches at every session.',
+    url: 'https://www.activeschool.org.uk/portal/sports',
+  })
   const navigate = useNavigate()
 
   return (
