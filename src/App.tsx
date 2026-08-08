@@ -67,6 +67,12 @@ import { PortalCareersPage } from './pages/portal/PortalCareersPage'
 import { PortalCareerDetailPage } from './pages/portal/PortalCareerDetailPage'
 import { PortalCareerApplyPage } from './pages/portal/PortalCareerApplyPage'
 import { PortalCoachPoolJoinPage } from './pages/portal/PortalCoachPoolJoinPage'
+import { PortalBlogPage } from './pages/portal/PortalBlogPage'
+import { PortalBlogPostPage } from './pages/portal/PortalBlogPostPage'
+import { PortalNewsletterPage } from './pages/portal/PortalNewsletterPage'
+import { BlogAdminPage } from './pages/admin/BlogAdminPage'
+import { BlogPostEditorPage } from './pages/admin/BlogPostEditorPage'
+import { NewsletterAdminPage } from './pages/admin/NewsletterAdminPage'
 import { JobAdvertsAdminPage } from './pages/admin/JobAdvertsAdminPage'
 import { JobApplicationsAdminPage } from './pages/admin/JobApplicationsAdminPage'
 import { HolidayCampsAdminPage } from './pages/admin/HolidayCampsAdminPage'
@@ -435,6 +441,9 @@ export default function App() {
           <Route path="/portal/careers/:id" element={<PortalCareerDetailPage />} />
           <Route path="/portal/careers/:id/apply" element={<PortalCareerApplyPage />} />
           <Route path="/portal/coach-pool" element={<PortalCoachPoolJoinPage />} />
+          <Route path="/portal/blog" element={<PortalBlogPage />} />
+          <Route path="/portal/blog/:slug" element={<PortalBlogPostPage />} />
+          <Route path="/portal/newsletters" element={<PortalNewsletterPage />} />
 
           {/* Recruitment — admin */}
           <Route path="/admin/job-adverts" element={
@@ -455,6 +464,26 @@ export default function App() {
           <Route path="/admin/holiday-camps" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <HolidayCampsAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/blog" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
+              <BlogAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/blog/new" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
+              <BlogPostEditorPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/blog/:id/edit" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
+              <BlogPostEditorPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/newsletters" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
+              <NewsletterAdminPage />
             </ProtectedRoute>
           } />
 

@@ -4,6 +4,7 @@ import {
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
+  Newspaper, Mail,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -247,6 +248,27 @@ export function AdminPage() {
               icon: ContactRound,
               path: '/admin/contact-export',
               color: 'bg-emerald-50 text-emerald-700',
+            },
+          ]}
+        />
+
+        {/* Content */}
+        <TileGroup
+          title="Content"
+          tiles={[
+            {
+              label: 'Blog & News',
+              description: 'Write and publish articles, news and updates for the public website',
+              icon: Newspaper,
+              path: '/admin/blog',
+              color: 'bg-sky-50 text-sky-700',
+            },
+            {
+              label: 'Newsletters',
+              description: 'Sync sent Brevo campaigns to the newsletter archive on the website',
+              icon: Mail,
+              path: '/admin/newsletters',
+              color: 'bg-violet-50 text-violet-700',
             },
           ]}
         />
