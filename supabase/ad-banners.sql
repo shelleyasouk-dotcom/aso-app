@@ -46,3 +46,41 @@ create policy "Admins can manage ad banners"
 -- Storage bucket: create manually in Supabase dashboard
 -- Name: ad-banners
 -- Public: true
+
+-- Storage RLS policies for ad-banners bucket
+create policy "Public can read ad banners"
+  on storage.objects for select
+  using (bucket_id = 'ad-banners');
+
+create policy "Admins can upload ad banners"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'ad-banners'
+    and exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+      and role in ('director', 'area_lead')
+    )
+  );
+
+create policy "Admins can update ad banners"
+  on storage.objects for update
+  using (
+    bucket_id = 'ad-banners'
+    and exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+      and role in ('director', 'area_lead')
+    )
+  );
+
+create policy "Admins can delete ad banners"
+  on storage.objects for delete
+  using (
+    bucket_id = 'ad-banners'
+    and exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+      and role in ('director', 'area_lead')
+    )
+  );
