@@ -59,5 +59,43 @@ create policy "Admins can manage newsletters"
     )
   );
 
--- Storage bucket for blog images (run this separately in Supabase dashboard > Storage)
+-- Storage bucket for blog images (create manually in Supabase dashboard > Storage)
 -- Bucket name: blog-images  (public: true)
+
+-- Storage RLS policies for blog-images bucket
+create policy "Public can read blog images"
+  on storage.objects for select
+  using (bucket_id = 'blog-images');
+
+create policy "Admins can upload blog images"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'blog-images'
+    and exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+      and role in ('director', 'area_lead', 'media_tech')
+    )
+  );
+
+create policy "Admins can update blog images"
+  on storage.objects for update
+  using (
+    bucket_id = 'blog-images'
+    and exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+      and role in ('director', 'area_lead', 'media_tech')
+    )
+  );
+
+create policy "Admins can delete blog images"
+  on storage.objects for delete
+  using (
+    bucket_id = 'blog-images'
+    and exists (
+      select 1 from public.profiles
+      where id = auth.uid()
+      and role in ('director', 'area_lead', 'media_tech')
+    )
+  );
