@@ -109,6 +109,13 @@ export function AdminPage() {
               path: '/admin/onboarding',
               color: 'bg-emerald-50 text-emerald-700',
             },
+            {
+              label: 'Programme Content',
+              description: 'View and edit all onboarding stages, tasks, quiz questions and declarations',
+              icon: BookOpen,
+              path: '/admin/onboarding/content',
+              color: 'bg-blue-50 text-blue-700',
+            },
           ]}
         />
 

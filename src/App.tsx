@@ -82,6 +82,7 @@ import { SchoolHealthScorePage } from './pages/admin/SchoolHealthScorePage'
 import { LessonsLearnedPage } from './pages/admin/LessonsLearnedPage'
 import { FeedbackAnalyticsPage } from './pages/admin/FeedbackAnalyticsPage'
 import { OnboardingAdminPage } from './pages/admin/OnboardingAdminPage'
+import { OnboardingContentPage } from './pages/admin/OnboardingContentPage'
 import { ContactExportPage } from './pages/admin/ContactExportPage'
 import { OrgContactsAdminPage } from './pages/admin/OrgContactsAdminPage'
 import { SchoolSharedDocsAdminPage } from './pages/admin/SchoolSharedDocsAdminPage'
@@ -259,6 +260,11 @@ export default function App() {
           <Route path="/admin/onboarding" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <OnboardingAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/onboarding/content" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <OnboardingContentPage />
             </ProtectedRoute>
           } />
 
