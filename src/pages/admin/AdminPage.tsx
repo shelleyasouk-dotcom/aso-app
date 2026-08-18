@@ -4,7 +4,7 @@ import {
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
-  Newspaper, Mail, RectangleHorizontal,
+  Newspaper, Mail, RectangleHorizontal, ScrollText,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -171,6 +171,20 @@ export function AdminPage() {
               icon: ReceiptText,
               path: '/expenses/admin',
               color: 'bg-orange-50 text-orange-700',
+            },
+          ]}
+        />
+
+        {/* Legal */}
+        <TileGroup
+          title="Legal"
+          tiles={[
+            {
+              label: 'Employment Contracts',
+              description: 'Write and edit contract sections for each staff role',
+              icon: ScrollText,
+              path: '/admin/staff-contracts',
+              color: 'bg-slate-50 text-slate-700',
             },
           ]}
         />

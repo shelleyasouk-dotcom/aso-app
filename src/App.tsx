@@ -107,6 +107,7 @@ import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailP
 import { AreaLeadCoursePage } from './pages/course/AreaLeadCoursePage'
 import { StaffOnboardingModal } from './components/StaffOnboardingModal'
 import { PhotoPolicyModal } from './components/PhotoPolicyModal'
+import { StaffContractsAdminPage } from './pages/admin/StaffContractsAdminPage'
 
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
@@ -496,6 +497,11 @@ export default function App() {
           <Route path="/admin/ad-banners" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <AdBannersAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/staff-contracts" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <StaffContractsAdminPage />
             </ProtectedRoute>
           } />
 

@@ -554,6 +554,16 @@ export function CoachProfilePage() {
   const safeguardCurrent = issuedWithin3Years(fields.safeguarding_expiry)
   const firstAidCurrent  = issuedWithin3Years(fields.first_aid_expiry)
 
+  const [activeTab, setActiveTab] = useState<'id' | 'compliance' | 'details' | 'contract' | 'documents'>('id')
+
+  const TABS: { key: typeof activeTab; label: string }[] = [
+    { key: 'id',          label: 'ID Card' },
+    { key: 'compliance',  label: 'Compliance' },
+    { key: 'details',     label: 'My Details' },
+    { key: 'contract',    label: 'Contract' },
+    { key: 'documents',   label: 'Documents' },
+  ]
+
   return (
     <Layout title={isOwnProfile ? 'My Profile' : subject.full_name} showBack>
 
@@ -568,6 +578,25 @@ export function CoachProfilePage() {
           </button>
         </div>
       )}
+
+      {/* Tab bar */}
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-sm">
+        <div className="flex overflow-x-auto scrollbar-none px-3">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`shrink-0 px-4 py-3.5 text-xs font-bold border-b-2 transition-colors whitespace-nowrap ${
+                activeTab === tab.key
+                  ? 'border-[#1a3a6b] text-[#1a3a6b]'
+                  : 'border-transparent text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* ── Full-screen ID overlay ── */}
       {showFullId && (
@@ -647,340 +676,275 @@ export function CoachProfilePage() {
         </div>
       )}
 
-      <div className="px-4 pt-6 flex flex-col gap-5 pb-8">
+      <div className="px-4 pt-5 flex flex-col gap-5 pb-10">
 
-        <CoachIdCard
-          fullName={subject.full_name}
-          role={ROLE_LABELS[subject.role]}
-          area={subject.area}
-          profileId={subject.id}
-          photoUrl={photoUrl}
-          dbsNumber={fields.dbs_number}
-          dbsIssued={fields.dbs_expiry}
-          safeguardingIssued={fields.safeguarding_expiry}
-          firstAidIssued={fields.first_aid_expiry}
-        />
+        {/* ── TAB: ID CARD ── */}
+        {activeTab === 'id' && (
+          <>
+            <CoachIdCard
+              fullName={subject.full_name}
+              role={ROLE_LABELS[subject.role]}
+              area={subject.area}
+              profileId={subject.id}
+              photoUrl={photoUrl}
+              dbsNumber={fields.dbs_number}
+              dbsIssued={fields.dbs_expiry}
+              safeguardingIssued={fields.safeguarding_expiry}
+              firstAidIssued={fields.first_aid_expiry}
+            />
 
-        {/* Show full ID button */}
-        <button
-          onClick={() => setShowFullId(true)}
-          className="w-full flex items-center justify-center gap-2 bg-[#1a3a6b] text-white font-bold py-3.5 rounded-2xl text-sm active:opacity-80"
-        >
-          <IdCard size={18} />
-          Show Full ID Card
-        </button>
+            <button
+              onClick={() => setShowFullId(true)}
+              className="w-full flex items-center justify-center gap-2 bg-[#1a3a6b] text-white font-bold py-3.5 rounded-2xl text-sm active:opacity-80"
+            >
+              <IdCard size={18} />
+              Show Full ID Card
+            </button>
 
-        {/* Leadership course certificate */}
-        {leadershipCert && (
-          <div className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] rounded-2xl p-4 text-white">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#f5c518] mb-1">Certificate of Completion</p>
-                <p className="font-extrabold text-sm leading-tight">ASO Lead Coach Leadership Programme</p>
-                <p className="text-white/70 text-xs mt-1">
-                  {subject?.full_name}
-                </p>
-                <p className="text-white/50 text-xs mt-2">
-                  Awarded {new Date(leadershipCert.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
-              </div>
-              <div className="text-3xl shrink-0">🏅</div>
-            </div>
-            <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
-              <p className="text-[10px] text-white/50 font-semibold">Active Schools Organisation</p>
-              <p className="text-[10px] text-white/50">Verified ✓</p>
-            </div>
-          </div>
-        )}
-
-        {/* Apparatus CPD certificates */}
-        {apparatusCerts.length > 0 && (() => {
-          const APPARATUS_META: Record<string, { emoji: string; label: string; gradient: string }> = {
-            floor:         { emoji: '🤸', label: 'Floor Coaching CPD',        gradient: 'from-rose-600 to-pink-700' },
-            bars:          { emoji: '🏋️', label: 'Bars Coaching CPD',         gradient: 'from-blue-700 to-indigo-700' },
-            beam:          { emoji: '⚖️', label: 'Beam Coaching CPD',         gradient: 'from-amber-500 to-orange-600' },
-            vault:         { emoji: '🏃', label: 'Vault Coaching CPD',        gradient: 'from-green-600 to-teal-700' },
-            area_lead_v1:  { emoji: '🗺️', label: 'UKAG Area Lead Award',      gradient: 'from-violet-700 to-purple-900' },
-          }
-          return (
-            <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">Apparatus CPD</p>
-              <div className="grid grid-cols-2 gap-2">
-                {apparatusCerts.map(cert => {
-                  const meta = APPARATUS_META[cert.course_id] ?? { emoji: '📋', label: cert.course_title, gradient: 'from-gray-600 to-gray-700' }
-                  return (
-                    <div key={cert.course_id} className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-3 text-white`}>
-                      <div className="text-2xl mb-1">{meta.emoji}</div>
-                      <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/60 mb-0.5">Certificate</p>
-                      <p className="font-bold text-xs leading-tight">{meta.label}</p>
-                      <p className="text-white/50 text-[10px] mt-1">
-                        {new Date(cert.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </p>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* Photo */}
-        {canEdit && (
-          <Card>
-            <p className="text-sm font-bold text-[#1a3a6b] mb-3">Profile Photo</p>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center shrink-0 relative">
-                {photoUrl ? (
-                  <>
-                    <img
-                      src={photoUrl}
-                      alt=""
-                      className="w-full h-full object-cover"
-                      onError={() => {/* keep broken state visible */}}
-                    />
-                    <button
-                      onClick={clearPhoto}
-                      className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center"
-                      title="Remove broken photo"
-                    >
-                      <X size={10} className="text-white" />
-                    </button>
-                  </>
-                ) : (
-                  <span className="text-white font-bold text-lg">{initials}</span>
-                )}
-              </div>
-              <div className="flex flex-col gap-2">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  disabled={uploadingPhoto}
-                />
-                <p className="text-xs text-gray-400">Any image from camera roll</p>
-              </div>
-            </div>
-            {uploadStep && (
-              <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2.5">
-                <p className="text-sm text-blue-700">{uploadStep}</p>
-              </div>
-            )}
-            {uploadError && (
-              <div className="mt-3 bg-red-100 border-2 border-red-400 rounded-xl px-3 py-3">
-                <p className="text-sm text-red-800 font-bold mb-1">Upload failed</p>
-                <p className="text-sm text-red-700">{uploadError}</p>
-              </div>
-            )}
-            {/* Director-only: approve this photo for use on the public website */}
-            {viewer?.role === 'director' && !isOwnProfile && subject?.photo_url && (
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <button
-                  onClick={toggleWebsitePhotoApproval}
-                  disabled={togglingWebsiteApproval}
-                  className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-colors ${
-                    websitePhotoApproved
-                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                  }`}
-                >
-                  {websitePhotoApproved ? (
-                    <><CheckCircle2 size={15} /> Approved for website</>
-                  ) : (
-                    <><User size={15} /> Approve for website</>
-                  )}
-                </button>
-                <p className="text-xs text-gray-400 mt-1.5">
-                  {websitePhotoApproved
-                    ? 'This photo appears in the ASO in Action gallery on the home page.'
-                    : 'Only approve photos where the coach is wearing an Active School top.'}
-                </p>
-              </div>
-            )}
-          </Card>
-        )}
-
-        {/* DBS / Compliance — editable by self + directors */}
-        {canEdit && (
-          <Card>
-            <p className="text-sm font-bold text-[#1a3a6b] mb-4">DBS &amp; Compliance</p>
-            {saveError && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-3">{saveError}</p>
-            )}
-            <div className="flex flex-col gap-3">
-              <Input label="Phone Number" placeholder="e.g. 07700 900123"
-                value={fields.phone} onChange={e => setFields({ ...fields, phone: e.target.value })} />
-              <Input label="DBS Certificate Number" placeholder="e.g. 001234567890"
-                value={fields.dbs_number} onChange={e => setFields({ ...fields, dbs_number: e.target.value })} />
-              <Input label="DBS Date of Issue" type="date"
-                value={fields.dbs_expiry} onChange={e => setFields({ ...fields, dbs_expiry: e.target.value })} />
-              <Input label="Safeguarding Certificate Date of Issue" type="date"
-                value={fields.safeguarding_expiry} onChange={e => setFields({ ...fields, safeguarding_expiry: e.target.value })} />
-              <Input label="First Aid Certificate Date of Issue" type="date"
-                value={fields.first_aid_expiry} onChange={e => setFields({ ...fields, first_aid_expiry: e.target.value })} />
-              <Button onClick={saveProfile} disabled={saving}>
-                {saving ? 'Saving…' : 'Save'}
-              </Button>
-            </div>
-          </Card>
-        )}
-
-        {/* Personal Details — staff fills in own; area leads + directors can view */}
-        {(isOwnProfile || viewer?.role === 'director' || viewer?.role === 'area_lead') && targetId && (
-          <PersonalDetailsSection
-            staffId={targetId}
-            canEdit={isOwnProfile || viewer?.role === 'director'}
-          />
-        )}
-
-        {/* Employment Details — directors fill in; staff + area leads can view (no admin notes) */}
-        {(isOwnProfile || viewer?.role === 'director' || viewer?.role === 'area_lead') && targetId && (
-          <EmploymentSection
-            staffId={targetId}
-            isDirector={viewer?.role === 'director'}
-            viewerId={viewer?.id ?? ''}
-          />
-        )}
-
-        {/* Contract — staff see own; directors see all */}
-        {(isOwnProfile || viewer?.role === 'director') && targetId && subject && (
-          <ContractSection
-            staffId={targetId}
-            staffRole={subject.role}
-            isDirector={viewer?.role === 'director'}
-          />
-        )}
-
-        {/* Certificates */}
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-bold text-[#1a3a6b]">Certificates &amp; Qualifications</p>
+            {/* Photo upload */}
             {canEdit && (
-              <button
-                onClick={() => setAddingCert(!addingCert)}
-                className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-3 py-1.5 rounded-lg"
-              >
-                <Plus size={13} /> Add
-              </button>
-            )}
-          </div>
-
-          {addingCert && (
-            <div className="flex flex-col gap-3 mb-4 pb-4 border-b border-gray-100">
-              {certError && (
-                <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{certError}</p>
-              )}
-              <Input label="Certificate Title *" placeholder="e.g. UKAG Gymnastics L2"
-                value={certForm.title} onChange={e => setCertForm({ ...certForm, title: e.target.value })} />
-              <Input label="Date of Issue (optional)" type="date"
-                value={certForm.issued_date} onChange={e => setCertForm({ ...certForm, issued_date: e.target.value })} />
-              <Input label="Expiry Date (optional)" type="date"
-                value={certForm.expiry_date} onChange={e => setCertForm({ ...certForm, expiry_date: e.target.value })} />
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-semibold text-gray-700">Upload Certificate (optional)</label>
-                <label className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] transition-colors cursor-pointer">
-                  <input type="file" className="hidden"
-                    onChange={e => setCertFile(e.target.files?.[0] ?? null)} />
-                  <FileText size={16} />
-                  <span className="text-sm">{certFile ? certFile.name : 'Tap to attach file…'}</span>
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="secondary" className="flex-1"
-                  onClick={() => { setAddingCert(false); setCertForm({ title: '', issued_date: '', expiry_date: '' }); setCertFile(null); setCertError(null) }}>
-                  Cancel
-                </Button>
-                <Button className="flex-1" onClick={addCert} disabled={uploadingCert || !certForm.title.trim()}>
-                  {uploadingCert ? 'Saving…' : 'Add'}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {certs.length === 0 && !addingCert
-            ? <p className="text-sm text-gray-400 text-center py-2">No certificates added yet.</p>
-            : certs.map(cert => (
-                <CertRow key={cert.id} cert={cert} canEdit={canEdit} onDelete={deleteCert} onDownload={downloadCert} />
-              ))
-          }
-        </Card>
-
-        {/* Onboarding Documents */}
-        <Card>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <FolderOpen size={16} className="text-[#1a3a6b]" />
-              <p className="text-sm font-bold text-[#1a3a6b]">Onboarding Documents</p>
-            </div>
-            {canEdit && (
-              <button
-                onClick={() => setAddingDoc(v => !v)}
-                className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-3 py-1.5 rounded-lg"
-              >
-                <Plus size={13} /> Upload
-              </button>
-            )}
-          </div>
-
-          {addingDoc && (
-            <div className="flex flex-col gap-3 mb-4 pb-4 border-b border-gray-100">
-              {docError && (
-                <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{docError}</p>
-              )}
-              <Input label="Document Title *" placeholder="e.g. Employment Contract May 2026"
-                value={docForm.title} onChange={e => setDocForm({ ...docForm, title: e.target.value })} />
-              <Select label="Category" value={docForm.category}
-                onChange={e => setDocForm({ ...docForm, category: e.target.value as OnboardingDocCategory })}>
-                {DOC_CATEGORIES.map(c => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </Select>
-              <Input label="Notes (optional)" placeholder="e.g. Signed and returned"
-                value={docForm.notes} onChange={e => setDocForm({ ...docForm, notes: e.target.value })} />
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-semibold text-gray-700">File *</label>
-                <label className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] transition-colors cursor-pointer">
-                  <input type="file" className="hidden"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    onChange={e => setDocFile(e.target.files?.[0] ?? null)} />
-                  <FileText size={16} />
-                  <span className="text-sm truncate">{docFile ? docFile.name : 'Tap to select file (PDF, Word, image)…'}</span>
-                </label>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="secondary" className="flex-1"
-                  onClick={() => { setAddingDoc(false); setDocForm({ title: '', category: 'contract', notes: '' }); setDocFile(null); setDocError(null) }}>
-                  Cancel
-                </Button>
-                <Button className="flex-1" onClick={uploadDoc}
-                  disabled={uploadingDoc || !docForm.title.trim() || !docFile}>
-                  {uploadingDoc ? 'Uploading…' : 'Upload'}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {docs.length === 0 && !addingDoc ? (
-            <p className="text-sm text-gray-400 text-center py-2">No onboarding documents yet.</p>
-          ) : (
-            docs.map(doc => (
-              <div key={doc.id}>
-                {confirmDeleteDocId === doc.id ? (
-                  <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-                    <p className="text-sm text-red-600 font-medium truncate flex-1 mr-2">Delete "{doc.title}"?</p>
-                    <div className="flex gap-2 shrink-0">
-                      <button onClick={() => setConfirmDeleteDocId(null)}
-                        className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg">Cancel</button>
-                      <button onClick={() => deleteDoc(doc)}
-                        className="text-xs text-white bg-red-500 px-3 py-1.5 rounded-lg font-semibold">Delete</button>
-                    </div>
+              <Card>
+                <p className="text-sm font-bold text-[#1a3a6b] mb-3">Profile Photo</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-[#1a3a6b] overflow-hidden flex items-center justify-center shrink-0 relative">
+                    {photoUrl ? (
+                      <>
+                        <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                        <button onClick={clearPhoto} className="absolute top-0 right-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center" title="Remove">
+                          <X size={10} className="text-white" />
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-white font-bold text-lg">{initials}</span>
+                    )}
                   </div>
-                ) : (
-                  <DocRow doc={doc} canDelete={canEdit} onView={viewDoc} onDelete={d => setConfirmDeleteDocId(d.id)} />
+                  <div className="flex flex-col gap-1.5">
+                    <input type="file" accept="image/*" onChange={handlePhotoChange} disabled={uploadingPhoto} />
+                    <p className="text-xs text-gray-400">Any image from camera roll</p>
+                  </div>
+                </div>
+                {uploadStep && <p className="text-sm text-blue-700 bg-blue-50 rounded-xl px-3 py-2 mt-3">{uploadStep}</p>}
+                {uploadError && <p className="text-sm text-red-700 bg-red-100 rounded-xl px-3 py-2 mt-3">{uploadError}</p>}
+                {viewer?.role === 'director' && !isOwnProfile && subject?.photo_url && (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <button
+                      onClick={toggleWebsitePhotoApproval}
+                      disabled={togglingWebsiteApproval}
+                      className={`inline-flex items-center gap-2 text-sm font-semibold px-4 py-2 rounded-xl transition-colors ${websitePhotoApproved ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+                    >
+                      {websitePhotoApproved ? <><CheckCircle2 size={15} /> Approved for website</> : <><User size={15} /> Approve for website</>}
+                    </button>
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      {websitePhotoApproved ? 'This photo appears in the ASO in Action gallery.' : 'Only approve photos where the coach is wearing an Active School top.'}
+                    </p>
+                  </div>
+                )}
+              </Card>
+            )}
+
+            {/* Leadership cert */}
+            {leadershipCert && (
+              <div className="bg-gradient-to-br from-[#1a3a6b] to-[#1e4a8c] rounded-2xl p-4 text-white">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest text-[#f5c518] mb-1">Certificate of Completion</p>
+                    <p className="font-extrabold text-sm leading-tight">ASO Lead Coach Leadership Programme</p>
+                    <p className="text-white/70 text-xs mt-1">{subject?.full_name}</p>
+                    <p className="text-white/50 text-xs mt-2">Awarded {new Date(leadershipCert.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  </div>
+                  <div className="text-3xl shrink-0">🏅</div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
+                  <p className="text-[10px] text-white/50 font-semibold">Active Schools Organisation</p>
+                  <p className="text-[10px] text-white/50">Verified ✓</p>
+                </div>
+              </div>
+            )}
+
+            {/* Apparatus certs */}
+            {apparatusCerts.length > 0 && (() => {
+              const APPARATUS_META: Record<string, { emoji: string; label: string; gradient: string }> = {
+                floor:        { emoji: '🤸', label: 'Floor Coaching CPD',   gradient: 'from-rose-600 to-pink-700' },
+                bars:         { emoji: '🏋️', label: 'Bars Coaching CPD',    gradient: 'from-blue-700 to-indigo-700' },
+                beam:         { emoji: '⚖️', label: 'Beam Coaching CPD',    gradient: 'from-amber-500 to-orange-600' },
+                vault:        { emoji: '🏃', label: 'Vault Coaching CPD',   gradient: 'from-green-600 to-teal-700' },
+                area_lead_v1: { emoji: '🗺️', label: 'UKAG Area Lead Award', gradient: 'from-violet-700 to-purple-900' },
+              }
+              return (
+                <div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">Apparatus CPD</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {apparatusCerts.map(cert => {
+                      const meta = APPARATUS_META[cert.course_id] ?? { emoji: '📋', label: cert.course_title, gradient: 'from-gray-600 to-gray-700' }
+                      return (
+                        <div key={cert.course_id} className={`bg-gradient-to-br ${meta.gradient} rounded-2xl p-3 text-white`}>
+                          <div className="text-2xl mb-1">{meta.emoji}</div>
+                          <p className="text-[10px] font-extrabold uppercase tracking-widest text-white/60 mb-0.5">Certificate</p>
+                          <p className="font-bold text-xs leading-tight">{meta.label}</p>
+                          <p className="text-white/50 text-[10px] mt-1">{new Date(cert.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
+          </>
+        )}
+
+        {/* ── TAB: COMPLIANCE ── */}
+        {activeTab === 'compliance' && canEdit && (
+          <Card>
+            <p className="text-sm font-bold text-[#1a3a6b] mb-1">DBS &amp; Compliance</p>
+            <p className="text-xs text-gray-400 mb-4">Enter the dates from your certificates below. These appear on your digital ID card.</p>
+            {saveError && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2 mb-3">{saveError}</p>}
+            <div className="flex flex-col gap-3">
+              <Input label="Phone Number" placeholder="e.g. 07700 900123" value={fields.phone} onChange={e => setFields({ ...fields, phone: e.target.value })} />
+              <div className="h-px bg-gray-100 my-1" />
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">DBS</p>
+              <Input label="DBS Certificate Number" placeholder="e.g. 001234567890" value={fields.dbs_number} onChange={e => setFields({ ...fields, dbs_number: e.target.value })} />
+              <Input label="DBS Date of Issue" type="date" value={fields.dbs_expiry} onChange={e => setFields({ ...fields, dbs_expiry: e.target.value })} />
+              <div className="h-px bg-gray-100 my-1" />
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Safeguarding</p>
+              <Input label="Safeguarding Certificate Date of Issue" type="date" value={fields.safeguarding_expiry} onChange={e => setFields({ ...fields, safeguarding_expiry: e.target.value })} />
+              <div className="h-px bg-gray-100 my-1" />
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">First Aid</p>
+              <Input label="First Aid Certificate Date of Issue" type="date" value={fields.first_aid_expiry} onChange={e => setFields({ ...fields, first_aid_expiry: e.target.value })} />
+              <Button onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
+            </div>
+          </Card>
+        )}
+        {activeTab === 'compliance' && !canEdit && (
+          <div className="bg-gray-50 rounded-2xl p-6 text-center text-sm text-gray-400">
+            Compliance details are managed by your director.
+          </div>
+        )}
+
+        {/* ── TAB: MY DETAILS ── */}
+        {activeTab === 'details' && (
+          <>
+            {(isOwnProfile || viewer?.role === 'director' || viewer?.role === 'area_lead') && targetId && (
+              <PersonalDetailsSection staffId={targetId} canEdit={isOwnProfile || viewer?.role === 'director'} />
+            )}
+            {(isOwnProfile || viewer?.role === 'director' || viewer?.role === 'area_lead') && targetId && (
+              <EmploymentSection staffId={targetId} isDirector={viewer?.role === 'director'} viewerId={viewer?.id ?? ''} />
+            )}
+          </>
+        )}
+
+        {/* ── TAB: CONTRACT ── */}
+        {activeTab === 'contract' && (
+          <>
+            {(isOwnProfile || viewer?.role === 'director') && targetId && subject ? (
+              <ContractSection staffId={targetId} staffRole={subject.role} isDirector={viewer?.role === 'director'} />
+            ) : (
+              <div className="bg-gray-50 rounded-2xl p-6 text-center text-sm text-gray-400">
+                Contract details are between you and your director.
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── TAB: DOCUMENTS ── */}
+        {activeTab === 'documents' && (
+          <>
+            {/* Certificates */}
+            <Card>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold text-[#1a3a6b]">Certificates &amp; Qualifications</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Add your certificates with issue date and upload the file</p>
+                </div>
+                {canEdit && (
+                  <button onClick={() => setAddingCert(!addingCert)} className="flex items-center gap-1 text-xs font-semibold text-[#1a3a6b] bg-blue-50 px-3 py-1.5 rounded-lg">
+                    <Plus size={13} /> Add
+                  </button>
                 )}
               </div>
-            ))
-          )}
-        </Card>
+              {addingCert && (
+                <div className="flex flex-col gap-3 mb-4 pb-4 border-b border-gray-100">
+                  {certError && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{certError}</p>}
+                  <Input label="Certificate Title *" placeholder="e.g. UKAG Gymnastics L2" value={certForm.title} onChange={e => setCertForm({ ...certForm, title: e.target.value })} />
+                  <Input label="Date of Issue" type="date" value={certForm.issued_date} onChange={e => setCertForm({ ...certForm, issued_date: e.target.value })} />
+                  <Input label="Expiry Date (if applicable)" type="date" value={certForm.expiry_date} onChange={e => setCertForm({ ...certForm, expiry_date: e.target.value })} />
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-700">Upload Certificate file (optional)</label>
+                    <label className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] transition-colors cursor-pointer">
+                      <input type="file" className="hidden" onChange={e => setCertFile(e.target.files?.[0] ?? null)} />
+                      <FileText size={16} />
+                      <span className="text-sm">{certFile ? certFile.name : 'Tap to attach PDF or image…'}</span>
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" className="flex-1" onClick={() => { setAddingCert(false); setCertForm({ title: '', issued_date: '', expiry_date: '' }); setCertFile(null); setCertError(null) }}>Cancel</Button>
+                    <Button className="flex-1" onClick={addCert} disabled={uploadingCert || !certForm.title.trim()}>{uploadingCert ? 'Saving…' : 'Add Certificate'}</Button>
+                  </div>
+                </div>
+              )}
+              {certs.length === 0 && !addingCert
+                ? <p className="text-sm text-gray-400 text-center py-4">No certificates added yet. Tap "Add" to upload your first one.</p>
+                : certs.map(cert => <CertRow key={cert.id} cert={cert} canEdit={canEdit} onDelete={deleteCert} onDownload={downloadCert} />)
+              }
+            </Card>
+
+            {/* Documents */}
+            <Card>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <FolderOpen size={16} className="text-[#1a3a6b]" />
+                  <div>
+                    <p className="text-sm font-bold text-[#1a3a6b]">Onboarding Documents</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Contracts, right to work, references</p>
+                  </div>
+                </div>
+                {canEdit && (
+                  <button onClick={() => setAddingDoc(v => !v)} className="flex items-center gap-1 text-xs font-semibold text-[#1a3a6b] bg-blue-50 px-3 py-1.5 rounded-lg">
+                    <Plus size={13} /> Upload
+                  </button>
+                )}
+              </div>
+              {addingDoc && (
+                <div className="flex flex-col gap-3 mb-4 pb-4 border-b border-gray-100">
+                  {docError && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{docError}</p>}
+                  <Input label="Document Title *" placeholder="e.g. Employment Contract May 2026" value={docForm.title} onChange={e => setDocForm({ ...docForm, title: e.target.value })} />
+                  <Select label="Category" value={docForm.category} onChange={e => setDocForm({ ...docForm, category: e.target.value as OnboardingDocCategory })}>
+                    {DOC_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </Select>
+                  <Input label="Notes (optional)" placeholder="e.g. Signed and returned" value={docForm.notes} onChange={e => setDocForm({ ...docForm, notes: e.target.value })} />
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-700">File *</label>
+                    <label className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-dashed border-gray-200 text-gray-500 hover:border-[#1a3a6b] transition-colors cursor-pointer">
+                      <input type="file" className="hidden" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={e => setDocFile(e.target.files?.[0] ?? null)} />
+                      <FileText size={16} />
+                      <span className="text-sm truncate">{docFile ? docFile.name : 'Tap to select file (PDF, Word, image)…'}</span>
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" className="flex-1" onClick={() => { setAddingDoc(false); setDocForm({ title: '', category: 'contract', notes: '' }); setDocFile(null); setDocError(null) }}>Cancel</Button>
+                    <Button className="flex-1" onClick={uploadDoc} disabled={uploadingDoc || !docForm.title.trim() || !docFile}>{uploadingDoc ? 'Uploading…' : 'Upload'}</Button>
+                  </div>
+                </div>
+              )}
+              {docs.length === 0 && !addingDoc ? (
+                <p className="text-sm text-gray-400 text-center py-4">No documents uploaded yet.</p>
+              ) : docs.map(doc => (
+                <div key={doc.id}>
+                  {confirmDeleteDocId === doc.id ? (
+                    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                      <p className="text-sm text-red-600 font-medium truncate flex-1 mr-2">Delete "{doc.title}"?</p>
+                      <div className="flex gap-2 shrink-0">
+                        <button onClick={() => setConfirmDeleteDocId(null)} className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg">Cancel</button>
+                        <button onClick={() => deleteDoc(doc)} className="text-xs text-white bg-red-500 px-3 py-1.5 rounded-lg font-semibold">Delete</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <DocRow doc={doc} canDelete={canEdit} onView={viewDoc} onDelete={d => setConfirmDeleteDocId(d.id)} />
+                  )}
+                </div>
+              ))}
+            </Card>
+          </>
+        )}
 
       </div>
     </Layout>
