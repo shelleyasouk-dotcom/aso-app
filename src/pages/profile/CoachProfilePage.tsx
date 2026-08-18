@@ -530,6 +530,16 @@ export function CoachProfilePage() {
     setConfirmDeleteDocId(null)
   }
 
+  const [activeTab, setActiveTab] = useState<'id' | 'compliance' | 'details' | 'contract' | 'documents'>('id')
+
+  const TABS: { key: typeof activeTab; label: string }[] = [
+    { key: 'id',          label: 'ID Card' },
+    { key: 'compliance',  label: 'Compliance' },
+    { key: 'details',     label: 'My Details' },
+    { key: 'contract',    label: 'Contract' },
+    { key: 'documents',   label: 'Documents' },
+  ]
+
   if (!subject) return (
     <Layout title="Profile" showBack>
       <p className="text-center text-gray-400 py-12">Loading…</p>
@@ -553,16 +563,6 @@ export function CoachProfilePage() {
   const dbsCurrent       = issuedWithin3Years(fields.dbs_expiry)
   const safeguardCurrent = issuedWithin3Years(fields.safeguarding_expiry)
   const firstAidCurrent  = issuedWithin3Years(fields.first_aid_expiry)
-
-  const [activeTab, setActiveTab] = useState<'id' | 'compliance' | 'details' | 'contract' | 'documents'>('id')
-
-  const TABS: { key: typeof activeTab; label: string }[] = [
-    { key: 'id',          label: 'ID Card' },
-    { key: 'compliance',  label: 'Compliance' },
-    { key: 'details',     label: 'My Details' },
-    { key: 'contract',    label: 'Contract' },
-    { key: 'documents',   label: 'Documents' },
-  ]
 
   return (
     <Layout title={isOwnProfile ? 'My Profile' : subject.full_name} showBack>
