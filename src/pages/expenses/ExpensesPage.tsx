@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { Badge } from '../../components/ui/Badge'
+import { useLocalDraft } from '../../hooks/useLocalDraft'
 import type { Expense, ExpenseType } from '../../types'
 
 const MILEAGE_RATE = 0.45 // HMRC approved mileage rate per mile
@@ -72,7 +73,7 @@ export function ExpensesPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({
+  const { state: form, setState: setForm, clearDraft } = useLocalDraft('draft:expense:new', {
     date: new Date().toISOString().slice(0, 10),
     type: 'mileage' as ExpenseType,
     description: '',
@@ -122,6 +123,7 @@ export function ExpensesPage() {
       amount: parseFloat(form.amount),
     }).select().single()
     if (data) setExpenses(prev => [data, ...prev])
+    clearDraft()
     setForm({ date: new Date().toISOString().slice(0, 10), type: 'mileage', description: '', miles: '', amount: '' })
     setShowForm(false)
     setSaving(false)

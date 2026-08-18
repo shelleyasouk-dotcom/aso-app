@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input, Select } from '../../components/ui/Input'
 import { ROLE_LABELS } from '../../lib/roles'
+import { useLocalDraft } from '../../hooks/useLocalDraft'
 import type { Profile, CoachCertificate, StaffDocument, OnboardingDocCategory, StaffPersonal, StaffEmployment, ContractType, PayFrequency } from '../../types'
 
 // ─── Date helpers ──────────────────────────────────────────────────────────
@@ -229,9 +230,9 @@ export function CoachProfilePage() {
   const [photoUrl, setPhotoUrl] = useState<string | undefined>()
   const [websitePhotoApproved, setWebsitePhotoApproved] = useState(false)
   const [togglingWebsiteApproval, setTogglingWebsiteApproval] = useState(false)
-  const [fields, setFields] = useState({
+  const { state: fields, setState: setFields, clearDraft: clearFieldsDraft, resetDraft: resetFields } = useLocalDraft(`draft:profile:${staffId ?? 'self'}`, {
     phone: '', dbs_number: '',
-    dbs_expiry: '',          // stored as "date of issue" now
+    dbs_expiry: '',
     safeguarding_expiry: '',
     first_aid_expiry: '',
   })
@@ -344,13 +345,17 @@ export function CoachProfilePage() {
     setWebsitePhotoApproved(!!(p as Profile & { website_photo_approved?: boolean }).website_photo_approved)
     if (p.photo_url) loadPhotoAsBlob(p.photo_url)
     else setPhotoUrl(undefined)
-    setFields({
+    // Only reset the draft if the server values differ from default empty strings,
+    // meaning real data has loaded. This lets a partially-filled draft survive a reload
+    // but gets replaced once the actual saved values come back from the DB.
+    const serverValues = {
       phone: p.phone ?? '',
       dbs_number: p.dbs_number ?? '',
       dbs_expiry: p.dbs_expiry ?? '',
       safeguarding_expiry: p.safeguarding_expiry ?? '',
       first_aid_expiry: p.first_aid_expiry ?? '',
-    })
+    }
+    resetFields(serverValues)
   }
 
   async function loadCerts(id: string) {
@@ -434,6 +439,7 @@ export function CoachProfilePage() {
       first_aid_expiry: fields.first_aid_expiry || null,
     }).eq('id', targetId)
     if (error) { setSaveError(error.message); setSaving(false); return }
+    clearFieldsDraft()
     if (isOwnProfile && refreshProfile) await refreshProfile()
     if (subject) setSubject({ ...subject, ...fields })
     setSaving(false)

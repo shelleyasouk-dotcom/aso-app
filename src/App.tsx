@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { ParentProtectedRoute } from './components/auth/ParentProtectedRoute'
@@ -109,6 +110,12 @@ import { StaffOnboardingModal } from './components/StaffOnboardingModal'
 import { PhotoPolicyModal } from './components/PhotoPolicyModal'
 import { StaffContractsAdminPage } from './pages/admin/StaffContractsAdminPage'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
+
 // Intercepts Supabase auth tokens that land on the root URL (e.g. recovery emails
 // sent before /reset-password was added to the allowed redirect list).
 function RootRedirect() {
@@ -126,6 +133,7 @@ function RootRedirect() {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <StaffOnboardingModal />
         <PhotoPolicyModal />
