@@ -157,8 +157,6 @@ export function StaffContractsAdminPage() {
     }
   }
 
-  const selected = contracts.find(c => c.role === selectedRole)
-
   return (
     <Layout title="Employment Contracts">
       <div className="flex flex-col h-full">

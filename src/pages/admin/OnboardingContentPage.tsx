@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import {
-  ChevronDown, ChevronUp, ChevronRight, BookOpen, HelpCircle,
+  ChevronDown, ChevronUp, BookOpen, HelpCircle,
   Upload, FileSignature, Eye, EyeOff, CheckCircle, Plus, Trash2,
-  PenLine, X, Save,
+  X,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
-import { Input } from '../../components/ui/Input'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

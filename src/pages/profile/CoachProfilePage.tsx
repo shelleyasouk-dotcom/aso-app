@@ -1282,8 +1282,42 @@ interface StaffContract {
   content: ContractSectionData[] | null
 }
 
-function ContractAccordionSection({ section, index }: { section: ContractSectionData; index: number }) {
+interface ContractPersonDetails {
+  full_name: string
+  email: string
+  phone?: string | null
+  address_line1?: string | null
+  address_line2?: string | null
+  address_city?: string | null
+  address_postcode?: string | null
+}
+
+function DetailRow({ label, value }: { label: string; value: string | null | undefined }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2 border-b border-emerald-100 last:border-0">
+      <span className="text-xs text-gray-500 shrink-0 w-24">{label}</span>
+      <span className={`text-sm text-right leading-snug ${value ? 'text-gray-800 font-medium' : 'text-gray-400 italic'}`}>
+        {value || 'Not provided'}
+      </span>
+    </div>
+  )
+}
+
+function ContractAccordionSection({ section, index, personDetails }: {
+  section: ContractSectionData
+  index: number
+  personDetails?: ContractPersonDetails
+}) {
   const [open, setOpen] = useState(index === 0)
+  const isYourDetails = section.heading.toUpperCase().includes('YOUR DETAILS')
+
+  const fullAddress = personDetails ? [
+    personDetails.address_line1,
+    personDetails.address_line2,
+    personDetails.address_city,
+    personDetails.address_postcode,
+  ].filter(Boolean).join(', ') : null
+
   return (
     <div className="border border-emerald-200 rounded-xl overflow-hidden">
       <button
@@ -1293,21 +1327,28 @@ function ContractAccordionSection({ section, index }: { section: ContractSection
         <span className="text-sm font-semibold text-[#1a5c3a] pr-2">{section.heading}</span>
         <ChevronDown size={16} className={`text-emerald-500 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && section.items.length > 0 && (
-        <div className="px-4 pb-4 pt-1 bg-white border-t border-emerald-100 flex flex-col gap-1.5">
-          {section.items.map((item, i) => (
-            item.type === 'bullet'
-              ? <div key={i} className="flex items-start gap-2">
-                  <span className="text-emerald-500 mt-1 shrink-0">•</span>
-                  <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
-                </div>
-              : <p key={i} className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
-          ))}
-        </div>
-      )}
-      {open && section.items.length === 0 && (
-        <div className="px-4 pb-3 pt-1 bg-white border-t border-emerald-100">
-          <p className="text-sm text-gray-400 italic">No details in this section.</p>
+      {open && (
+        <div className="px-4 pb-4 pt-2 bg-white border-t border-emerald-100 flex flex-col gap-1.5">
+          {/* Auto-populate personal details for "Your Details" section */}
+          {isYourDetails && personDetails ? (
+            <div className="flex flex-col">
+              <DetailRow label="Full name" value={personDetails.full_name} />
+              <DetailRow label="Email" value={personDetails.email} />
+              <DetailRow label="Phone" value={personDetails.phone} />
+              <DetailRow label="Address" value={fullAddress} />
+            </div>
+          ) : section.items.length > 0 ? (
+            section.items.map((item, i) => (
+              item.type === 'bullet'
+                ? <div key={i} className="flex items-start gap-2">
+                    <span className="text-emerald-500 mt-1 shrink-0">•</span>
+                    <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
+                  </div>
+                : <p key={i} className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
+            ))
+          ) : (
+            <p className="text-sm text-gray-400 italic">No details in this section.</p>
+          )}
         </div>
       )}
     </div>
@@ -1322,6 +1363,7 @@ function ContractSection({ staffId, staffRole, isDirector }: {
   const [contract, setContract] = useState<StaffContract | null>(null)
   const [signedAt, setSignedAt] = useState<string | null>(null)
   const [signedVersion, setSignedVersion] = useState<string | null>(null)
+  const [personDetails, setPersonDetails] = useState<ContractPersonDetails | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [signing, setSigning] = useState(false)
@@ -1332,12 +1374,22 @@ function ContractSection({ staffId, staffRole, isDirector }: {
     if (!CONTRACT_ROLES.includes(staffRole)) { setLoaded(true); return }
     Promise.all([
       supabase.from('staff_contracts').select('id,role,title,version,content').eq('role', staffRole).eq('is_active', true).maybeSingle(),
-      supabase.from('profiles').select('contract_signed_at,contract_version').eq('id', staffId).maybeSingle(),
-    ]).then(([{ data: c }, { data: p }]) => {
+      supabase.from('profiles').select('full_name,email,phone,contract_signed_at,contract_version').eq('id', staffId).maybeSingle(),
+      supabase.from('staff_personal').select('address_line1,address_line2,address_city,address_postcode').eq('staff_id', staffId).maybeSingle(),
+    ]).then(([{ data: c }, { data: p }, { data: sp }]) => {
       if (c) setContract(c as StaffContract)
       if (p) {
         setSignedAt((p as any).contract_signed_at ?? null)
         setSignedVersion((p as any).contract_version ?? null)
+        setPersonDetails({
+          full_name: (p as any).full_name ?? '',
+          email: (p as any).email ?? '',
+          phone: (p as any).phone ?? null,
+          address_line1: (sp as any)?.address_line1 ?? null,
+          address_line2: (sp as any)?.address_line2 ?? null,
+          address_city: (sp as any)?.address_city ?? null,
+          address_postcode: (sp as any)?.address_postcode ?? null,
+        })
       }
       setLoaded(true)
     })
@@ -1468,7 +1520,7 @@ function ContractSection({ staffId, staffRole, isDirector }: {
         {showContract && contract?.content && (
           <div className="flex flex-col gap-2">
             {contract.content.map((section, i) => (
-              <ContractAccordionSection key={i} section={section} index={i} />
+              <ContractAccordionSection key={i} section={section} index={i} personDetails={personDetails ?? undefined} />
             ))}
           </div>
         )}
