@@ -20,9 +20,9 @@ const ROLE_LABELS: Record<string, string> = {
   assistant_coach: 'Assistant Coach',
   lead_coach:      'Lead Coach',
   area_lead:       'Area Lead',
-  outreach_worker: 'Outreach Worker',
-  media_tech:      'Media & Tech',
-  director:        'Director',
+  outreach_worker: 'Outreach Manager',
+  media_tech:      'Marketing Coordinator',
+  director:        'Operations Manager',
 }
 
 const ROLE_COLORS: Record<string, string> = {
