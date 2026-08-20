@@ -4,7 +4,7 @@ import {
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
-  Newspaper, Mail, RectangleHorizontal, ScrollText,
+  Newspaper, Mail, RectangleHorizontal, ScrollText, ClipboardCheck,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -185,6 +185,13 @@ export function AdminPage() {
               icon: ScrollText,
               path: '/admin/staff-contracts',
               color: 'bg-slate-50 text-slate-700',
+            },
+            {
+              label: 'Job Descriptions',
+              description: 'Write role job descriptions — staff must read and agree on login',
+              icon: ClipboardCheck,
+              path: '/admin/job-descriptions',
+              color: 'bg-indigo-50 text-indigo-700',
             },
           ]}
         />

@@ -108,7 +108,9 @@ import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailP
 import { AreaLeadCoursePage } from './pages/course/AreaLeadCoursePage'
 import { StaffOnboardingModal } from './components/StaffOnboardingModal'
 import { PhotoPolicyModal } from './components/PhotoPolicyModal'
+import { JobDescriptionModal } from './components/JobDescriptionModal'
 import { StaffContractsAdminPage } from './pages/admin/StaffContractsAdminPage'
+import { JobDescriptionsAdminPage } from './pages/admin/JobDescriptionsAdminPage'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -136,6 +138,7 @@ export default function App() {
       <ScrollToTop />
       <AuthProvider>
         <StaffOnboardingModal />
+        <JobDescriptionModal />
         <PhotoPolicyModal />
         <Routes>
           {/* Public */}
@@ -510,6 +513,11 @@ export default function App() {
           <Route path="/admin/staff-contracts" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <StaffContractsAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/job-descriptions" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <JobDescriptionsAdminPage />
             </ProtectedRoute>
           } />
 
