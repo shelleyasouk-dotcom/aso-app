@@ -15,6 +15,8 @@ interface EnrolledStaff {
   full_name: string
   role: string
   area: string | null
+  profile_onboarding_status: string | null
+  profile_onboarding_required: boolean
   enrollment: {
     id: string
     status: string
@@ -775,7 +777,7 @@ export function OnboardingAdminPage() {
         .select(`
           id, status, learning_completion_pct, on_hold_reason,
           enrolled_at, last_activity_at, activation_recommended_by,
-          staff:profiles!staff_id(id, full_name, role, area)
+          staff:profiles!staff_id(id, full_name, role, area, onboarding_status, onboarding_required)
         `)
         .eq('enrollment_type', 'initial')
         .order('enrolled_at', { ascending: false }),
@@ -798,15 +800,24 @@ export function OnboardingAdminPage() {
     )
 
     const enrolledList: EnrolledStaff[] = (enrollRows ?? []).map((r: Record<string, unknown>) => {
-      const s = r.staff as { id: string; full_name: string; role: string; area: string | null }
+      const s = r.staff as { id: string; full_name: string; role: string; area: string | null; onboarding_status: string | null; onboarding_required: boolean }
+      // If the profile says they're active but the enrollment status is stale, use 'active'
+      const enrollmentStatus = r.status as string
+      const effectiveStatus =
+        (enrollmentStatus === 'not_started' || enrollmentStatus === 'in_progress') &&
+        s.onboarding_status === 'active' && s.onboarding_required === false
+          ? 'active'
+          : enrollmentStatus
       return {
         id: s.id,
         full_name: s.full_name,
         role: s.role,
         area: s.area,
+        profile_onboarding_status: s.onboarding_status,
+        profile_onboarding_required: s.onboarding_required,
         enrollment: {
           id: r.id as string,
-          status: r.status as string,
+          status: effectiveStatus,
           learning_completion_pct: r.learning_completion_pct as number,
           on_hold_reason: r.on_hold_reason as string | null,
           enrolled_at: r.enrolled_at as string,
