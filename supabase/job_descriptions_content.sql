@@ -6,7 +6,7 @@
 UPDATE public.job_descriptions
 SET
   title      = $$Junior Coach — Job Description$$,
-  version    = $$v2025$$,
+  version    = $$v26-27$$,
   content    = $$[
     {
       "heading": "Role Overview",
@@ -62,7 +62,7 @@ WHERE role = 'junior_coach';
 UPDATE public.job_descriptions
 SET
   title      = $$Assistant Coach — Job Description$$,
-  version    = $$v2025$$,
+  version    = $$v26-27$$,
   content    = $$[
     {
       "heading": "Role Overview",
@@ -119,7 +119,7 @@ WHERE role = 'assistant_coach';
 UPDATE public.job_descriptions
 SET
   title      = $$Lead Coach — Job Description$$,
-  version    = $$v2025$$,
+  version    = $$v26-27$$,
   content    = $$[
     {
       "heading": "Role Overview",
@@ -183,7 +183,7 @@ WHERE role = 'lead_coach';
 UPDATE public.job_descriptions
 SET
   title      = $$Area Lead — Job Description$$,
-  version    = $$v2025$$,
+  version    = $$v26-27$$,
   content    = $$[
     {
       "heading": "About This Role",
