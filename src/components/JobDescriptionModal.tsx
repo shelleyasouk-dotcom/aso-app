@@ -137,7 +137,7 @@ export function JobDescriptionModal() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
-      <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl overflow-hidden flex flex-col max-h-[95dvh] sm:max-h-[90vh] shadow-2xl">
+      <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl overflow-hidden flex flex-col h-[95dvh] sm:h-auto sm:max-h-[90vh] shadow-2xl">
 
         {/* Header */}
         <div className="bg-[#1a3a6b] px-5 py-4 flex items-center gap-3 shrink-0">
