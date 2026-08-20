@@ -5,9 +5,9 @@
 
 UPDATE public.job_descriptions
 SET
-  title   = 'Junior Coach — Job Description',
-  version = 'v2025',
-  content = '[
+  title      = $$Junior Coach — Job Description$$,
+  version    = $$v2025$$,
+  content    = $$[
     {
       "heading": "Role Overview",
       "items": [
@@ -38,9 +38,9 @@ SET
       ]
     },
     {
-      "heading": "What You''ll Need",
+      "heading": "What You'll Need",
       "items": [
-        {"type":"bullet","text":"Enhanced DBS certificate including children''s barred list check"},
+        {"type":"bullet","text":"Enhanced DBS certificate including children's barred list check"},
         {"type":"bullet","text":"UKAG Level 0 (Junior Coach) qualification"},
         {"type":"bullet","text":"Safeguarding in Sport, minimum Level 1"},
         {"type":"bullet","text":"Typically aged 13–16, working under close and constant supervision"}
@@ -52,7 +52,7 @@ SET
         {"type":"text","text":"Assistant Coach, once age, training, and experience requirements are met."}
       ]
     }
-  ]'::jsonb,
+  ]$$::jsonb,
   updated_at = now()
 WHERE role = 'junior_coach';
 
@@ -61,9 +61,9 @@ WHERE role = 'junior_coach';
 
 UPDATE public.job_descriptions
 SET
-  title   = 'Assistant Coach — Job Description',
-  version = 'v2025',
-  content = '[
+  title      = $$Assistant Coach — Job Description$$,
+  version    = $$v2025$$,
+  content    = $$[
     {
       "heading": "Role Overview",
       "items": [
@@ -74,13 +74,13 @@ SET
     {
       "heading": "Purpose",
       "items": [
-        {"type":"text","text":"To support session delivery, children''s development, behaviour management, and the safe operation of the programme alongside the Lead Coach."}
+        {"type":"text","text":"To support session delivery, children's development, behaviour management, and the safe operation of the programme alongside the Lead Coach."}
       ]
     },
     {
       "heading": "Key Responsibilities",
       "items": [
-        {"type":"bullet","text":"Support warm-up, main activity, and cool-down delivery under the Lead Coach''s direction"},
+        {"type":"bullet","text":"Support warm-up, main activity, and cool-down delivery under the Lead Coach's direction"},
         {"type":"bullet","text":"Support behaviour management calmly and positively"},
         {"type":"bullet","text":"Support the register, medical awareness, and dismissal processes as directed"},
         {"type":"bullet","text":"Flag any concerns to the Lead Coach immediately"}
@@ -95,9 +95,9 @@ SET
       ]
     },
     {
-      "heading": "What You''ll Need",
+      "heading": "What You'll Need",
       "items": [
-        {"type":"bullet","text":"Enhanced DBS certificate including children''s barred list check"},
+        {"type":"bullet","text":"Enhanced DBS certificate including children's barred list check"},
         {"type":"bullet","text":"UKAG Level 1 (Assistant Coach) qualification"},
         {"type":"bullet","text":"Safeguarding in Sport, minimum Level 1"},
         {"type":"bullet","text":"Completed shadow session"}
@@ -109,7 +109,7 @@ SET
         {"type":"text","text":"Lead Coach, once training requirements are met and a shadow session is signed off by the Area Lead."}
       ]
     }
-  ]'::jsonb,
+  ]$$::jsonb,
   updated_at = now()
 WHERE role = 'assistant_coach';
 
@@ -118,9 +118,9 @@ WHERE role = 'assistant_coach';
 
 UPDATE public.job_descriptions
 SET
-  title   = 'Lead Coach — Job Description',
-  version = 'v2025',
-  content = '[
+  title      = $$Lead Coach — Job Description$$,
+  version    = $$v2025$$,
+  content    = $$[
     {
       "heading": "Role Overview",
       "items": [
@@ -154,13 +154,13 @@ SET
         {"type":"bullet","text":"Zero medical-protocol breaches"},
         {"type":"bullet","text":"Consistent on-time arrival and session start"},
         {"type":"bullet","text":"Positive, consistent feedback from schools and parents"},
-        {"type":"bullet","text":"Observations and photo checks consistently meet ASO''s quality standards"}
+        {"type":"bullet","text":"Observations and photo checks consistently meet ASO's quality standards"}
       ]
     },
     {
-      "heading": "What You''ll Need",
+      "heading": "What You'll Need",
       "items": [
-        {"type":"bullet","text":"Enhanced DBS certificate including children''s barred list check"},
+        {"type":"bullet","text":"Enhanced DBS certificate including children's barred list check"},
         {"type":"bullet","text":"UKAG Level 2 (Lead Coach) qualification"},
         {"type":"bullet","text":"Paediatric First Aid or First Aid at Work (current)"},
         {"type":"bullet","text":"Safeguarding in Sport, minimum Level 1, renewed annually"},
@@ -173,7 +173,7 @@ SET
         {"type":"text","text":"Area Lead, where regional management aptitude has been demonstrated."}
       ]
     }
-  ]'::jsonb,
+  ]$$::jsonb,
   updated_at = now()
 WHERE role = 'lead_coach';
 
@@ -182,9 +182,9 @@ WHERE role = 'lead_coach';
 
 UPDATE public.job_descriptions
 SET
-  title   = 'Area Lead — Job Description',
-  version = 'v2025',
-  content = '[
+  title      = $$Area Lead — Job Description$$,
+  version    = $$v2025$$,
+  content    = $$[
     {
       "heading": "About This Role",
       "items": [
@@ -241,7 +241,7 @@ SET
       ]
     },
     {
-      "heading": "What You''ll Need",
+      "heading": "What You'll Need",
       "items": [
         {"type":"bullet","text":"Holds Level 2 Safeguarding (Deputy DSL), or is committed to obtaining it immediately on taking the role"},
         {"type":"bullet","text":"Holds UKAG Level 2 and a relevant First Aid qualification if continuing to coach sessions personally"},
@@ -255,6 +255,6 @@ SET
         {"type":"text","text":"Regional Manager, once the business is managing multiple regions through a single point of oversight, or into the Operations Manager track."}
       ]
     }
-  ]'::jsonb,
+  ]$$::jsonb,
   updated_at = now()
 WHERE role = 'area_lead';
