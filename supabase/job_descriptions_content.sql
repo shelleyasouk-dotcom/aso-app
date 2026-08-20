@@ -40,7 +40,7 @@ SET
     {
       "heading": "What You''ll Need",
       "items": [
-        {"type":"bullet","text":"Enhanced DBS certificate including children's barred list check"},
+        {"type":"bullet","text":"Enhanced DBS certificate including children''s barred list check"},
         {"type":"bullet","text":"UKAG Level 0 (Junior Coach) qualification"},
         {"type":"bullet","text":"Safeguarding in Sport, minimum Level 1"},
         {"type":"bullet","text":"Typically aged 13–16, working under close and constant supervision"}
@@ -80,7 +80,7 @@ SET
     {
       "heading": "Key Responsibilities",
       "items": [
-        {"type":"bullet","text":"Support warm-up, main activity, and cool-down delivery under the Lead Coach's direction"},
+        {"type":"bullet","text":"Support warm-up, main activity, and cool-down delivery under the Lead Coach''s direction"},
         {"type":"bullet","text":"Support behaviour management calmly and positively"},
         {"type":"bullet","text":"Support the register, medical awareness, and dismissal processes as directed"},
         {"type":"bullet","text":"Flag any concerns to the Lead Coach immediately"}
@@ -97,7 +97,7 @@ SET
     {
       "heading": "What You''ll Need",
       "items": [
-        {"type":"bullet","text":"Enhanced DBS certificate including children's barred list check"},
+        {"type":"bullet","text":"Enhanced DBS certificate including children''s barred list check"},
         {"type":"bullet","text":"UKAG Level 1 (Assistant Coach) qualification"},
         {"type":"bullet","text":"Safeguarding in Sport, minimum Level 1"},
         {"type":"bullet","text":"Completed shadow session"}
@@ -160,7 +160,7 @@ SET
     {
       "heading": "What You''ll Need",
       "items": [
-        {"type":"bullet","text":"Enhanced DBS certificate including children's barred list check"},
+        {"type":"bullet","text":"Enhanced DBS certificate including children''s barred list check"},
         {"type":"bullet","text":"UKAG Level 2 (Lead Coach) qualification"},
         {"type":"bullet","text":"Paediatric First Aid or First Aid at Work (current)"},
         {"type":"bullet","text":"Safeguarding in Sport, minimum Level 1, renewed annually"},
