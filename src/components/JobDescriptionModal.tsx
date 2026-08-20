@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle2, ScrollText, ChevronRight, Check } from 'lucide-react'
+import { CheckCircle2, ScrollText, ChevronRight, Check, ArrowLeft } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -19,9 +19,17 @@ export function JobDescriptionModal() {
   const { profile, refreshProfile } = useAuth()
   const [jd, setJd] = useState<JobDescription | null>(null)
   const [show, setShow] = useState(false)
-  const [step, setStep] = useState(0) // which section we're on; sections.length = confirm screen
+  const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
+
+  // Lock body scroll while modal is visible
+  useEffect(() => {
+    if (!show) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [show])
 
   useEffect(() => {
     if (!profile || !STAFF_ROLES.includes(profile.role)) return
@@ -74,11 +82,22 @@ export function JobDescriptionModal() {
   const currentSection = !onConfirmScreen ? sections[step] : null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 px-0 sm:px-4">
-      <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl overflow-hidden flex flex-col h-[95dvh] sm:h-auto sm:max-h-[90vh] shadow-2xl">
+    /* Overlay — stopPropagation prevents clicks reaching the page behind */
+    <div
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60"
+      onTouchMove={e => e.stopPropagation()}
+    >
+      <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl flex flex-col shadow-2xl"
+        style={{ height: '95dvh', maxHeight: '95dvh' }}
+      >
 
         {/* Header */}
-        <div className="bg-[#1a3a6b] px-5 py-4 flex items-center gap-3 shrink-0">
+        <div className="bg-[#1a3a6b] px-5 py-4 flex items-center gap-3 shrink-0 sm:rounded-t-2xl">
+          {step > 0 && !done && !onConfirmScreen && (
+            <button onClick={() => setStep(s => s - 1)} className="text-white/70 hover:text-white">
+              <ArrowLeft size={18} />
+            </button>
+          )}
           <div className="w-9 h-9 bg-[#f5c518] rounded-xl flex items-center justify-center shrink-0">
             <ScrollText size={17} className="text-[#1a3a6b]" />
           </div>
@@ -95,7 +114,7 @@ export function JobDescriptionModal() {
 
         {/* Progress bar */}
         {!done && (
-          <div className="h-1 bg-gray-100 shrink-0">
+          <div className="h-1.5 bg-gray-100 shrink-0">
             <div
               className="h-full bg-[#f5c518] transition-all duration-300"
               style={{ width: `${(Math.min(step, total) / total) * 100}%` }}
@@ -103,34 +122,30 @@ export function JobDescriptionModal() {
           </div>
         )}
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-5 py-5">
+        {/* Scrollable content — each step fills this area */}
+        <div className="flex-1 overflow-y-auto">
 
-          {/* Success state */}
           {done ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3">
+            <div className="flex flex-col items-center justify-center h-full gap-3 px-6">
               <CheckCircle2 size={52} className="text-green-500" />
               <p className="text-base font-bold text-gray-800">Thank you!</p>
               <p className="text-sm text-gray-500 text-center">Your agreement has been recorded.</p>
             </div>
 
-          /* Confirm screen — all sections read */
           ) : onConfirmScreen ? (
-            <div className="flex flex-col gap-5 py-2">
-              <div className="flex flex-col items-center gap-3 py-4">
+            <div className="px-5 py-6 flex flex-col gap-5">
+              <div className="flex flex-col items-center gap-3 py-2">
                 <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center">
                   <CheckCircle2 size={30} className="text-green-500" />
                 </div>
                 <p className="text-base font-bold text-gray-800 text-center">All sections read</p>
                 <p className="text-sm text-gray-500 text-center leading-relaxed">
-                  By confirming below you agree to fulfil the responsibilities described in your job description ({jd.title}, {jd.version}).
+                  Tap confirm below to record your agreement to the {jd.title} ({jd.version}).
                 </p>
               </div>
-
-              {/* Section summary */}
-              <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-2">
+              <div className="bg-gray-50 rounded-2xl p-4 flex flex-col gap-2.5">
                 {sections.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2">
+                  <div key={i} className="flex items-center gap-2.5">
                     <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shrink-0">
                       <Check size={11} className="text-white" strokeWidth={3} />
                     </div>
@@ -140,16 +155,14 @@ export function JobDescriptionModal() {
               </div>
             </div>
 
-          /* Section view */
           ) : currentSection && (
-            <div className="flex flex-col gap-4">
+            <div className="px-5 py-6 flex flex-col gap-4">
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                <p className="text-xs font-bold text-[#1a3a6b]/40 uppercase tracking-wider mb-1">
                   Section {step + 1} of {total}
                 </p>
-                <h2 className="text-lg font-extrabold text-[#1a3a6b] leading-snug">{currentSection.heading}</h2>
+                <h2 className="text-xl font-extrabold text-[#1a3a6b] leading-snug">{currentSection.heading}</h2>
               </div>
-
               <div className="flex flex-col gap-3">
                 {currentSection.items.map((item, i) =>
                   item.type === 'bullet'
@@ -164,21 +177,21 @@ export function JobDescriptionModal() {
           )}
         </div>
 
-        {/* Footer action */}
+        {/* Footer */}
         {!done && (
-          <div className="border-t border-gray-100 px-5 py-4 shrink-0 bg-white">
+          <div className="border-t border-gray-100 px-5 py-4 shrink-0 bg-white sm:rounded-b-2xl">
             {onConfirmScreen ? (
               <button
                 onClick={handleAgree}
                 disabled={saving}
-                className="w-full py-3.5 rounded-2xl bg-green-600 text-white text-sm font-extrabold disabled:opacity-50 transition-opacity"
+                className="w-full py-4 rounded-2xl bg-green-600 text-white text-sm font-extrabold disabled:opacity-50"
               >
-                {saving ? 'Saving…' : 'I confirm — I've read and understood my job description'}
+                {saving ? 'Saving…' : '✓  I confirm — I have read and understood my job description'}
               </button>
             ) : (
               <button
                 onClick={() => setStep(s => s + 1)}
-                className="w-full py-3.5 rounded-2xl bg-[#1a3a6b] text-white text-sm font-extrabold flex items-center justify-center gap-2"
+                className="w-full py-4 rounded-2xl bg-[#1a3a6b] text-white text-sm font-extrabold flex items-center justify-center gap-2 active:opacity-80"
               >
                 I've read this section
                 <ChevronRight size={16} />
