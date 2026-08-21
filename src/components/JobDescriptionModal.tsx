@@ -19,7 +19,9 @@ export function JobDescriptionModal() {
   const { profile, refreshProfile } = useAuth()
   const [jd, setJd] = useState<JobDescription | null>(null)
   const [show, setShow] = useState(false)
-  const [step, setStep] = useState(0)
+  const [step, setStep] = useState(() => {
+    try { return parseInt(localStorage.getItem('jd_modal_step') ?? '0', 10) || 0 } catch { return 0 }
+  })
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -69,6 +71,7 @@ export function JobDescriptionModal() {
       jd_agreed_role:    jd.role,
     } as Record<string, unknown>).eq('id', profile.id)
     if (refreshProfile) await refreshProfile()
+    try { localStorage.removeItem('jd_modal_step') } catch {}
     setSaving(false)
     setDone(true)
     setTimeout(() => setShow(false), 1800)
@@ -190,7 +193,11 @@ export function JobDescriptionModal() {
               </button>
             ) : (
               <button
-                onClick={() => setStep(s => s + 1)}
+                onClick={() => {
+                  const next = step + 1
+                  try { localStorage.setItem('jd_modal_step', String(next)) } catch {}
+                  setStep(next)
+                }}
                 className="w-full py-4 rounded-2xl bg-[#1a3a6b] text-white text-sm font-extrabold flex items-center justify-center gap-2 active:opacity-80"
               >
                 I've read this section
