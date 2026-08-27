@@ -15,17 +15,32 @@ interface JobDescription {
 
 const STAFF_ROLES = ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach', 'outreach_worker', 'media_tech']
 
+function stepKey(profileId: string, role: string, version: string) {
+  return `jd_step:${profileId}:${role}:${version}`
+}
+
+function readStep(key: string): number {
+  try { return Math.max(0, parseInt(localStorage.getItem(key) ?? '0', 10) || 0) } catch { return 0 }
+}
+
+function saveStep(key: string, step: number) {
+  try { localStorage.setItem(key, String(step)) } catch {}
+}
+
+function clearStep(key: string) {
+  try { localStorage.removeItem(key) } catch {}
+}
+
 export function JobDescriptionModal() {
   const { profile, refreshProfile } = useAuth()
   const [jd, setJd] = useState<JobDescription | null>(null)
   const [show, setShow] = useState(false)
-  const [step, setStep] = useState(() => {
-    try { return parseInt(localStorage.getItem('jd_modal_step') ?? '0', 10) || 0 } catch { return 0 }
-  })
+  const [step, setStep] = useState(0)
+  const [lsKey, setLsKey] = useState('')
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(false)
 
-  // Lock body scroll while modal is visible
+  // Lock body scroll while modal is open
   useEffect(() => {
     if (!show) return
     const prev = document.body.style.overflow
@@ -54,13 +69,32 @@ export function JobDescriptionModal() {
           p.jd_agreed_role === profile.role &&
           p.jd_agreed_version === data.version &&
           !!p.jd_agreed_at
-        if (!alreadyAgreed) {
-          setJd(data as JobDescription)
-          setStep(0)
-          setShow(true)
-        }
+        if (alreadyAgreed) return
+
+        // Resume from where they left off (keyed by user + role + version)
+        const key = stepKey(profile.id, data.role, data.version)
+        const saved = readStep(key)
+        // Clamp saved step to valid range — never skip past last section
+        const resumeStep = Math.min(saved, (data.content?.length ?? 1) - 1)
+
+        setJd(data as JobDescription)
+        setLsKey(key)
+        setStep(resumeStep)
+        setShow(true)
       })
   }, [profile?.id, profile?.role])
+
+  function advance() {
+    const next = step + 1
+    saveStep(lsKey, next)
+    setStep(next)
+  }
+
+  function goBack() {
+    const prev = Math.max(0, step - 1)
+    saveStep(lsKey, prev)
+    setStep(prev)
+  }
 
   async function handleAgree() {
     if (!profile || !jd) return
@@ -71,7 +105,7 @@ export function JobDescriptionModal() {
       jd_agreed_role:    jd.role,
     } as Record<string, unknown>).eq('id', profile.id)
     if (refreshProfile) await refreshProfile()
-    try { localStorage.removeItem('jd_modal_step') } catch {}
+    clearStep(lsKey)
     setSaving(false)
     setDone(true)
     setTimeout(() => setShow(false), 1800)
@@ -85,19 +119,18 @@ export function JobDescriptionModal() {
   const currentSection = !onConfirmScreen ? sections[step] : null
 
   return (
-    /* Overlay — stopPropagation prevents clicks reaching the page behind */
     <div
       className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60"
       onTouchMove={e => e.stopPropagation()}
     >
-      <div className="bg-white w-full sm:max-w-lg sm:rounded-2xl flex flex-col shadow-2xl"
+      <div
+        className="bg-white w-full sm:max-w-lg sm:rounded-2xl flex flex-col shadow-2xl"
         style={{ height: '95dvh', maxHeight: '95dvh' }}
       >
-
         {/* Header */}
         <div className="bg-[#1a3a6b] px-5 py-4 flex items-center gap-3 shrink-0 sm:rounded-t-2xl">
           {step > 0 && !done && !onConfirmScreen && (
-            <button onClick={() => setStep(s => s - 1)} className="text-white/70 hover:text-white">
+            <button onClick={goBack} className="text-white/70 hover:text-white shrink-0">
               <ArrowLeft size={18} />
             </button>
           )}
@@ -125,9 +158,8 @@ export function JobDescriptionModal() {
           </div>
         )}
 
-        {/* Scrollable content — each step fills this area */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
-
           {done ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 px-6">
               <CheckCircle2 size={52} className="text-green-500" />
@@ -193,11 +225,7 @@ export function JobDescriptionModal() {
               </button>
             ) : (
               <button
-                onClick={() => {
-                  const next = step + 1
-                  try { localStorage.setItem('jd_modal_step', String(next)) } catch {}
-                  setStep(next)
-                }}
+                onClick={advance}
                 className="w-full py-4 rounded-2xl bg-[#1a3a6b] text-white text-sm font-extrabold flex items-center justify-center gap-2 active:opacity-80"
               >
                 I've read this section
