@@ -23,10 +23,14 @@ export function ResetPasswordPage() {
       // ── 1. PKCE flow: URL has ?code=... ──────────────────────────────────
       const code = searchParams.get('code')
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        const { error, data } = await supabase.auth.exchangeCodeForSession(code)
         if (!cancelled) {
-          if (error) { setStatus('expired'); setErrorMsg(error.message) }
-          else setStatus('ready')
+          if (error || !data.session) {
+            setStatus('expired')
+            setErrorMsg(error?.message ?? 'Could not establish a reset session')
+          } else {
+            setStatus('ready')
+          }
         }
         return
       }
@@ -81,7 +85,13 @@ export function ResetPasswordPage() {
     setSaving(true)
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     if (error) {
-      setFormError(error.message)
+      const isSessionGone = error.message.toLowerCase().includes('session') || error.message.toLowerCase().includes('auth')
+      if (isSessionGone) {
+        setStatus('expired')
+        setErrorMsg('Your reset session expired — please request a new link.')
+      } else {
+        setFormError(error.message)
+      }
       setSaving(false)
     } else {
       setStatus('success')
