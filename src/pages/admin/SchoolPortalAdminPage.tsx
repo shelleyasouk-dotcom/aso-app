@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Building2, ShieldCheck, FileText, Upload, CheckCircle,
-  ClipboardList, Users, Link2, AlertTriangle, Eye, FolderOpen, Trash2, Plus
+  ClipboardList, Users, Link2, AlertTriangle, Eye, FolderOpen, Trash2, Plus, Edit2, Send
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -51,6 +51,17 @@ export function SchoolPortalAdminPage() {
   const [uploadingDoc, setUploadingDoc] = useState(false)
   const [docError, setDocError] = useState<string | null>(null)
 
+  // Safeguarding interface edit
+  const [editingSafeguarding, setEditingSafeguarding] = useState(false)
+  const [sgForm, setSgForm] = useState({
+    safeguarding_out_of_hours: '',
+    child_protection_policy_received: false,
+    medical_emergency_process: '',
+    lado_pathway: '',
+    secure_info_method: '',
+  })
+  const [sgSaving, setSgSaving] = useState(false)
+
   // Portal accounts
   interface PortalAccount { id: string; user_id: string; label: string | null; profile?: Profile }
   const [portalAccounts, setPortalAccounts] = useState<PortalAccount[]>([])
@@ -70,7 +81,17 @@ export function SchoolPortalAdminPage() {
         supabase.from('school_portal_assignments').select('id, user_id, label, profile:profiles(id,full_name,email)').eq('school_id', id),
         supabase.from('school_documents').select('*').eq('school_id', id).order('created_at', { ascending: false }),
       ])
-      if (schoolRes.data) setSchool(schoolRes.data)
+      if (schoolRes.data) {
+        setSchool(schoolRes.data)
+        const s = schoolRes.data
+        setSgForm({
+          safeguarding_out_of_hours: s.safeguarding_out_of_hours ?? '',
+          child_protection_policy_received: s.child_protection_policy_received ?? false,
+          medical_emergency_process: s.medical_emergency_process ?? '',
+          lado_pathway: s.lado_pathway ?? '',
+          secure_info_method: s.secure_info_method ?? '',
+        })
+      }
       setReports(reportsRes.data ?? [])
       setChildCount(childRes.count ?? 0)
       setSessionCount(sessionRes.count ?? 0)
@@ -80,6 +101,29 @@ export function SchoolPortalAdminPage() {
     }
     load()
   }, [id])
+
+  async function saveSafeguarding() {
+    if (!id) return
+    setSgSaving(true)
+    const { data } = await supabase.from('schools')
+      .update(sgForm)
+      .eq('id', id)
+      .select()
+      .single()
+    if (data) setSchool(data)
+    setSgSaving(false)
+    setEditingSafeguarding(false)
+  }
+
+  async function markAsoPackShared() {
+    if (!id) return
+    const { data } = await supabase.from('schools')
+      .update({ aso_pack_shared_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single()
+    if (data) setSchool(data)
+  }
 
   async function uploadReport(file: File) {
     if (!id || !reportForm.term_name) {
@@ -294,6 +338,100 @@ export function SchoolPortalAdminPage() {
           <Row label="DDSL name"  value={school.ddsl_name} />
           <Row label="DDSL email" value={school.ddsl_email} />
           <Row label="DDSL phone" value={school.ddsl_phone} />
+        </Card>
+
+        {/* KCSIE 2026 Safeguarding Interface */}
+        <Card>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={18} className="text-red-600" />
+              <p className="font-bold text-[#1a3a6b]">Safeguarding Interface <span className="text-xs font-normal text-gray-400 ml-1">KCSIE 2026</span></p>
+            </div>
+            <button
+              onClick={() => setEditingSafeguarding(e => !e)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#1a3a6b] bg-[#1a3a6b]/8 px-3 py-1.5 rounded-lg hover:bg-[#1a3a6b]/15 transition-colors"
+            >
+              <Edit2 size={12} /> {editingSafeguarding ? 'Cancel' : 'Edit'}
+            </button>
+          </div>
+
+          {/* ASO DSL info — always visible */}
+          <div className="mb-3 p-3 bg-[#1a3a6b]/5 border border-[#1a3a6b]/15 rounded-xl">
+            <p className="text-[10px] font-extrabold uppercase tracking-wide text-[#1a3a6b] mb-1.5">ASO Designated Safeguarding Leads</p>
+            <p className="text-sm font-semibold text-gray-800">Shelley Wood <span className="text-gray-400 font-normal">(DSL)</span></p>
+            <p className="text-sm font-semibold text-gray-800">Naima Clarke <span className="text-gray-400 font-normal">(Deputy DSL)</span></p>
+          </div>
+
+          {editingSafeguarding ? (
+            <div className="flex flex-col gap-3">
+              <Input
+                label="Out-of-hours safeguarding contact"
+                placeholder="e.g. 07700 900000 — call MASH directly after 5pm"
+                value={sgForm.safeguarding_out_of_hours}
+                onChange={e => setSgForm(f => ({ ...f, safeguarding_out_of_hours: e.target.value }))}
+              />
+              <Input
+                label="Medical emergency process"
+                placeholder="e.g. Call 999 then school office on 01234 567890"
+                value={sgForm.medical_emergency_process}
+                onChange={e => setSgForm(f => ({ ...f, medical_emergency_process: e.target.value }))}
+              />
+              <Input
+                label="LADO / allegation pathway"
+                placeholder="e.g. Contact LADO via LA: 01234 567000"
+                value={sgForm.lado_pathway}
+                onChange={e => setSgForm(f => ({ ...f, lado_pathway: e.target.value }))}
+              />
+              <Input
+                label="Secure information transmission"
+                placeholder="e.g. Encrypted email to dsl@school.org.uk only"
+                value={sgForm.secure_info_method}
+                onChange={e => setSgForm(f => ({ ...f, secure_info_method: e.target.value }))}
+              />
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={sgForm.child_protection_policy_received}
+                  onChange={e => setSgForm(f => ({ ...f, child_protection_policy_received: e.target.checked }))}
+                  className="w-4 h-4 rounded accent-[#1a3a6b]"
+                />
+                <span className="text-sm font-medium text-gray-700">School child protection policy received</span>
+              </label>
+              <Button onClick={saveSafeguarding} disabled={sgSaving}>
+                {sgSaving ? 'Saving…' : 'Save Safeguarding Interface'}
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <Row label="Out-of-hours contact"    value={school.safeguarding_out_of_hours} />
+              <Row label="Medical emergency"        value={school.medical_emergency_process} />
+              <Row label="LADO pathway"             value={school.lado_pathway} />
+              <Row label="Secure info method"       value={school.secure_info_method} />
+              <Row label="CP policy received"       value={school.child_protection_policy_received} />
+            </div>
+          )}
+
+          {/* ASO pack shared */}
+          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-gray-700">ASO compliance pack shared with school</p>
+              {school.aso_pack_shared_at ? (
+                <p className="text-xs text-green-600 mt-0.5">
+                  ✓ Shared {new Date(school.aso_pack_shared_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              ) : (
+                <p className="text-xs text-amber-600 mt-0.5">Not yet shared</p>
+              )}
+            </div>
+            {!school.aso_pack_shared_at && (
+              <button
+                onClick={markAsoPackShared}
+                className="flex items-center gap-1.5 text-xs font-semibold text-white bg-[#1a3a6b] px-3 py-1.5 rounded-lg hover:bg-[#1a3a6b]/90 transition-colors shrink-0"
+              >
+                <Send size={11} /> Mark as shared
+              </button>
+            )}
+          </div>
         </Card>
 
         {/* Impact reports */}

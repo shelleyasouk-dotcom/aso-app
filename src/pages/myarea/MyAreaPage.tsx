@@ -118,6 +118,7 @@ export function MyAreaPage() {
 
   const adminTiles: Tile[] = [
     { label: 'Area Schools', description: 'Schools in your area', icon: School, path: '/admin/area-schools', color: 'bg-sky-50 text-sky-700' },
+    { label: 'DBS Compliance', description: 'Staff DBS & training status', icon: ShieldAlert, path: '/admin/dbs-compliance', color: 'bg-red-50 text-red-700' },
     { label: 'Announcements', description: 'Post & manage updates', icon: Megaphone, path: '/admin/announcements', color: 'bg-pink-50 text-pink-700' },
     { label: 'Admin Panel', description: 'Manage staff & schools', icon: Settings, path: '/admin', color: 'bg-gray-50 text-gray-700' },
   ]

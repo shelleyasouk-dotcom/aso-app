@@ -65,6 +65,13 @@ export interface School {
   ddsl_name?: string | null
   ddsl_email?: string | null
   ddsl_phone?: string | null
+  // KCSIE 2026 safeguarding interface fields
+  safeguarding_out_of_hours?: string | null
+  child_protection_policy_received?: boolean | null
+  medical_emergency_process?: string | null
+  lado_pathway?: string | null
+  secure_info_method?: string | null
+  aso_pack_shared_at?: string | null
   mat_name?: string | null
   school_type?: string | null
   region?: string | null

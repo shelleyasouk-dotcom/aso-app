@@ -29,6 +29,7 @@ import { ChildSkillsPage } from './pages/awards/ChildSkillsPage'
 import { AdminPage } from './pages/admin/AdminPage'
 import { SchoolsAdminPage } from './pages/admin/SchoolsAdminPage'
 import { StaffAdminPage } from './pages/admin/StaffAdminPage'
+import { DBSCompliancePage } from './pages/admin/DBSCompliancePage'
 import { ChildrenAdminPage } from './pages/admin/ChildrenAdminPage'
 import { BulkImportPage } from './pages/admin/BulkImportPage'
 import { AreaSchoolsPage } from './pages/admin/AreaSchoolsPage'
@@ -239,6 +240,11 @@ export default function App() {
           <Route path="/admin/schools" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <SchoolsAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/dbs-compliance" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <DBSCompliancePage />
             </ProtectedRoute>
           } />
           <Route path="/admin/staff" element={
