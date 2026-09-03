@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckCircle, Lock, Clock, ChevronRight, Award, AlertTriangle } from 'lucide-react'
+import { CheckCircle, Lock, Clock, ChevronRight, Award, AlertTriangle, Printer } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -89,13 +89,19 @@ export function AnaphylaxisCoursePage() {
           {certificate ? (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
               <Award size={28} className="text-green-600 shrink-0" />
-              <div>
+              <div className="flex-1">
                 <p className="font-extrabold text-green-800 text-sm">Certificate Earned</p>
                 <p className="text-xs text-gray-500">
                   Completed {new Date(certificate.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
                 <p className="text-xs text-green-700 font-semibold mt-0.5">Visible on your profile · Renew every 3 years</p>
               </div>
+              <button
+                onClick={() => navigate('/course/anaphylaxis/certificate')}
+                className="flex items-center gap-1.5 bg-green-700 text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-green-800 transition-colors shrink-0"
+              >
+                <Printer size={13} /> View
+              </button>
             </div>
           ) : allDone ? (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">

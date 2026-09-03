@@ -108,6 +108,7 @@ import { ApparatusCpdHubPage } from './pages/course/ApparatusCpdHubPage'
 import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailPage'
 import { AreaLeadCoursePage } from './pages/course/AreaLeadCoursePage'
 import { AnaphylaxisCoursePage } from './pages/course/AnaphylaxisCoursePage'
+import { AnaphylaxisCertificatePage } from './pages/course/AnaphylaxisCertificatePage'
 import { StaffOnboardingModal } from './components/StaffOnboardingModal'
 import { PhotoPolicyModal } from './components/PhotoPolicyModal'
 import { JobDescriptionModal } from './components/JobDescriptionModal'
@@ -530,11 +531,20 @@ export default function App() {
 
           {/* Anaphylaxis mandatory training */}
           <Route path="/course/anaphylaxis" element={<ProtectedRoute><AnaphylaxisCoursePage /></ProtectedRoute>} />
+          <Route path="/course/anaphylaxis/certificate" element={<ProtectedRoute><AnaphylaxisCertificatePage /></ProtectedRoute>} />
           <Route path="/course/anaphylaxis/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
 
-          {/* Leadership course */}
-          <Route path="/course/leadership" element={<ProtectedRoute><LeadershipCoursePage /></ProtectedRoute>} />
-          <Route path="/course/leadership/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
+          {/* Leadership course — lead coaches and above only */}
+          <Route path="/course/leadership" element={
+            <ProtectedRoute allowedRoles={['lead_coach', 'area_lead', 'director']}>
+              <LeadershipCoursePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/course/leadership/:moduleId" element={
+            <ProtectedRoute allowedRoles={['lead_coach', 'area_lead', 'director']}>
+              <CourseModulePage />
+            </ProtectedRoute>
+          } />
 
           {/* Apparatus CPD courses */}
           <Route path="/course/apparatus" element={<ProtectedRoute><ApparatusCpdHubPage /></ProtectedRoute>} />
