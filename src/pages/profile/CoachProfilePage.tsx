@@ -244,6 +244,7 @@ export function CoachProfilePage() {
   const [uploadStep, setUploadStep] = useState<string | null>(null)
   const [leadershipCert, setLeadershipCert] = useState<{ course_title: string; completed_at: string } | null>(null)
   const [apparatusCerts, setApparatusCerts] = useState<{ course_id: string; course_title: string; completed_at: string }[]>([])
+  const [anaphylaxisCert, setAnaphylaxisCert] = useState<{ completed_at: string } | null>(null)
 
   // Whether the current viewer can edit this profile
   const [canEdit, setCanEdit] = useState(false)
@@ -296,6 +297,12 @@ export function CoachProfilePage() {
       .eq('course_id', 'leadership_v1')
       .maybeSingle()
       .then(({ data }) => setLeadershipCert(data))
+    supabase.from('course_certificates')
+      .select('completed_at')
+      .eq('user_id', targetId)
+      .eq('course_id', 'anaphylaxis_v1')
+      .maybeSingle()
+      .then(({ data }) => setAnaphylaxisCert(data))
     supabase.from('course_certificates')
       .select('course_id, course_title, completed_at')
       .eq('user_id', targetId)
@@ -759,6 +766,26 @@ export function CoachProfilePage() {
                     <p className="text-white/50 text-xs mt-2">Awarded {new Date(leadershipCert.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                   </div>
                   <div className="text-3xl shrink-0">🏅</div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
+                  <p className="text-[10px] text-white/50 font-semibold">Active Schools Organisation</p>
+                  <p className="text-[10px] text-white/50">Verified ✓</p>
+                </div>
+              </div>
+            )}
+
+            {/* Anaphylaxis cert */}
+            {anaphylaxisCert && (
+              <div className="bg-gradient-to-br from-red-700 to-red-900 rounded-2xl p-4 text-white">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-extrabold uppercase tracking-widest text-yellow-300 mb-1">Mandatory Training Certificate</p>
+                    <p className="font-extrabold text-sm leading-tight">Anaphylaxis Awareness Training</p>
+                    <p className="text-white/70 text-xs mt-0.5">Benedict's Law (September 2026)</p>
+                    <p className="text-white/70 text-xs mt-1">{subject?.full_name}</p>
+                    <p className="text-white/50 text-xs mt-2">Awarded {new Date(anaphylaxisCert.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  </div>
+                  <div className="text-3xl shrink-0">🚨</div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between">
                   <p className="text-[10px] text-white/50 font-semibold">Active Schools Organisation</p>
