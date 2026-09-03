@@ -9,6 +9,7 @@ import { Layout } from '../../components/layout/Layout'
 import { LEADERSHIP_COURSE } from '../../data/leadershipCourse'
 import { APPARATUS_CPD_COURSES } from '../../data/apparatusCpd'
 import { AREA_LEAD_COURSE } from '../../data/areaLeadCourse'
+import { ANAPHYLAXIS_COURSE } from '../../data/anaphylaxisCourse'
 
 export function CourseModulePage() {
   const { moduleId, courseSlug } = useParams<{ moduleId: string; courseSlug?: string }>()
@@ -17,8 +18,11 @@ export function CourseModulePage() {
   const location = useLocation()
 
   const isAreaLead = location.pathname.startsWith('/course/area-lead')
+  const isAnaphylaxis = location.pathname.startsWith('/course/anaphylaxis')
 
-  const course = isAreaLead
+  const course = isAnaphylaxis
+    ? ANAPHYLAXIS_COURSE
+    : isAreaLead
     ? AREA_LEAD_COURSE
     : courseSlug
     ? APPARATUS_CPD_COURSES.find(c => c.slug === courseSlug) ?? null
@@ -119,7 +123,7 @@ export function CourseModulePage() {
     }
 
     setSaving(false)
-    navigate(isAreaLead ? '/course/area-lead' : courseSlug ? `/course/apparatus/${courseSlug}` : '/course/leadership')
+    navigate(isAnaphylaxis ? '/course/anaphylaxis' : isAreaLead ? '/course/area-lead' : courseSlug ? `/course/apparatus/${courseSlug}` : '/course/leadership')
   }
 
   function resetQuiz() {

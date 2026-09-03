@@ -82,6 +82,7 @@ export function MyAreaPage() {
     { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-sky-50 text-sky-700' },
     { label: 'Expenses', description: 'Submit travel & mileage', icon: ReceiptText, path: '/expenses', color: 'bg-orange-50 text-orange-700' },
     { label: 'Absences', description: 'Log & manage requests', icon: CalendarOff, path: '/absences', color: 'bg-rose-50 text-rose-700' },
+    { label: 'Anaphylaxis Training', description: "Benedict's Law — mandatory for all staff", icon: ShieldAlert, path: '/course/anaphylaxis', color: 'bg-red-50 text-red-700' },
   ]
 
   const juniorCoachTiles: Tile[] = [

@@ -106,6 +106,7 @@ import { CourseModulePage } from './pages/course/CourseModulePage'
 import { ApparatusCpdHubPage } from './pages/course/ApparatusCpdHubPage'
 import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailPage'
 import { AreaLeadCoursePage } from './pages/course/AreaLeadCoursePage'
+import { AnaphylaxisCoursePage } from './pages/course/AnaphylaxisCoursePage'
 import { StaffOnboardingModal } from './components/StaffOnboardingModal'
 import { PhotoPolicyModal } from './components/PhotoPolicyModal'
 import { JobDescriptionModal } from './components/JobDescriptionModal'
@@ -520,6 +521,10 @@ export default function App() {
               <JobDescriptionsAdminPage />
             </ProtectedRoute>
           } />
+
+          {/* Anaphylaxis mandatory training */}
+          <Route path="/course/anaphylaxis" element={<ProtectedRoute><AnaphylaxisCoursePage /></ProtectedRoute>} />
+          <Route path="/course/anaphylaxis/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
 
           {/* Leadership course */}
           <Route path="/course/leadership" element={<ProtectedRoute><LeadershipCoursePage /></ProtectedRoute>} />
