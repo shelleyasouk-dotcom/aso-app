@@ -103,7 +103,9 @@ export function CourseModulePage() {
         .from('profiles').select('id')
         .in('role', ['area_lead', 'director'])
         .neq('id', profile.id)
-      const notifTitle = isAreaLead
+      const notifTitle = isAnaphylaxis
+        ? `${profile.full_name} completed Anaphylaxis Training`
+        : isAreaLead
         ? `${profile.full_name} completed the Area Lead Course`
         : courseSlug
         ? `${profile.full_name} completed ${course.title}`
