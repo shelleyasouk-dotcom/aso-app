@@ -135,7 +135,7 @@ export function AnaphylaxisCertificatePage() {
               <div style={{ textAlign: 'right' }}>
                 <p style={{ fontSize: '11px', color: '#9ca3af', fontFamily: 'sans-serif', margin: '0 0 2px' }}>Valid until</p>
                 <p style={{ fontSize: '14px', fontWeight: 600, color: '#374151', fontFamily: 'sans-serif', margin: 0 }}>
-                  {new Date(new Date(cert.completed_at).setFullYear(new Date(cert.completed_at).getFullYear() + 3))
+                  {new Date(new Date(cert.completed_at).setFullYear(new Date(cert.completed_at).getFullYear() + 1))
                     .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>

@@ -5,7 +5,7 @@ export const ANAPHYLAXIS_COURSE: LeadershipCourse = {
   title: 'Anaphylaxis Awareness',
   subtitle: "Benedict's Law — Mandatory Training for All ASO Staff",
   description:
-    "Mandatory anaphylaxis training required under Benedict's Law (September 2026). All ASO staff must complete this course before their first coaching session and renew every 3 years.",
+    "Mandatory anaphylaxis training required under Benedict's Law (September 2026). All ASO staff must complete this course before their first coaching session and renew annually.",
   certificateTitle: "Certificate of Completion — Anaphylaxis Awareness Training (Benedict's Law)",
   modules: [
     {
@@ -40,7 +40,7 @@ export const ANAPHYLAXIS_COURSE: LeadershipCourse = {
             'All staff working with children must complete accredited anaphylaxis training',
             'Settings must hold at least one stock adrenaline auto-injector (AAI) on site',
             'Training records must be maintained and available for inspection',
-            'Training must be renewed at least every 3 years',
+            'Training must be renewed at least annually',
             'Failure to comply is a criminal offence under child safety legislation',
           ],
         },
@@ -97,8 +97,8 @@ export const ANAPHYLAXIS_COURSE: LeadershipCourse = {
         {
           question: "Under Benedict's Law, how often must anaphylaxis training be renewed?",
           options: ['Every year', 'Every 2 years', 'Every 3 years', 'Every 5 years'],
-          correct: 2,
-          explanation: "Benedict's Law requires renewal at least every 3 years. ASO will track your certification date.",
+          correct: 0,
+          explanation: "ASO requires anaphylaxis training to be renewed annually. Benedict's Law sets a minimum of every 3 years but ASO policy goes further — coaches must recertify every year.",
         },
         {
           question: 'What must ASO hold in order to comply with the law?',

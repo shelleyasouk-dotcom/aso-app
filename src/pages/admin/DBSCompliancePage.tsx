@@ -201,7 +201,7 @@ export function DBSCompliancePage() {
 
                   {/* Anaphylaxis row */}
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-xs text-gray-500">Anaphylaxis training</span>
+                    <span className="text-xs text-gray-500">Anaphylaxis training (annual)</span>
                     <div className="flex items-center gap-1.5">
                       {s.anaphylaxis_cert ? (
                         <>
@@ -222,9 +222,10 @@ export function DBSCompliancePage() {
           )}
         </div>
 
-        <p className="px-4 text-xs text-gray-400 text-center">
-          DBS numbers and expiry dates are entered on each coach's profile. Update them via Staff Admin → Edit.
-        </p>
+        <div className="px-4 flex flex-col gap-1 text-xs text-gray-400">
+          <p className="text-center">DBS numbers and expiry dates are entered on each coach's profile. Update them via Staff Admin → Edit.</p>
+          <p className="text-center">Anaphylaxis training must be renewed <strong>annually</strong> (ASO policy). Benedict's Law minimum is every 3 years.</p>
+        </div>
       </div>
     </Layout>
   )

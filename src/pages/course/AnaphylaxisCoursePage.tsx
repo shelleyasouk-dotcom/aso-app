@@ -94,7 +94,7 @@ export function AnaphylaxisCoursePage() {
                 <p className="text-xs text-gray-500">
                   Completed {new Date(certificate.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
-                <p className="text-xs text-green-700 font-semibold mt-0.5">Visible on your profile · Renew every 3 years</p>
+                <p className="text-xs text-green-700 font-semibold mt-0.5">Visible on your profile · Renew annually</p>
               </div>
               <button
                 onClick={() => navigate('/course/anaphylaxis/certificate')}
