@@ -13,7 +13,7 @@ export function StaffOnboardingModal() {
   // Only show for staff who haven't agreed yet
   if (!profile) return null
   if (!STAFF_ROLES.includes(profile.role)) return null
-  if ((profile as any).terms_agreed_at) return null
+  if (profile.terms_agreed_at) return null
 
   async function handleAccept() {
     if (!agreed || !profile) return

@@ -296,6 +296,7 @@ export function StaffAdminPage() {
 
         await supabase.from('onboarding_enrollments').insert({
           staff_id: data.user.id,
+          enrolled_by: profile!.id,
           status: 'not_started',
           enrollment_type: 'initial',
           enrolled_at: new Date().toISOString(),

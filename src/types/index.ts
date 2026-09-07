@@ -19,6 +19,7 @@ export interface Profile {
   can_issue_contracts?: boolean
   onboarding_required?: boolean
   onboarding_status?: string
+  terms_agreed_at?: string | null
   school_id?: string | null
   created_at: string
 }

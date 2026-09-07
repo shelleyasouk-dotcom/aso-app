@@ -361,7 +361,10 @@ export function CoachOnboardingPage() {
 
   async function completeOnboarding() {
     await patch({ profile_completed_at: new Date().toISOString() })
-    await supabase.from('profiles').update({ onboarding_required: false }).eq('id', profile!.id)
+    await supabase.from('profiles').update({
+      onboarding_required: false,
+      onboarding_status: 'active',
+    }).eq('id', profile!.id)
     await refreshProfile()
     navigate('/dashboard')
   }
