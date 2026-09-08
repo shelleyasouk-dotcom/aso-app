@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Award, Printer } from 'lucide-react'
+import { Award, Download, Share2, Loader2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -8,8 +8,10 @@ import { Layout } from '../../components/layout/Layout'
 export function AnaphylaxisCertificatePage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
+  const certRef = useRef<HTMLDivElement>(null)
   const [cert, setCert] = useState<{ completed_at: string } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -20,6 +22,49 @@ export function AnaphylaxisCertificatePage() {
       .maybeSingle()
       .then(({ data }) => { setCert(data); setLoading(false) })
   }, [profile])
+
+  async function handleDownload() {
+    if (!certRef.current || !profile) return
+    setDownloading(true)
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const { jsPDF } = await import('jspdf')
+
+      const canvas = await html2canvas(certRef.current, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      })
+
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pageW = pdf.internal.pageSize.getWidth()
+      const pageH = pdf.internal.pageSize.getHeight()
+      const imgW = pageW - 20
+      const imgH = (canvas.height / canvas.width) * imgW
+      const y = Math.max(10, (pageH - imgH) / 2)
+      pdf.addImage(imgData, 'PNG', 10, y, imgW, imgH)
+
+      const fileName = `ASO_Anaphylaxis_Certificate_${profile.full_name.replace(/\s+/g, '_')}.pdf`
+
+      // On mobile, try Web Share API first so it goes to Files / email
+      if (navigator.share && navigator.canShare) {
+        const blob = pdf.output('blob')
+        const file = new File([blob], fileName, { type: 'application/pdf' })
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'Anaphylaxis Training Certificate' })
+          setDownloading(false)
+          return
+        }
+      }
+
+      // Desktop / fallback: trigger download
+      pdf.save(fileName)
+    } catch (err) {
+      console.error('PDF generation failed:', err)
+    }
+    setDownloading(false)
+  }
 
   if (loading) return (
     <Layout title="Certificate" showBack>
@@ -48,26 +93,34 @@ export function AnaphylaxisCertificatePage() {
   const validUntil = new Date(new Date(cert.completed_at).setFullYear(new Date(cert.completed_at).getFullYear() + 1))
     .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
+  const canShare = typeof navigator !== 'undefined' && !!navigator.share
+
   return (
     <Layout title="Certificate" showBack>
       <div className="flex flex-col gap-4 px-4 pb-10 pt-2">
 
-        {/* Print button — always visible on the page */}
+        {/* Download / Share button */}
         <button
-          onClick={() => window.print()}
-          className="print:hidden w-full flex items-center justify-center gap-2 bg-[#1a3a6b] text-white font-bold py-3.5 rounded-2xl text-sm"
+          onClick={handleDownload}
+          disabled={downloading}
+          className="w-full flex items-center justify-center gap-2 bg-[#1a3a6b] text-white font-bold py-3.5 rounded-2xl text-sm disabled:opacity-60"
         >
-          <Printer size={16} /> Print / Save PDF
+          {downloading
+            ? <><Loader2 size={16} className="animate-spin" /> Generating PDF…</>
+            : canShare
+            ? <><Share2 size={16} /> Save / Share Certificate</>
+            : <><Download size={16} /> Download Certificate (PDF)</>
+          }
         </button>
 
-        {/* Certificate card */}
+        {/* Certificate card — this is what gets captured */}
         <div
-          id="certificate"
-          className="bg-white rounded-2xl overflow-hidden shadow-lg print:shadow-none print:rounded-none"
+          ref={certRef}
+          className="bg-white rounded-2xl overflow-hidden shadow-lg"
           style={{ border: '4px solid #1a3a6b', fontFamily: 'Georgia, serif' }}
         >
           {/* Top stripe */}
-          <div style={{ background: '#1a3a6b', padding: '16px 24px' }} className="flex items-center justify-between">
+          <div style={{ background: '#1a3a6b', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <p style={{ color: '#f5c518', fontSize: '10px', fontWeight: 800, letterSpacing: '3px', textTransform: 'uppercase', fontFamily: 'sans-serif', margin: 0 }}>
                 Active School Organisation
@@ -80,7 +133,7 @@ export function AnaphylaxisCertificatePage() {
           </div>
 
           {/* Body */}
-          <div style={{ padding: '28px 24px', textAlign: 'center' }}>
+          <div style={{ padding: '28px 24px', textAlign: 'center', background: '#ffffff' }}>
             <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: '#9ca3af', fontFamily: 'sans-serif', margin: '0 0 10px' }}>
               Certificate of Completion
             </p>
@@ -116,14 +169,14 @@ export function AnaphylaxisCertificatePage() {
                 'Emergency Response & Adrenaline Auto-Injectors',
                 'Your Responsibilities as an ASO Coach',
               ].map((m, i) => (
-                <p key={i} style={{ fontSize: '11px', color: '#374151', fontFamily: 'sans-serif', margin: '0 0 4px', paddingLeft: '14px', position: 'relative' }}>
+                <div key={i} style={{ fontSize: '11px', color: '#374151', fontFamily: 'sans-serif', margin: '0 0 4px', paddingLeft: '14px', position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 0, color: '#16a34a', fontWeight: 700 }}>✓</span>
                   {m}
-                </p>
+                </div>
               ))}
             </div>
 
-            {/* Date + signatures row */}
+            {/* Dates + signature */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
               <div style={{ textAlign: 'left' }}>
                 <p style={{ fontSize: '9px', color: '#9ca3af', fontFamily: 'sans-serif', margin: '0 0 2px' }}>Date awarded</p>
@@ -152,19 +205,12 @@ export function AnaphylaxisCertificatePage() {
           </div>
         </div>
 
-        <p className="print:hidden text-xs text-gray-400 text-center">
+        <p className="text-xs text-gray-400 text-center">
           This certificate is stored on your profile as evidence of compliance with Benedict's Law.
           Renew annually before your first session of each academic year.
         </p>
 
       </div>
-
-      <style>{`
-        @media print {
-          body { margin: 0; background: white; }
-          .print\\:hidden { display: none !important; }
-        }
-      `}</style>
     </Layout>
   )
 }
