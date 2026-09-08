@@ -46,9 +46,10 @@ export function LeadershipCertificatePage() {
       pdf.addImage(imgData, 'PNG', 10, y, imgW, imgH)
 
       const fileName = `ASO_Leadership_Certificate_${profile.full_name.replace(/\s+/g, '_')}.pdf`
+      const blob = pdf.output('blob')
 
+      // 1. Native share sheet
       if (navigator.share && navigator.canShare) {
-        const blob = pdf.output('blob')
         const file = new File([blob], fileName, { type: 'application/pdf' })
         if (navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: 'ASO Lead Coach Programme Certificate' })
@@ -57,7 +58,21 @@ export function LeadershipCertificatePage() {
         }
       }
 
-      pdf.save(fileName)
+      // 2. Blob URL in new tab (iOS Safari shows inline PDF with save option)
+      const url = URL.createObjectURL(blob)
+      const opened = window.open(url, '_blank')
+      if (opened) {
+        setTimeout(() => URL.revokeObjectURL(url), 10000)
+        setDownloading(false)
+        return
+      }
+
+      // 3. Desktop anchor download
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 5000)
     } catch (err) {
       console.error('PDF generation failed:', err)
     }
