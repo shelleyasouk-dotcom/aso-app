@@ -73,16 +73,19 @@ export function LeadershipCoursePage() {
 
           {/* Certificate banner */}
           {certificate ? (
-            <div className="bg-[#f5c518]/10 border border-[#f5c518]/40 rounded-2xl p-4 flex items-center gap-3">
+            <button
+              onClick={() => navigate('/course/leadership/certificate')}
+              className="w-full bg-[#f5c518]/10 border border-[#f5c518]/40 rounded-2xl p-4 flex items-center gap-3 text-left active:opacity-80"
+            >
               <Award size={28} className="text-[#f5c518] shrink-0" />
-              <div>
+              <div className="flex-1">
                 <p className="font-extrabold text-[#1a3a6b] text-sm">Certificate Earned</p>
                 <p className="text-xs text-gray-500">
                   Completed {new Date(certificate.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
-                <p className="text-xs text-[#1a3a6b] font-semibold mt-0.5">Visible on your profile</p>
+                <p className="text-xs text-[#1a3a6b] font-semibold mt-0.5">Tap to view &amp; download →</p>
               </div>
-            </div>
+            </button>
           ) : allDone ? (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
               <p className="font-extrabold text-green-800">All modules complete!</p>

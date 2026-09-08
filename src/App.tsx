@@ -109,6 +109,8 @@ import { ApparatusCourseDetailPage } from './pages/course/ApparatusCourseDetailP
 import { AreaLeadCoursePage } from './pages/course/AreaLeadCoursePage'
 import { AnaphylaxisCoursePage } from './pages/course/AnaphylaxisCoursePage'
 import { AnaphylaxisCertificatePage } from './pages/course/AnaphylaxisCertificatePage'
+import { LeadershipCertificatePage } from './pages/course/LeadershipCertificatePage'
+import { ApparatusCertificatePage } from './pages/course/ApparatusCertificatePage'
 import { StaffOnboardingModal } from './components/StaffOnboardingModal'
 import { PhotoPolicyModal } from './components/PhotoPolicyModal'
 import { JobDescriptionModal } from './components/JobDescriptionModal'
@@ -540,6 +542,11 @@ export default function App() {
               <LeadershipCoursePage />
             </ProtectedRoute>
           } />
+          <Route path="/course/leadership/certificate" element={
+            <ProtectedRoute allowedRoles={['lead_coach', 'area_lead', 'director']}>
+              <LeadershipCertificatePage />
+            </ProtectedRoute>
+          } />
           <Route path="/course/leadership/:moduleId" element={
             <ProtectedRoute allowedRoles={['lead_coach', 'area_lead', 'director']}>
               <CourseModulePage />
@@ -549,6 +556,7 @@ export default function App() {
           {/* Apparatus CPD courses */}
           <Route path="/course/apparatus" element={<ProtectedRoute><ApparatusCpdHubPage /></ProtectedRoute>} />
           <Route path="/course/apparatus/:courseSlug" element={<ProtectedRoute><ApparatusCourseDetailPage /></ProtectedRoute>} />
+          <Route path="/course/apparatus/:courseSlug/certificate" element={<ProtectedRoute><ApparatusCertificatePage /></ProtectedRoute>} />
           <Route path="/course/apparatus/:courseSlug/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />
           <Route path="/course/area-lead" element={<ProtectedRoute><AreaLeadCoursePage /></ProtectedRoute>} />
           <Route path="/course/area-lead/:moduleId" element={<ProtectedRoute><CourseModulePage /></ProtectedRoute>} />

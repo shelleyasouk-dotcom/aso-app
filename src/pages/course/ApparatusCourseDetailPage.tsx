@@ -85,16 +85,19 @@ export function ApparatusCourseDetailPage() {
 
           {/* Certificate banner */}
           {certificate ? (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3">
+            <button
+              onClick={() => navigate(`/course/apparatus/${courseSlug}/certificate`)}
+              className="w-full bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-center gap-3 text-left active:opacity-80"
+            >
               <Award size={28} className="text-yellow-500 shrink-0" />
-              <div>
+              <div className="flex-1">
                 <p className="font-extrabold text-yellow-800 text-sm">Certificate Earned</p>
                 <p className="text-xs text-gray-500">
                   Completed {new Date(certificate.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
-                <p className="text-xs text-yellow-700 font-semibold mt-0.5">Visible on your profile</p>
+                <p className="text-xs text-yellow-700 font-semibold mt-0.5">Tap to view &amp; download →</p>
               </div>
-            </div>
+            </button>
           ) : allDone ? (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
               <p className="font-extrabold text-green-800">All modules complete!</p>
