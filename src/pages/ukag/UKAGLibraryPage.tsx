@@ -1,7 +1,44 @@
 import { useNavigate } from 'react-router-dom'
-import { ChevronRight, GraduationCap } from 'lucide-react'
+import { ChevronRight, GraduationCap, FileText, Download } from 'lucide-react'
 import { Layout } from '../../components/layout/Layout'
 import { UKAG_LEVELS } from '../../data/ukagLevels'
+
+const UKAG_RESOURCES = [
+  {
+    title: 'UKAG Coach Field Guide',
+    description: 'Skills, coaching cues & progressions for Levels 1–6 across all apparatus',
+    file: '/resources/UKAG_Coach_Field_Guide.pdf',
+    filename: 'UKAG_Coach_Field_Guide.pdf',
+  },
+  {
+    title: 'UKAG Gymnastics Award Tracker',
+    description: 'Skill checklists & floor routines for Levels 1–6',
+    file: '/resources/UKAG_Award_Tracker.pdf',
+    filename: 'UKAG_Award_Tracker.pdf',
+  },
+]
+
+async function openResource(file: string, filename: string) {
+  try {
+    const response = await fetch(file)
+    const blob = await response.blob()
+    if (navigator.share && navigator.canShare) {
+      const f = new File([blob], filename, { type: 'application/pdf' })
+      if (navigator.canShare({ files: [f] })) {
+        await navigator.share({ files: [f], title: filename.replace(/_/g, ' ').replace('.pdf', '') })
+        return
+      }
+    }
+    const url = URL.createObjectURL(blob)
+    const opened = window.open(url, '_blank')
+    if (opened) { setTimeout(() => URL.revokeObjectURL(url), 10000); return }
+    const a = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+  } catch {
+    window.open(file, '_blank')
+  }
+}
 
 const LEVEL_COLORS: Record<number, { bg: string; text: string; border: string; pill: string }> = {
   1: { bg: 'bg-[#1a3a6b]/8',  text: 'text-[#1a3a6b]',  border: 'border-[#1a3a6b]/20',  pill: 'bg-[#1a3a6b] text-white' },
@@ -51,6 +88,29 @@ export function UKAGLibraryPage() {
             </button>
           )
         })}
+
+        {/* Downloads */}
+        <div className="mt-2">
+          <p className="text-xs font-extrabold uppercase tracking-widest text-gray-400 mb-3 px-1">Official UKAG Documents</p>
+          <div className="flex flex-col gap-3">
+            {UKAG_RESOURCES.map(r => (
+              <button
+                key={r.file}
+                onClick={() => openResource(r.file, r.filename)}
+                className="w-full text-left bg-white border border-gray-100 rounded-2xl p-4 flex items-center gap-3 shadow-sm active:opacity-70"
+              >
+                <div className="w-11 h-11 rounded-xl bg-[#1a3a6b]/10 flex items-center justify-center shrink-0">
+                  <FileText size={20} className="text-[#1a3a6b]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-extrabold text-gray-800 text-sm leading-tight">{r.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5 leading-snug">{r.description}</p>
+                </div>
+                <Download size={16} className="text-gray-300 shrink-0" />
+              </button>
+            ))}
+          </div>
+        </div>
 
       </div>
     </Layout>
