@@ -300,7 +300,7 @@ function EnrollModal({ unenrolled, actorId, onDone, onCancel }: {
     }
 
     await Promise.all([
-      supabase.from('profiles').update({ onboarding_status: 'not_started' }).eq('id', selected.id),
+      supabase.from('profiles').update({ onboarding_status: 'not_started', onboarding_required: true }).eq('id', selected.id),
       supabase.from('onboarding_audit_log').insert({
         enrollment_id: enrollment.id,
         staff_id: selected.id,

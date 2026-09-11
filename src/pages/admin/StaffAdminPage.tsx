@@ -269,13 +269,18 @@ export function StaffAdminPage() {
     })
 
     if (!error && data.user) {
-      // Upsert profile while new user's session is active (passes RLS)
-      await supabase.from('profiles').upsert({
+      // All profile writes run while signed in as the new user (passes RLS on own row)
+      const profilePayload: Record<string, unknown> = {
         id: data.user.id,
         email: form.email,
         full_name: form.full_name,
         role: form.role,
-      })
+      }
+      if (form.enrollOnboarding) {
+        profilePayload.onboarding_required = true
+        profilePayload.onboarding_status = 'not_started'
+      }
+      await supabase.from('profiles').upsert(profilePayload)
     }
 
     // Always restore director's session
@@ -287,19 +292,15 @@ export function StaffAdminPage() {
     }
 
     if (!error && data.user) {
-      // Enrol in onboarding if requested — runs as director so RLS passes
+      // Enrollment insert runs as director (enrolled_by = director's id)
       if (form.enrollOnboarding) {
-        await supabase.from('profiles').update({
-          onboarding_required: true,
-          onboarding_status: 'not_started',
-        }).eq('id', data.user.id)
-
         await supabase.from('onboarding_enrollments').insert({
           staff_id: data.user.id,
           enrolled_by: profile!.id,
           status: 'not_started',
           enrollment_type: 'initial',
           enrolled_at: new Date().toISOString(),
+          last_activity_at: new Date().toISOString(),
         })
       }
 
