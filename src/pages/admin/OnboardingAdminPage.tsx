@@ -527,8 +527,30 @@ function StaffRow({ staff, stages, actorId, actorRole, onRefresh }: {
     onRefresh()
   }
 
+  async function resetToInProgress() {
+    if (!confirm(`Reset ${staff.full_name}'s onboarding to In Progress? They will be sent back to the onboarding flow on next login.`)) return
+    setSaving(true)
+    await Promise.all([
+      supabase.from('onboarding_enrollments').update({
+        status: 'in_progress',
+        activated_at: null,
+        activated_by: null,
+        activation_recommended_by: null,
+        activation_recommended_at: null,
+      }).eq('id', e.id),
+      supabase.from('profiles').update({
+        onboarding_required: true,
+        onboarding_status: 'in_progress',
+      }).eq('id', staff.id),
+      writeLog('enrollment_reset_to_in_progress', { previous_status: e.status }),
+    ])
+    setSaving(false)
+    onRefresh()
+  }
+
   const canRecommend = isAreaLead && e.status !== 'active' && e.status !== 'withdrawn' && !e.activation_recommended_by
   const canActivate = isDirector && e.activation_recommended_by != null && e.status !== 'active' && e.status !== 'withdrawn'
+  const canReset = isDirector && e.status === 'active' && e.learning_completion_pct < 100
   const isOnHold = e.status === 'on_hold'
   const isWithdrawn = e.status === 'withdrawn' || e.status === 'inactive'
 
@@ -701,6 +723,15 @@ function StaffRow({ staff, stages, actorId, actorRole, onRefresh }: {
             {/* Actions */}
             {!isWithdrawn && (
               <div className="flex flex-wrap gap-2">
+                {canReset && (
+                  <button
+                    onClick={resetToInProgress}
+                    disabled={saving}
+                    className="px-3 py-2 bg-orange-50 text-orange-700 border border-orange-200 rounded-xl text-xs font-bold hover:bg-orange-100 transition-colors disabled:opacity-50"
+                  >
+                    Reset to In Progress
+                  </button>
+                )}
                 {canActivate && (
                   <button
                     onClick={activate}
