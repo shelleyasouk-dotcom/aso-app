@@ -19,7 +19,7 @@ interface TaskAssignment {
   id: string
   task_id: string
   status: string
-  task: { stage_id: string } | null
+  task: { stage_id: string; is_mandatory: boolean } | null
 }
 
 interface Enrollment {
@@ -134,39 +134,71 @@ export function OnboardingDashboardPage() {
     ])
 
     const enroll: Enrollment | null = enrollRows?.[0] ?? null
+    const stages = stageRows ?? []
 
-    // Auto-activate: if training is 100% complete and the account is still gated,
-    // unlock it and hard-redirect to the main app.
-    // Hard redirect (window.location.replace) is essential — a soft navigate()
-    // reads the stale in-memory profile and ProtectedRoute bounces them back.
-    if (enroll && enroll.learning_completion_pct >= 100 &&
-        !['active', 'not_required'].includes(enroll.status)) {
-      const now = new Date().toISOString()
-      await Promise.all([
-        supabase.from('profiles').update({
-          onboarding_required: false,
-          onboarding_status: 'active',
-        }).eq('id', profile.id),
-        supabase.from('onboarding_enrollments').update({
-          status: 'active',
-          activated_at: now,
-        }).eq('id', enroll.id),
+    if (enroll && !['active', 'not_required'].includes(enroll.status)) {
+      // Load assignments and total mandatory task count in parallel so we can
+      // run a client-side completion check that doesn't rely solely on the DB trigger.
+      const qualifyingStageIds = stages
+        .filter(s => !s.exclude_from_pct)
+        .map(s => s.id)
+
+      const [{ data: assignRows }, { count: totalMandatory }] = await Promise.all([
+        supabase
+          .from('onboarding_task_assignments')
+          .select('id, task_id, status, task:onboarding_tasks!task_id(stage_id, is_mandatory)')
+          .eq('enrollment_id', enroll.id),
+        qualifyingStageIds.length > 0
+          ? supabase
+              .from('onboarding_tasks')
+              .select('id', { count: 'exact', head: true })
+              .eq('is_mandatory', true)
+              .eq('is_active', true)
+              .in('stage_id', qualifyingStageIds)
+          : Promise.resolve({ count: 0, data: null, error: null }),
       ])
-      window.location.replace('/dashboard')
+
+      const typedAssignments = (assignRows as unknown as TaskAssignment[]) ?? []
+
+      const completedMandatory = typedAssignments.filter(
+        a => ['completed', 'approved'].includes(a.status) &&
+             a.task?.is_mandatory === true &&
+             qualifyingStageIds.includes(a.task.stage_id)
+      ).length
+
+      // Auto-activate: if training is fully complete and the account is still gated.
+      // Uses both the DB-computed pct AND a client-side count as a fallback.
+      // Hard redirect (window.location.replace) is essential — a soft navigate()
+      // reads the stale in-memory profile and ProtectedRoute bounces them back.
+      const dbSaysComplete = enroll.learning_completion_pct >= 100
+      const clientSaysComplete = (totalMandatory ?? 0) > 0 && completedMandatory >= (totalMandatory ?? 0)
+
+      if (dbSaysComplete || clientSaysComplete) {
+        const now = new Date().toISOString()
+        await Promise.all([
+          supabase.from('profiles').update({
+            onboarding_required: false,
+            onboarding_status: 'active',
+          }).eq('id', profile.id),
+          supabase.from('onboarding_enrollments').update({
+            status: 'active',
+            activated_at: now,
+            learning_completion_pct: 100,
+          }).eq('id', enroll.id),
+        ])
+        window.location.replace('/dashboard')
+        return
+      }
+
+      setEnrollment(enroll)
+      setStages(stages)
+      setAssignments(typedAssignments)
+      setLoading(false)
       return
     }
 
     setEnrollment(enroll)
-    setStages(stageRows ?? [])
-
-    if (enroll) {
-      const { data: assignRows } = await supabase
-        .from('onboarding_task_assignments')
-        .select('id, task_id, status, task:onboarding_tasks!task_id(stage_id)')
-        .eq('enrollment_id', enroll.id)
-      setAssignments((assignRows as unknown as TaskAssignment[]) ?? [])
-    }
-
+    setStages(stages)
     setLoading(false)
   }
 

@@ -24,6 +24,12 @@ export function QuizTask({ task, assignment, onComplete, onRefresh }: TaskCompon
     }
   }, [])
 
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current)
+    }
+  }, [])
+
   function startRetryCountdown(seconds: number) {
     setRetryCountdown(seconds)
     if (countdownRef.current) clearInterval(countdownRef.current)

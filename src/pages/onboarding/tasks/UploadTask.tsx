@@ -111,6 +111,7 @@ export function UploadTask({ task, assignment, enrollment: _enrollment, profileI
         uploaded_by: profileId,
         issued_date: issueDate || null,
         expiry_date: expiryDate || null,
+        completion_date: completionDate || null,
         training_provider: provider || null,
         course_name: certNumber || null,
         onboarding_task_assignment_id: assignment.id,
