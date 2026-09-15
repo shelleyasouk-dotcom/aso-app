@@ -3,13 +3,259 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import {
   Target, Lightbulb, Users, Shield, BookMarked, ChevronDown, ChevronUp,
   Clock, CheckCircle, Dumbbell, Star, PartyPopper, TriangleAlert,
-  Camera, X, Send, Edit2, Lock, GraduationCap,
+  Camera, X, Send, Edit2, Lock, GraduationCap, Download, Share2, Loader2,
 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { LESSON_PLANS } from '../../data/lessonPlans'
 import type { SessionFeedback, School, AcademicSemester } from '../../types'
+import type { WeeklyLessonPlan } from '../../data/lessonPlans'
+
+async function downloadLessonPlanPDF(plan: WeeklyLessonPlan, semesterLabel: string) {
+  const { jsPDF } = await import('jspdf')
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+
+  const pageW = pdf.internal.pageSize.getWidth()
+  const pageH = pdf.internal.pageSize.getHeight()
+  const margin = 14
+  const contentW = pageW - margin * 2
+  let y = 0
+
+  const PRIMARY = '#1a3a6b'
+  const ACCENT = '#f5c518'
+
+  function hexToRgb(hex: string) {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return { r, g, b }
+  }
+
+  function checkPage(needed = 10) {
+    if (y + needed > pageH - 14) { pdf.addPage(); y = 20 }
+  }
+
+  function sectionHeader(title: string) {
+    checkPage(12)
+    const c = hexToRgb(PRIMARY)
+    pdf.setFillColor(c.r, c.g, c.b)
+    pdf.rect(margin, y, contentW, 7, 'F')
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(9)
+    pdf.setTextColor(255, 255, 255)
+    pdf.text(title.toUpperCase(), margin + 3, y + 5)
+    pdf.setTextColor(0, 0, 0)
+    y += 11
+  }
+
+  function bullet(text: string, indent = margin + 3, prefix = '•') {
+    checkPage(7)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(8.5)
+    pdf.setTextColor(55, 65, 81)
+    const lines = pdf.splitTextToSize(`${prefix} ${text}`, contentW - (indent - margin) - 2)
+    pdf.text(lines, indent, y)
+    y += lines.length * 4.5
+  }
+
+  function bodyText(text: string, indent = margin) {
+    checkPage(7)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(8.5)
+    pdf.setTextColor(55, 65, 81)
+    const lines = pdf.splitTextToSize(text, contentW - (indent - margin))
+    pdf.text(lines, indent, y)
+    y += lines.length * 4.5
+  }
+
+  function label(text: string) {
+    checkPage(6)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(8)
+    pdf.setTextColor(107, 114, 128)
+    pdf.text(text.toUpperCase(), margin, y)
+    y += 5
+  }
+
+  function gap(n = 4) { y += n }
+
+  // ── Header ─────────────────────────────────────────────────────────────────
+  const hc = hexToRgb(PRIMARY)
+  pdf.setFillColor(hc.r, hc.g, hc.b)
+  pdf.rect(0, 0, pageW, 32, 'F')
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(7)
+  const ac = hexToRgb(ACCENT)
+  pdf.setTextColor(ac.r, ac.g, ac.b)
+  pdf.text('ACTIVE SCHOOL ORGANISATION', margin, 10)
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(15)
+  pdf.setTextColor(255, 255, 255)
+  pdf.text(`Week ${plan.week} — ${plan.theme}`, margin, 20)
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(9)
+  pdf.setTextColor(255, 255, 255, 0.7)
+  pdf.text(`${plan.focus}  ·  ${plan.duration}  ·  ${semesterLabel}`, margin, 27)
+  y = 40
+
+  // ── Session Overview ────────────────────────────────────────────────────────
+  sectionHeader('Session Overview')
+  for (const stage of plan.overview) {
+    checkPage(14)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(8.5)
+    pdf.setTextColor(26, 58, 107)
+    pdf.text(`${stage.stage}  (${stage.time})`, margin, y)
+    y += 5
+    bodyText(stage.description)
+    if (stage.coachFocus) {
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(8)
+      pdf.setTextColor(107, 114, 128)
+      const lines = pdf.splitTextToSize(stage.coachFocus, contentW)
+      pdf.text(lines, margin, y)
+      y += lines.length * 4.5
+    }
+    gap(3)
+  }
+
+  // ── Objectives ─────────────────────────────────────────────────────────────
+  gap(2)
+  sectionHeader('Session Objectives')
+  for (const obj of plan.objectives) bullet(obj)
+  gap(2)
+
+  // ── Ability Guide ──────────────────────────────────────────────────────────
+  if (plan.abilityGuide && plan.abilityGuide.length > 0) {
+    sectionHeader('Ability Assessment Guide')
+    for (const tier of plan.abilityGuide) {
+      label(`${tier.label}  (${tier.ukagLevels})`)
+      for (const ind of tier.indicators) bullet(ind, margin + 3)
+      gap(2)
+    }
+  }
+
+  // ── Skill Progressions ─────────────────────────────────────────────────────
+  if (plan.skillProgressions && plan.skillProgressions.length > 0) {
+    sectionHeader('Skill Progressions')
+    for (const prog of plan.skillProgressions) {
+      checkPage(10)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(9)
+      pdf.setTextColor(26, 58, 107)
+      pdf.text(prog.apparatus, margin, y); y += 5
+      if (prog.beginner && prog.beginner.length > 0) { label('Beginner'); for (const s of prog.beginner) bullet(s) }
+      if (prog.intermediate && prog.intermediate.length > 0) { label('Intermediate'); for (const s of prog.intermediate) bullet(s) }
+      if (prog.advanced && prog.advanced.length > 0) { label('Advanced'); for (const s of prog.advanced) bullet(s) }
+      if (!prog.beginner && prog.skills.length > 0) { for (const s of prog.skills) bullet(s) }
+      if (prog.progression) { label('Pathway'); bodyText(prog.progression) }
+      if (prog.coachingCues) { label('Coaching Cues'); bodyText(prog.coachingCues) }
+      gap(3)
+    }
+  }
+
+  // ── Skill Options ──────────────────────────────────────────────────────────
+  if (plan.skillOptions && plan.skillOptions.length > 0) {
+    sectionHeader('Skill Options (Choose 2–3)')
+    for (const opt of plan.skillOptions) {
+      checkPage(10)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(9)
+      pdf.setTextColor(26, 58, 107)
+      pdf.text(opt.apparatus, margin, y); y += 5
+      for (const s of opt.skills) bullet(s)
+      if (opt.progression) { label('Progression'); bodyText(opt.progression) }
+      gap(3)
+    }
+  }
+
+  // ── Circuit Ideas ──────────────────────────────────────────────────────────
+  if (plan.circuitIdeas && plan.circuitIdeas.length > 0) {
+    sectionHeader('Circuit Ideas')
+    for (const circuit of plan.circuitIdeas) {
+      checkPage(10)
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(9)
+      pdf.setTextColor(26, 58, 107)
+      pdf.text(circuit.apparatus, margin, y); y += 5
+      for (const s of circuit.skills) bullet(s)
+      gap(3)
+    }
+  }
+
+  // ── Wall Frame Safety ──────────────────────────────────────────────────────
+  if (plan.wallFrameGuidance) {
+    sectionHeader('Wall Frame Safety')
+    for (const phase of ['before', 'during', 'after'] as const) {
+      label(`${phase} Session`)
+      for (const item of plan.wallFrameGuidance[phase]) bullet(item, margin + 3, '✓')
+      gap(2)
+    }
+  }
+
+  // ── Coaching Focus ─────────────────────────────────────────────────────────
+  sectionHeader('Coaching Focus')
+  for (const point of plan.coachingFocus) bullet(point)
+  gap(2)
+
+  // ── Assistant Roles ────────────────────────────────────────────────────────
+  sectionHeader('Assistant Coach Roles')
+  for (const role of plan.assistantRoles) {
+    checkPage(8)
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(8.5)
+    pdf.setTextColor(55, 65, 81)
+    pdf.text(role.area, margin, y)
+    const lines = pdf.splitTextToSize(role.responsibility, contentW - 40)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setTextColor(107, 114, 128)
+    pdf.text(lines, margin + 38, y)
+    y += Math.max(lines.length * 4.5, 5)
+    gap(1)
+  }
+  gap(2)
+
+  // ── Safety Checklist ───────────────────────────────────────────────────────
+  sectionHeader('Safety Checklist')
+  for (const item of plan.safetyChecklist) bullet(item, margin + 3, '✓')
+  gap(2)
+
+  // ── Coaching Reminders ─────────────────────────────────────────────────────
+  sectionHeader('Coaching Reminders')
+  for (const r of plan.coachingReminders) bullet(r, margin + 3, '→')
+  gap(2)
+
+  // ── Footer ─────────────────────────────────────────────────────────────────
+  const totalPages = (pdf as any).internal.getNumberOfPages()
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(7)
+    pdf.setTextColor(180, 180, 180)
+    pdf.text('www.activeschool.org.uk', margin, pageH - 6)
+    pdf.text(`Page ${i} of ${totalPages}`, pageW - margin, pageH - 6, { align: 'right' })
+    pdf.text('ASO Coaching Session Plan', pageW / 2, pageH - 6, { align: 'center' })
+  }
+
+  // ── Output ─────────────────────────────────────────────────────────────────
+  const fileName = `ASO_Week${plan.week}_${plan.theme.replace(/\s+/g, '_')}_Session_Plan.pdf`
+  const blob = pdf.output('blob')
+
+  if (navigator.share && navigator.canShare) {
+    const file = new File([blob], fileName, { type: 'application/pdf' })
+    if (navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: `Week ${plan.week} Session Plan` })
+      return
+    }
+  }
+  const url = URL.createObjectURL(blob)
+  const opened = window.open(url, '_blank')
+  if (opened) { setTimeout(() => URL.revokeObjectURL(url), 10000); return }
+  const a = document.createElement('a')
+  a.href = url; a.download = fileName; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 5000)
+}
 
 function Section({
   icon: Icon, title, children, defaultOpen = false,
@@ -52,6 +298,7 @@ export function LessonPlanDetailPage() {
   const [activeTab, setActiveTab] = useState<'plan' | 'note' | 'report'>('plan')
   const [editingNote, setEditingNote] = useState(false)
   const [editingReport, setEditingReport] = useState(false)
+  const [downloadingPDF, setDownloadingPDF] = useState(false)
 
   // Coach note form
   const [noteSchoolId, setNoteSchoolId] = useState('')
@@ -237,9 +484,30 @@ export function LessonPlanDetailPage() {
             </div>
             <span className="text-4xl shrink-0">{plan.emoji}</span>
           </div>
-          <span className="flex items-center gap-1 text-xs text-white/60 mt-2">
-            <Clock size={11} /> {plan.duration}
-          </span>
+          <div className="flex items-center justify-between mt-3">
+            <span className="flex items-center gap-1 text-xs text-white/60">
+              <Clock size={11} /> {plan.duration}
+            </span>
+            <button
+              onClick={async () => {
+                setDownloadingPDF(true)
+                const semLabel = semester
+                  ? `${semester.label ?? `Semester ${semester.semester_number}`} · ${semester.academic_year}`
+                  : 'Session Plan'
+                await downloadLessonPlanPDF(plan, semLabel).catch(console.error)
+                setDownloadingPDF(false)
+              }}
+              disabled={downloadingPDF}
+              className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors disabled:opacity-60"
+            >
+              {downloadingPDF
+                ? <><Loader2 size={13} className="animate-spin" /> Generating…</>
+                : typeof navigator !== 'undefined' && !!navigator.share
+                ? <><Share2 size={13} /> Save / Share PDF</>
+                : <><Download size={13} /> Download PDF</>
+              }
+            </button>
+          </div>
         </div>
 
         {/* Archived notice */}
