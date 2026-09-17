@@ -23,6 +23,7 @@ import {
   Dumbbell,
   ClipboardCheck,
   BarChart2,
+  ListChecks,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -82,10 +83,15 @@ export function MyAreaPage() {
     { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-sky-50 text-sky-700' },
     { label: 'Expenses', description: 'Submit travel & mileage', icon: ReceiptText, path: '/expenses', color: 'bg-orange-50 text-orange-700' },
     { label: 'Absences', description: 'Log & manage requests', icon: CalendarOff, path: '/absences', color: 'bg-rose-50 text-rose-700' },
+  ]
+
+  const coachDevBaseTiles: Tile[] = [
+    { label: 'Onboarding', description: 'Staff induction — start here', icon: ListChecks, path: '/onboarding', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
     { label: 'Anaphylaxis Training', description: "Benedict's Law — mandatory for all staff", icon: ShieldAlert, path: '/course/anaphylaxis', color: 'bg-red-50 text-red-700' },
   ]
 
   const juniorCoachTiles: Tile[] = [
+    ...coachDevBaseTiles,
     { label: 'Semester Plans', description: 'Plans & feedback by week', icon: BookOpen, path: '/lesson-plans', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
     { label: 'UKAG Library', description: 'Level 1–6 coaching plans', icon: GraduationCap, path: '/ukag', color: 'bg-violet-50 text-violet-800' },
     { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
@@ -94,6 +100,7 @@ export function MyAreaPage() {
   ]
 
   const coachingTiles: Tile[] = [
+    ...coachDevBaseTiles,
     { label: 'Semester Plans', description: 'Plans & feedback by week', icon: BookOpen, path: '/lesson-plans', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
     { label: 'UKAG Library', description: 'Level 1–6 coaching plans', icon: GraduationCap, path: '/ukag', color: 'bg-violet-50 text-violet-800' },
     { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
@@ -118,23 +125,25 @@ export function MyAreaPage() {
 
   const adminTiles: Tile[] = [
     { label: 'Area Schools', description: 'Schools in your area', icon: School, path: '/admin/area-schools', color: 'bg-sky-50 text-sky-700' },
-    { label: 'DBS Compliance', description: 'Staff DBS & training status', icon: ShieldAlert, path: '/admin/dbs-compliance', color: 'bg-red-50 text-red-700' },
     { label: 'Announcements', description: 'Post & manage updates', icon: Megaphone, path: '/admin/announcements', color: 'bg-pink-50 text-pink-700' },
     { label: 'Admin Panel', description: 'Manage staff & schools', icon: Settings, path: '/admin', color: 'bg-gray-50 text-gray-700' },
   ]
 
   return (
-    <Layout title="Coach Zone">
+    <Layout title="Coaching Development">
       <div className="px-4 pt-6 pb-6 flex flex-col gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-[#1a3a6b]">Coach Zone</h2>
+          <h2 className="text-2xl font-bold text-[#1a3a6b]">Coaching Development</h2>
           <p className="text-sm text-gray-500 mt-0.5">{ROLE_LABELS[role]}</p>
         </div>
 
         <TileSection title="Personal" tiles={personalTiles} />
 
-        {isLead && <TileSection title="Coaching" tiles={coachingTiles} />}
-        {(role === 'assistant_coach' || role === 'junior_coach') && <TileSection title="Coaching" tiles={juniorCoachTiles} />}
+        {isLead && <TileSection title="Coaching Development" tiles={coachingTiles} />}
+        {(role === 'assistant_coach' || role === 'junior_coach') && <TileSection title="Coaching Development" tiles={juniorCoachTiles} />}
+        {!isLead && role !== 'assistant_coach' && role !== 'junior_coach' && (
+          <TileSection title="Coaching Development" tiles={coachDevBaseTiles} />
+        )}
 
         {(isAreaLead || isOutreach) && (
           <TileSection

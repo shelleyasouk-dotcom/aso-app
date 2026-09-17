@@ -54,7 +54,7 @@ export function Layout({ children, title, showBack }: LayoutProps) {
 
   const navItems = [
     { path: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-    { path: '/my-area', icon: LayoutGrid, label: 'Coach Zone' },
+    { path: '/my-area', icon: LayoutGrid, label: 'Development' },
     ...(isDirector ? [{ path: '/messages', icon: Inbox, label: 'Messages' }] : []),
   ]
 

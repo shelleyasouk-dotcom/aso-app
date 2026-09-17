@@ -35,16 +35,6 @@ export function ProtectedRoute({ children, allowedRoles, allowFlag }: ProtectedR
     return <Navigate to="/dashboard" replace />
   }
 
-  // Gate staff who are undergoing onboarding (legacy boolean OR new status string)
-  // /profile is also allowed so staff can complete their profile and sign their contract
-  const onboardingPaths = ['/onboarding', '/profile']
-  const needsOnboarding =
-    profile.onboarding_required === true ||
-    (profile.onboarding_status != null && !['not_required', 'active'].includes(profile.onboarding_status))
-  if (needsOnboarding && !onboardingPaths.some(p => location.pathname.startsWith(p))) {
-    return <Navigate to="/onboarding" replace />
-  }
-
   const flagAllows = allowFlag ? !!profile[allowFlag] : false
   if (allowedRoles && !allowedRoles.includes(profile.role) && !flagAllows) {
     return <Navigate to="/dashboard" replace />
