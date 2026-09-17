@@ -240,6 +240,8 @@ export function CoachProfilePage() {
     dbs_pending: null as boolean | null,
     safeguarding_pending: null as boolean | null,
     first_aid_pending: null as boolean | null,
+    anaphylaxis_expiry: '',
+    anaphylaxis_pending: null as boolean | null,
   })
   const [showFullId, setShowFullId] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -370,6 +372,8 @@ export function CoachProfilePage() {
       dbs_pending: (p as any).dbs_pending ?? null,
       safeguarding_pending: (p as any).safeguarding_pending ?? null,
       first_aid_pending: (p as any).first_aid_pending ?? null,
+      anaphylaxis_expiry: (p as any).anaphylaxis_expiry ?? '',
+      anaphylaxis_pending: (p as any).anaphylaxis_pending ?? null,
     }
     resetFields(serverValues)
   }
@@ -457,6 +461,8 @@ export function CoachProfilePage() {
       dbs_pending: fields.dbs_pending,
       safeguarding_pending: fields.safeguarding_pending,
       first_aid_pending: fields.first_aid_pending,
+      anaphylaxis_expiry: fields.anaphylaxis_expiry || null,
+      anaphylaxis_pending: fields.anaphylaxis_pending,
     } as any).eq('id', targetId)
     if (error) { setSaveError(error.message); setSaving(false); return }
     clearFieldsDraft()
@@ -589,10 +595,11 @@ export function CoachProfilePage() {
     return issued >= cutoff
   }
 
-  const dbsValid         = !!fields.dbs_number
-  const dbsCurrent       = issuedWithin3Years(fields.dbs_expiry)
-  const safeguardCurrent = issuedWithin3Years(fields.safeguarding_expiry)
-  const firstAidCurrent  = issuedWithin3Years(fields.first_aid_expiry)
+  const dbsValid          = !!fields.dbs_number
+  const dbsCurrent        = issuedWithin3Years(fields.dbs_expiry)
+  const safeguardCurrent  = issuedWithin3Years(fields.safeguarding_expiry)
+  const firstAidCurrent   = issuedWithin3Years(fields.first_aid_expiry)
+  const anaphylaxisCurrent = issuedWithin3Years((fields as any).anaphylaxis_expiry)
 
   return (
     <Layout title={isOwnProfile ? 'My Profile' : subject.full_name} showBack>
@@ -697,6 +704,13 @@ export function CoachProfilePage() {
                 label="First Aid Certificate"
                 status={!needsFirstAid ? 'na' : (fields.first_aid_pending ? 'pending' : (firstAidCurrent ? 'yes' : 'no'))}
                 note={!needsFirstAid ? undefined : (fields.first_aid_pending ? 'Awaiting certificate' : (fields.first_aid_expiry ? `Issued ${formatDate(fields.first_aid_expiry)}` : undefined))}
+              />
+
+              {/* Anaphylaxis */}
+              <ComplianceRow
+                label="Anaphylaxis Training"
+                status={(fields as any).anaphylaxis_pending ? 'pending' : (anaphylaxisCurrent ? 'yes' : ((fields as any).anaphylaxis_expiry ? 'no' : 'no'))}
+                note={(fields as any).anaphylaxis_pending ? 'Currently undergoing training' : ((fields as any).anaphylaxis_expiry ? `Completed ${formatDate((fields as any).anaphylaxis_expiry)}` : 'Mandatory for all coaches (Sept 2026)')}
                 last
               />
             </div>
@@ -905,6 +919,18 @@ export function CoachProfilePage() {
                   <span className="text-xs text-gray-500">Currently awaiting / undergoing First Aid</span>
                 </label>
               )}
+              <div className="h-px bg-gray-100 my-1" />
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Anaphylaxis Training</p>
+              <p className="text-xs text-gray-400">Mandatory for all coaches from September 2026</p>
+              {!(fields as any).anaphylaxis_pending ? (
+                <Input label="Anaphylaxis Training Completion Date" type="date" value={(fields as any).anaphylaxis_expiry} onChange={e => setFields({ ...fields, anaphylaxis_expiry: e.target.value } as any)} />
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-700 font-medium">Currently undergoing Anaphylaxis training</div>
+              )}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 rounded accent-amber-500" checked={(fields as any).anaphylaxis_pending === true} onChange={e => setFields({ ...fields, anaphylaxis_pending: e.target.checked || null, anaphylaxis_expiry: e.target.checked ? '' : (fields as any).anaphylaxis_expiry } as any)} />
+                <span className="text-xs text-gray-500">Currently undergoing Anaphylaxis training</span>
+              </label>
               <Button onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
             </div>
           </Card>
