@@ -2,7 +2,63 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle2, Download, Info, AlertTriangle, Lightbulb, Star, FileText, ArrowRight, ExternalLink } from 'lucide-react'
 import { supabase } from '../../../lib/supabase'
-import type { TaskComponentProps, ContentBlock, ContentJson } from '../../../types/onboarding'
+import type { TaskComponentProps, ContentBlock, ContentJson, ProfileFieldsFormBlock } from '../../../types/onboarding'
+
+// ─── Profile fields form (inline save to profiles table) ─────────────────────
+
+function ProfileFieldsForm({ block, profileId }: { block: ProfileFieldsFormBlock; profileId: string }) {
+  const initialValues = Object.fromEntries(block.fields.map(f => [f.key, '']))
+  const [values, setValues] = useState<Record<string, string>>(initialValues)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSave() {
+    setSaving(true)
+    setError(null)
+    const payload = Object.fromEntries(
+      block.fields.map(f => [f.key, values[f.key] || null])
+    )
+    const { error: err } = await supabase.from('profiles').update(payload as any).eq('id', profileId)
+    setSaving(false)
+    if (err) { setError(err.message); return }
+    setSaved(true)
+  }
+
+  const anyFilled = block.fields.some(f => values[f.key])
+
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-2xl px-4 py-4 flex flex-col gap-3">
+      {block.title && <p className="text-sm font-bold text-[#1a3a6b]">{block.title}</p>}
+      {block.subtitle && <p className="text-xs text-gray-500 leading-relaxed">{block.subtitle}</p>}
+      {block.fields.map(f => (
+        <div key={f.key} className="flex flex-col gap-1">
+          <label className="text-xs font-semibold text-gray-600">{f.label}</label>
+          <input
+            type={f.inputType}
+            placeholder={f.placeholder}
+            value={values[f.key]}
+            onChange={e => { setValues(prev => ({ ...prev, [f.key]: e.target.value })); setSaved(false) }}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#1a3a6b]"
+          />
+        </div>
+      ))}
+      {error && <p className="text-xs text-red-600">{error}</p>}
+      {saved && (
+        <div className="flex items-center gap-2 text-green-700 text-xs font-semibold">
+          <CheckCircle2 size={13} /> Saved to your profile
+        </div>
+      )}
+      <button
+        onClick={anyFilled && !saving ? handleSave : undefined}
+        disabled={!anyFilled || saving}
+        className={`w-full rounded-xl py-3 text-sm font-bold transition-colors ${anyFilled && !saving ? 'bg-[#1a3a6b] text-white' : 'bg-gray-100 text-gray-400'}`}
+      >
+        {saving ? 'Saving…' : 'Save to my profile'}
+      </button>
+    </div>
+  )
+}
 
 // ─── Content block renderer ───────────────────────────────────────────────────
 
@@ -12,9 +68,10 @@ interface ContentBlockRendererProps {
   onAckChange: (id: string, checked: boolean) => void
   readOnly?: boolean
   onNavigate?: (route: string) => void
+  profileId?: string
 }
 
-function ContentBlockRenderer({ block, ackStates, onAckChange, readOnly, onNavigate }: ContentBlockRendererProps) {
+function ContentBlockRenderer({ block, ackStates, onAckChange, readOnly, onNavigate, profileId }: ContentBlockRendererProps) {
   switch (block.type) {
     case 'heading': {
       const { level, text } = block
@@ -154,6 +211,10 @@ function ContentBlockRenderer({ block, ackStates, onAckChange, readOnly, onNavig
       )
     }
 
+    case 'profile_fields_form':
+      if (!profileId) return null
+      return <ProfileFieldsForm block={block as ProfileFieldsFormBlock} profileId={profileId} />
+
     default:
       return null
   }
@@ -161,7 +222,7 @@ function ContentBlockRenderer({ block, ackStates, onAckChange, readOnly, onNavig
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskComponentProps) {
+export function ContentTask({ task, assignment, onComplete, onRefresh, profileId }: TaskComponentProps) {
   const navigate = useNavigate()
   const contentJson: ContentJson | null = task.content_json
   const blocks: ContentBlock[] = contentJson?.blocks ?? []
@@ -261,6 +322,7 @@ export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskCom
               onAckChange={() => {}}
               readOnly
               onNavigate={navigateToRoute}
+              profileId={profileId}
             />
           ))}
         </div>
@@ -298,6 +360,7 @@ export function ContentTask({ task, assignment, onComplete, onRefresh }: TaskCom
             ackStates={ackStates}
             onAckChange={handleAckChange}
             onNavigate={navigateToRoute}
+            profileId={profileId}
           />
         ))}
 

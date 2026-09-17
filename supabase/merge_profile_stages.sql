@@ -44,7 +44,7 @@ SET
       {"id":"11","order":11,"type":"bullet_list","items":["Conditions that may affect your physical ability during sessions","Allergies — including any epi-pen requirements","Any condition that may affect your response in an emergency"]},
       {"id":"12","order":12,"type":"callout","variant":"warning","title":"Update us if things change","text":"If your emergency contact details or medical information changes at any point during your employment, you must inform your Area Lead straight away. Keeping this current is your responsibility."},
 
-      {"id":"13","order":13,"type":"cta_button","text":"Open My Details →","route":"/profile?tab=details"},
+      {"id":"13","order":13,"type":"cta_button","label":"Open My Details →","route":"/profile?tab=details"},
 
       {"id":"14","order":14,"type":"acknowledgement","prompt":"I have completed my personal profile including my contact details, emergency contacts, and any relevant medical information. I understand I must keep this up to date throughout my employment."}
     ]

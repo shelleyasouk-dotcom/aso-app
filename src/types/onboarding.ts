@@ -15,10 +15,19 @@ export interface ScenarioBlock      extends BaseBlock { type: 'scenario';       
 export interface AcknowledgementBlock extends BaseBlock { type: 'acknowledgement'; prompt: string }
 export interface CtaButtonBlock     extends BaseBlock { type: 'cta_button';    label: string; route: string }
 
+export interface ProfileFieldsFormField { key: string; label: string; inputType: 'text' | 'date'; placeholder?: string }
+export interface ProfileFieldsFormBlock extends BaseBlock {
+  type: 'profile_fields_form'
+  title?: string
+  subtitle?: string
+  fields: ProfileFieldsFormField[]
+}
+
 export type ContentBlock =
   | HeadingBlock | ParagraphBlock | BulletListBlock | NumberedListBlock
   | ImageBlock | VideoBlock | CalloutBlock | DownloadableBlock
   | DividerBlock | ScenarioBlock | AcknowledgementBlock | CtaButtonBlock
+  | ProfileFieldsFormBlock
 // Note: ContentJson.blocks may contain future unknown types at runtime.
 // The renderer's default case handles them gracefully; TypeScript trusts the cast.
 
