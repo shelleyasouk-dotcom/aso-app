@@ -543,7 +543,11 @@ export function CoachProfilePage() {
     setConfirmDeleteDocId(null)
   }
 
-  const [activeTab, setActiveTab] = useState<'id' | 'compliance' | 'details' | 'contract' | 'documents'>('id')
+  const validTabs = ['id', 'compliance', 'details', 'contract', 'documents'] as const
+  const tabParam = new URLSearchParams(location.search).get('tab')
+  const [activeTab, setActiveTab] = useState<'id' | 'compliance' | 'details' | 'contract' | 'documents'>(
+    validTabs.includes(tabParam as typeof validTabs[number]) ? (tabParam as typeof validTabs[number]) : 'id'
+  )
 
   const TABS: { key: typeof activeTab; label: string }[] = [
     { key: 'id',          label: 'ID Card' },

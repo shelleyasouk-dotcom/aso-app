@@ -122,7 +122,7 @@ export function OnboardingTaskPage() {
     if (nextTaskId) {
       navigate(`/onboarding/stage/${stageId}/task/${nextTaskId}`)
     } else {
-      goBack()
+      navigate('/onboarding')
     }
   }
 
