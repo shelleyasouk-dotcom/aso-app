@@ -55,11 +55,12 @@ export function OnboardingTaskPage() {
     setTask(taskRow as OnboardingTask)
     setEnrollment(enrollRow as OnboardingEnrollment)
 
-    // Compute next task in this stage for auto-advance
+    // Compute next task in this stage for auto-advance (active tasks only)
     const { data: stageTasks } = await supabase
       .from('onboarding_tasks')
       .select('id')
       .eq('stage_id', taskRow.stage_id)
+      .eq('is_active', true)
       .order('display_order', { ascending: true })
     const idx = (stageTasks ?? []).findIndex(t => t.id === taskId)
     setNextTaskId(idx >= 0 && idx < (stageTasks ?? []).length - 1 ? (stageTasks![idx + 1].id) : null)
