@@ -537,6 +537,7 @@ function StaffRow({ staff, stages, actorId, actorRole, onRefresh }: {
         activated_by: null,
         activation_recommended_by: null,
         activation_recommended_at: null,
+        learning_completion_pct: 0,
       }).eq('id', e.id),
       supabase.from('profiles').update({
         onboarding_required: true,
@@ -550,7 +551,7 @@ function StaffRow({ staff, stages, actorId, actorRole, onRefresh }: {
 
   const canRecommend = isAreaLead && e.status !== 'active' && e.status !== 'withdrawn' && !e.activation_recommended_by
   const canActivate = isDirector && e.activation_recommended_by != null && e.status !== 'active' && e.status !== 'withdrawn'
-  const canReset = isDirector && e.status === 'active' && e.learning_completion_pct < 100
+  const canReset = isDirector && e.status === 'active'
   const isOnHold = e.status === 'on_hold'
   const isWithdrawn = e.status === 'withdrawn' || e.status === 'inactive'
 
