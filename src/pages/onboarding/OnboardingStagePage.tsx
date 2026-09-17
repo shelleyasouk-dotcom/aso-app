@@ -82,7 +82,7 @@ export function OnboardingStagePage() {
       supabase.from('onboarding_stages').select('id, title, description').eq('id', stageId).single(),
       supabase.from('onboarding_tasks')
         .select('id, title, type, display_order, is_mandatory')
-        .eq('stage_id', stageId).eq('is_active', true).order('display_order'),
+        .eq('stage_id', stageId).eq('is_active', true).neq('type', 'quiz').order('display_order'),
       supabase.from('onboarding_enrollments')
         .select('id').eq('staff_id', profile.id).eq('enrollment_type', 'initial')
         .order('created_at', { ascending: false }).limit(1).maybeSingle(),

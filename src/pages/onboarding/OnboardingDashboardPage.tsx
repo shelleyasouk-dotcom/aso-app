@@ -154,6 +154,7 @@ export function OnboardingDashboardPage() {
               .select('id', { count: 'exact', head: true })
               .eq('is_mandatory', true)
               .eq('is_active', true)
+              .neq('type', 'quiz')
               .in('stage_id', qualifyingStageIds)
           : Promise.resolve({ count: 0, data: null, error: null }),
       ])
