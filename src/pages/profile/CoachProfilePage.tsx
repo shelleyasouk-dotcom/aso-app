@@ -194,14 +194,15 @@ function DocRow({ doc, canDelete, onView, onDelete }: {
 
 function ComplianceRow({ label, status, note, last }: {
   label: string
-  status: 'yes' | 'no' | 'na'
+  status: 'yes' | 'no' | 'na' | 'pending'
   note?: string
   last?: boolean
 }) {
   const chip = {
-    yes: { text: 'YES', cls: 'bg-green-500 text-white' },
-    no:  { text: 'NO',  cls: 'bg-red-500 text-white' },
-    na:  { text: 'N/A', cls: 'bg-white/20 text-white/60' },
+    yes:     { text: 'YES',     cls: 'bg-green-500 text-white' },
+    no:      { text: 'NO',      cls: 'bg-red-500 text-white' },
+    na:      { text: 'N/A',     cls: 'bg-white/20 text-white/60' },
+    pending: { text: 'PENDING', cls: 'bg-amber-400 text-amber-900' },
   }[status]
 
   return (
@@ -236,6 +237,9 @@ export function CoachProfilePage() {
     safeguarding_expiry: '',
     first_aid_expiry: '',
     requires_first_aid: null as boolean | null,
+    dbs_pending: null as boolean | null,
+    safeguarding_pending: null as boolean | null,
+    first_aid_pending: null as boolean | null,
   })
   const [showFullId, setShowFullId] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -363,6 +367,9 @@ export function CoachProfilePage() {
       safeguarding_expiry: p.safeguarding_expiry ?? '',
       first_aid_expiry: p.first_aid_expiry ?? '',
       requires_first_aid: (p as any).requires_first_aid ?? null,
+      dbs_pending: (p as any).dbs_pending ?? null,
+      safeguarding_pending: (p as any).safeguarding_pending ?? null,
+      first_aid_pending: (p as any).first_aid_pending ?? null,
     }
     resetFields(serverValues)
   }
@@ -447,6 +454,9 @@ export function CoachProfilePage() {
       safeguarding_expiry: fields.safeguarding_expiry || null,
       first_aid_expiry: fields.first_aid_expiry || null,
       requires_first_aid: fields.requires_first_aid,
+      dbs_pending: fields.dbs_pending,
+      safeguarding_pending: fields.safeguarding_pending,
+      first_aid_pending: fields.first_aid_pending,
     } as any).eq('id', targetId)
     if (error) { setSaveError(error.message); setSaving(false); return }
     clearFieldsDraft()
@@ -568,7 +578,8 @@ export function CoachProfilePage() {
 
   const initials = subject.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 
-  const needsFirstAid = fields.requires_first_aid === true
+  const needsFirstAid = fields.requires_first_aid === true ||
+    (fields.requires_first_aid === null && subject?.role === 'lead_coach')
 
   function issuedWithin3Years(dateStr: string | null | undefined) {
     if (!dateStr) return false
@@ -668,16 +679,24 @@ export function CoachProfilePage() {
               <ComplianceRow label="Enhanced DBS Checked" status={dbsValid ? 'yes' : 'no'} />
 
               {/* DBS up to date */}
-              <ComplianceRow label="DBS Up to Date" status={dbsCurrent ? 'yes' : (fields.dbs_expiry ? 'no' : 'no')} note={fields.dbs_expiry ? `Issued ${formatDate(fields.dbs_expiry)}` : undefined} />
+              <ComplianceRow
+                label="DBS Up to Date"
+                status={fields.dbs_pending ? 'pending' : (dbsCurrent ? 'yes' : (fields.dbs_expiry ? 'no' : 'no'))}
+                note={fields.dbs_pending ? 'Awaiting certificate' : (fields.dbs_expiry ? `Issued ${formatDate(fields.dbs_expiry)}` : undefined)}
+              />
 
               {/* Safeguarding */}
-              <ComplianceRow label="Safeguarding Certificate" status={safeguardCurrent ? 'yes' : (fields.safeguarding_expiry ? 'no' : 'no')} note={fields.safeguarding_expiry ? `Issued ${formatDate(fields.safeguarding_expiry)}` : undefined} />
+              <ComplianceRow
+                label="Safeguarding Certificate"
+                status={fields.safeguarding_pending ? 'pending' : (safeguardCurrent ? 'yes' : (fields.safeguarding_expiry ? 'no' : 'no'))}
+                note={fields.safeguarding_pending ? 'Awaiting certificate' : (fields.safeguarding_expiry ? `Issued ${formatDate(fields.safeguarding_expiry)}` : undefined)}
+              />
 
               {/* First Aid */}
               <ComplianceRow
                 label="First Aid Certificate"
-                status={needsFirstAid ? (firstAidCurrent ? 'yes' : 'no') : 'na'}
-                note={needsFirstAid && fields.first_aid_expiry ? `Issued ${formatDate(fields.first_aid_expiry)}` : undefined}
+                status={!needsFirstAid ? 'na' : (fields.first_aid_pending ? 'pending' : (firstAidCurrent ? 'yes' : 'no'))}
+                note={!needsFirstAid ? undefined : (fields.first_aid_pending ? 'Awaiting certificate' : (fields.first_aid_expiry ? `Issued ${formatDate(fields.first_aid_expiry)}` : undefined))}
                 last
               />
             </div>
@@ -842,10 +861,26 @@ export function CoachProfilePage() {
               <div className="h-px bg-gray-100 my-1" />
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">DBS</p>
               <Input label="DBS Certificate Number" placeholder="e.g. 001234567890" value={fields.dbs_number} onChange={e => setFields({ ...fields, dbs_number: e.target.value })} />
-              <Input label="DBS Date of Issue" type="date" value={fields.dbs_expiry} onChange={e => setFields({ ...fields, dbs_expiry: e.target.value })} />
+              {!fields.dbs_pending ? (
+                <Input label="DBS Date of Issue" type="date" value={fields.dbs_expiry} onChange={e => setFields({ ...fields, dbs_expiry: e.target.value })} />
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-700 font-medium">Currently awaiting DBS certificate</div>
+              )}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 rounded accent-amber-500" checked={fields.dbs_pending === true} onChange={e => setFields({ ...fields, dbs_pending: e.target.checked || null, dbs_expiry: e.target.checked ? '' : fields.dbs_expiry })} />
+                <span className="text-xs text-gray-500">Currently awaiting / undergoing DBS</span>
+              </label>
               <div className="h-px bg-gray-100 my-1" />
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Safeguarding</p>
-              <Input label="Safeguarding Certificate Date of Issue" type="date" value={fields.safeguarding_expiry} onChange={e => setFields({ ...fields, safeguarding_expiry: e.target.value })} />
+              {!fields.safeguarding_pending ? (
+                <Input label="Safeguarding Certificate Date of Issue" type="date" value={fields.safeguarding_expiry} onChange={e => setFields({ ...fields, safeguarding_expiry: e.target.value })} />
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-700 font-medium">Currently awaiting Safeguarding certificate</div>
+              )}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" className="w-4 h-4 rounded accent-amber-500" checked={fields.safeguarding_pending === true} onChange={e => setFields({ ...fields, safeguarding_pending: e.target.checked || null, safeguarding_expiry: e.target.checked ? '' : fields.safeguarding_expiry })} />
+                <span className="text-xs text-gray-500">Currently awaiting / undergoing Safeguarding</span>
+              </label>
               <div className="h-px bg-gray-100 my-1" />
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">First Aid</p>
               <button
@@ -853,13 +888,22 @@ export function CoachProfilePage() {
                 onClick={() => setFields({ ...fields, requires_first_aid: fields.requires_first_aid === true ? false : true })}
                 className="flex items-center gap-3 py-2"
               >
-                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${fields.requires_first_aid === true ? 'bg-[#1a3a6b]' : 'bg-gray-200'}`}>
-                  <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${fields.requires_first_aid === true ? 'translate-x-5' : 'translate-x-0'}`} />
+                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${needsFirstAid ? 'bg-[#1a3a6b]' : 'bg-gray-200'}`}>
+                  <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${needsFirstAid ? 'translate-x-5' : 'translate-x-0'}`} />
                 </div>
-                <span className="text-sm text-gray-700">I require a First Aid certificate (coaches aged 18+)</span>
+                <span className="text-sm text-gray-700">First Aid required (Lead Coaches only)</span>
               </button>
-              {fields.requires_first_aid === true && (
+              {needsFirstAid && !fields.first_aid_pending && (
                 <Input label="First Aid Certificate Date of Issue" type="date" value={fields.first_aid_expiry} onChange={e => setFields({ ...fields, first_aid_expiry: e.target.value })} />
+              )}
+              {needsFirstAid && fields.first_aid_pending && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-700 font-medium">Currently awaiting First Aid certificate</div>
+              )}
+              {needsFirstAid && (
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" className="w-4 h-4 rounded accent-amber-500" checked={fields.first_aid_pending === true} onChange={e => setFields({ ...fields, first_aid_pending: e.target.checked || null, first_aid_expiry: e.target.checked ? '' : fields.first_aid_expiry })} />
+                  <span className="text-xs text-gray-500">Currently awaiting / undergoing First Aid</span>
+                </label>
               )}
               <Button onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
             </div>
