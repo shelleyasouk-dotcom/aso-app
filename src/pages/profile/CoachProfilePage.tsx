@@ -235,6 +235,7 @@ export function CoachProfilePage() {
     dbs_expiry: '',
     safeguarding_expiry: '',
     first_aid_expiry: '',
+    requires_first_aid: null as boolean | null,
   })
   const [showFullId, setShowFullId] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -361,6 +362,7 @@ export function CoachProfilePage() {
       dbs_expiry: p.dbs_expiry ?? '',
       safeguarding_expiry: p.safeguarding_expiry ?? '',
       first_aid_expiry: p.first_aid_expiry ?? '',
+      requires_first_aid: (p as any).requires_first_aid ?? null,
     }
     resetFields(serverValues)
   }
@@ -444,7 +446,8 @@ export function CoachProfilePage() {
       dbs_expiry: fields.dbs_expiry || null,
       safeguarding_expiry: fields.safeguarding_expiry || null,
       first_aid_expiry: fields.first_aid_expiry || null,
-    }).eq('id', targetId)
+      requires_first_aid: fields.requires_first_aid,
+    } as any).eq('id', targetId)
     if (error) { setSaveError(error.message); setSaving(false); return }
     clearFieldsDraft()
     if (isOwnProfile && refreshProfile) await refreshProfile()
@@ -565,8 +568,7 @@ export function CoachProfilePage() {
 
   const initials = subject.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 
-  const COACHING_ROLES = ['director', 'area_lead', 'lead_coach', 'assistant_coach', 'junior_coach']
-  const needsFirstAid = COACHING_ROLES.includes(subject.role)
+  const needsFirstAid = fields.requires_first_aid === true
 
   function issuedWithin3Years(dateStr: string | null | undefined) {
     if (!dateStr) return false
@@ -846,7 +848,19 @@ export function CoachProfilePage() {
               <Input label="Safeguarding Certificate Date of Issue" type="date" value={fields.safeguarding_expiry} onChange={e => setFields({ ...fields, safeguarding_expiry: e.target.value })} />
               <div className="h-px bg-gray-100 my-1" />
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">First Aid</p>
-              <Input label="First Aid Certificate Date of Issue" type="date" value={fields.first_aid_expiry} onChange={e => setFields({ ...fields, first_aid_expiry: e.target.value })} />
+              <button
+                type="button"
+                onClick={() => setFields({ ...fields, requires_first_aid: fields.requires_first_aid === true ? false : true })}
+                className="flex items-center gap-3 py-2"
+              >
+                <div className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${fields.requires_first_aid === true ? 'bg-[#1a3a6b]' : 'bg-gray-200'}`}>
+                  <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${fields.requires_first_aid === true ? 'translate-x-5' : 'translate-x-0'}`} />
+                </div>
+                <span className="text-sm text-gray-700">I require a First Aid certificate (coaches aged 18+)</span>
+              </button>
+              {fields.requires_first_aid === true && (
+                <Input label="First Aid Certificate Date of Issue" type="date" value={fields.first_aid_expiry} onChange={e => setFields({ ...fields, first_aid_expiry: e.target.value })} />
+              )}
               <Button onClick={saveProfile} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
             </div>
           </Card>

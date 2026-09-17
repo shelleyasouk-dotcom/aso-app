@@ -67,7 +67,10 @@ SET
       {"id":"19","order":19,"type":"bullet_list","items":["UKAG Safeguarding Course — complete via your UKAG profile (see button below)","High Speed Training — Naima will send you a direct link to the Safeguarding in Sport online course once your onboarding is underway"]},
       {"id":"20","order":20,"type":"callout","variant":"info","title":"High Speed Training link","text":"You do not need to book the High Speed Training course yourself. Naima will send you a personalised link once your onboarding is underway. Keep an eye on your email."},
       {"id":"21","order":21,"type":"cta_button","text":"Create your UKAG profile","route":"https://www.ukacademiesofgymnastics.com/"},
-      {"id":"22","order":22,"type":"acknowledgement","prompt":"I have read and understood my safeguarding responsibilities at ASO. I know the correct escalation chain and what to do if a child makes a disclosure."}
+      {"id":"23","order":23,"type":"callout","variant":"info","title":"Record your certificate date","text":"Once you have completed your safeguarding course, go to your Profile → Compliance section and enter the date of issue. Then upload a copy of your certificate in your Documents tab. Naima may ask to verify this before your onboarding is signed off."},
+      {"id":"24","order":24,"type":"cta_button","text":"Update my Compliance record","route":"/profile?tab=compliance"},
+      {"id":"25","order":25,"type":"cta_button","text":"Upload my safeguarding certificate","route":"/profile?tab=documents"},
+      {"id":"22","order":26,"type":"acknowledgement","prompt":"I have read and understood my safeguarding responsibilities at ASO. I know the correct escalation chain and what to do if a child makes a disclosure."}
     ]
   }$j$::jsonb
 WHERE title = 'Safeguarding — Your Responsibilities';
