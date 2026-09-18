@@ -840,7 +840,7 @@ export function CoachProfilePage() {
                 bars:         { emoji: '🏋️', label: 'Bars Coaching CPD',    gradient: 'from-blue-700 to-indigo-700' },
                 beam:         { emoji: '⚖️', label: 'Beam Coaching CPD',    gradient: 'from-amber-500 to-orange-600' },
                 vault:        { emoji: '🏃', label: 'Vault Coaching CPD',   gradient: 'from-green-600 to-teal-700' },
-                area_lead_v1: { emoji: '🗺️', label: 'UKAG Area Lead Award', gradient: 'from-violet-700 to-purple-900' },
+                area_lead_v1: { emoji: '🗺️', label: 'UKAG Super Lead Award', gradient: 'from-violet-700 to-purple-900' },
               }
               return (
                 <div>

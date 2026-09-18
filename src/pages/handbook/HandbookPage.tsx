@@ -152,7 +152,7 @@ export function HandbookPage() {
             You're now part of the Active School Org coaching team. This handbook tells you everything you need to know about working with us — how sessions run, what's expected of you, how to get paid, and what to do when things don't go to plan.
           </p>
           <p className="text-sm font-bold text-[#1a3a6b] mt-3">Read it fully. Keep it. Refer back to it.</p>
-          <p className="text-xs text-gray-500 mt-2">If something isn't covered here, ask your Lead Coach or Area Lead before making a decision. Never guess when it comes to safety or safeguarding.</p>
+          <p className="text-xs text-gray-500 mt-2">If something isn't covered here, ask your Lead Coach or Super Lead before making a decision. Never guess when it comes to safety or safeguarding.</p>
         </div>
 
         {/* Section 1 */}
@@ -174,7 +174,7 @@ export function HandbookPage() {
             <RoleRow role="Junior Coach" age="13–16" pay="£8–10 per session" desc="Assist under supervision. Equipment, engagement, stickers, games." />
             <RoleRow role="Assistant Coach" age="16–18" pay="£15–20 per session" desc="Support small groups, lead warm-ups, assist Lead Coach." />
             <RoleRow role="Lead Coach" age="18+" pay="£30–45 per session" desc="Run the full session. Responsible for safety, register, team, and school relationship." />
-            <RoleRow role="Area Lead" age="18+" pay="Agreed rate" desc="Oversee multiple schools, manage coaches, quality assurance." />
+            <RoleRow role="Super Lead" age="18+" pay="Agreed rate" desc="Oversee multiple schools, manage coaches, quality assurance." />
           </div>
           <Warn text="You are responsible for knowing your role and staying within it. If you are an Assistant Coach, you do not run a session alone. If you are a Junior Coach, you do not manage behaviour independently." />
         </Section>
@@ -193,11 +193,11 @@ export function HandbookPage() {
             'Completed ASO onboarding training',
             'Added to the staff WhatsApp group',
             'Attended one shadow session',
-            'Signed off by your Lead Coach or Area Lead',
+            'Signed off by your Lead Coach or Super Lead',
           ].map(item => <Bullet key={item} text={item} />)}
           <SubHeading text="Lead Coaches Only — Additional Requirement" />
           <Bullet text="Valid Paediatric First Aid certificate uploaded" />
-          <Warn text="You may not attend a session independently until every item above is ticked and confirmed by your Area Lead." />
+          <Warn text="You may not attend a session independently until every item above is ticked and confirmed by your Super Lead." />
         </Section>
 
         {/* Section 4 */}
@@ -243,7 +243,7 @@ export function HandbookPage() {
           <Step n={5} text="Complete the Daily Risk Assessment (paper or digital form)" />
           <Step n={6} text="Set up equipment according to that week's station rotation" />
           <Step n={7} text="Be ready and positioned at the hall entrance when children arrive" />
-          <Warn text="If something is wrong with the space (wet floor, damaged equipment, no supervision possible) — do not start the session. Call your Lead Coach or Area Lead immediately." />
+          <Warn text="If something is wrong with the space (wet floor, damaged equipment, no supervision possible) — do not start the session. Call your Lead Coach or Super Lead immediately." />
         </Section>
 
         {/* Section 6 */}
@@ -254,12 +254,12 @@ export function HandbookPage() {
           <Step n={2} text="Mark every child present or absent by name" />
           <Step n={3} text="Note any late arrivals and the time they arrived" />
           <Step n={4} text="Note any early collections and who collected the child" />
-          <Step n={5} text="Submit the register to Naima or your Area Lead within 24 hours of the session" />
+          <Step n={5} text="Submit the register to Naima or your Super Lead within 24 hours of the session" />
           <SubHeading text="If a Child Arrives Who Is Not on the Register" />
           <Bullet text="Do not turn them away" />
-          <Bullet text="Contact your Area Lead immediately" />
+          <Bullet text="Contact your Super Lead immediately" />
           <Bullet text="Record their name, time of arrival, and who brought them" />
-          <Bullet text="Do not allow them to participate until you have confirmation from the Area Lead" />
+          <Bullet text="Do not allow them to participate until you have confirmation from the Super Lead" />
         </Section>
 
         {/* Section 7 */}
@@ -277,7 +277,7 @@ export function HandbookPage() {
           <Bullet text="The medical bag must remain courtside and within reach at all times" />
           <Bullet text="It must never be locked away, left in a kit bag, or kept in another room" />
           <Bullet text="If a child needs their epi-pen or medication during the session — use it and call 999 immediately" />
-          <Bullet text="Then notify the Area Lead and parent without delay" />
+          <Bullet text="Then notify the Super Lead and parent without delay" />
           <Bullet text="Record the incident on the Incident Report Form the same day" />
           <SubHeading text="7.3 End of Session — Medical Check Out" />
           <Step n={1} text="Ensure any epi-pens or medication are returned directly to the parent or guardian" />
@@ -307,7 +307,7 @@ export function HandbookPage() {
           <SubHeading text="7.6 Escalation" />
           {[
             { situation: "Child's medication is missing at session start", action: 'Call parent immediately. Do not start session without it.' },
-            { situation: 'Child has a reaction during session', action: 'Use epi-pen if prescribed. Call 999. Call Area Lead. Call parent.' },
+            { situation: 'Child has a reaction during session', action: 'Use epi-pen if prescribed. Call 999. Call Super Lead. Call parent.' },
             { situation: "Unsure about a child's allergy", action: 'Ask the parent before the session. Do not guess.' },
             { situation: 'Snack situation is unclear', action: 'Default to no snacks in the hall. Always the safer option.' },
             { situation: 'Any medical incident occurs', action: 'Complete Incident Report Form the same day.' },
@@ -327,7 +327,7 @@ export function HandbookPage() {
           <Step n={2} text="Call each child's name individually" />
           <Step n={3} text="Only release a child to a named adult on their contact list — no name, no go" />
           <Step n={4} text="If you do not recognise the adult, ask for their name and check it against the register" />
-          <Step n={5} text="If someone is collecting who is not on the list, call the Area Lead before releasing the child" />
+          <Step n={5} text="If someone is collecting who is not on the list, call the Super Lead before releasing the child" />
           <Step n={6} text="Record any late collections in the register with the exact time" />
           <Step n={7} text="If a parent is more than 15 minutes late, follow the Late Pickup Protocol (Section 12)" />
           <SubHeading text="What Good Looks Like" />
@@ -348,22 +348,22 @@ export function HandbookPage() {
           <Step n={1} text="Contact your Lead Coach by phone call or voice note — not text — as early as possible" />
           <Step n={2} text="This must happen before 9:00am on the day of the session" />
           <Step n={3} text="Your Lead Coach will attempt to find cover from the coaching team" />
-          <Step n={4} text="If no cover is found within one hour, the Lead Coach contacts the Area Lead" />
-          <Step n={5} text="The Area Lead contacts Naima if still unresolved by 12:00pm" />
+          <Step n={4} text="If no cover is found within one hour, the Lead Coach contacts the Super Lead" />
+          <Step n={5} text="The Super Lead contacts Naima if still unresolved by 12:00pm" />
           <Step n={6} text="Naima will inform the school and parents if the session cannot go ahead" />
-          <Note text="If you cannot reach your Lead Coach within 30 minutes, go directly to the Area Lead." />
+          <Note text="If you cannot reach your Lead Coach within 30 minutes, go directly to the Super Lead." />
           <SubHeading text="Rules Around Absence" />
           <Bullet text="One unplanned absence per term is understandable — life happens" />
-          <Bullet text="Two or more unplanned absences in a term will trigger a review with your Area Lead" />
+          <Bullet text="Two or more unplanned absences in a term will trigger a review with your Super Lead" />
           <Bullet text="Three or more may result in removal from the rota" />
           <Bullet text="If you know in advance you cannot attend, give a minimum of 7 days' notice" />
-          <Bullet text="Planned absences must be logged with your Lead Coach and Area Lead in writing" />
+          <Bullet text="Planned absences must be logged with your Lead Coach and Super Lead in writing" />
         </Section>
 
         {/* Section 10 */}
         <Section icon={Timer} title="Section 10 — Logging Your Hours" subtitle="Submit by 5th, paid by 15th">
           <p className="text-sm text-gray-700 pt-2">All coaches must log their hours accurately. This is how you get paid correctly and on time.</p>
-          <Info text="Current system: Monthly Timesheet Template (moving to online logging in 2026). Templates are available from Naima or your Area Lead." />
+          <Info text="Current system: Monthly Timesheet Template (moving to online logging in 2026). Templates are available from Naima or your Super Lead." />
           <SubHeading text="What to Include on Every Timesheet" />
           <Bullet text="Your full name" />
           <Bullet text="School name" />
@@ -400,7 +400,7 @@ export function HandbookPage() {
           <SubHeading text="With Schools" />
           <Bullet text="Always sign in at reception" />
           <Bullet text="Be respectful of the school environment — you are a guest" />
-          <Bullet text="If a teacher raises a concern, listen, thank them, and report it to your Area Lead the same day" />
+          <Bullet text="If a teacher raises a concern, listen, thank them, and report it to your Super Lead the same day" />
           <Bullet text="Do not make commitments on behalf of ASO to school staff" />
           <SubHeading text="On WhatsApp" />
           <Bullet text="The staff WhatsApp group is for work communication only" />
@@ -415,11 +415,11 @@ export function HandbookPage() {
           <Step n={2} text="Check the register for the parent's emergency contact number" />
           <Step n={3} text="Call the parent or guardian directly" />
           <Step n={4} text="If no answer, call the secondary contact" />
-          <Step n={5} text="If still no answer after two attempts, call your Area Lead immediately" />
-          <Step n={6} text="The Area Lead will contact Naima and follow the school's late collection policy" />
+          <Step n={5} text="If still no answer after two attempts, call your Super Lead immediately" />
+          <Step n={6} text="The Super Lead will contact Naima and follow the school's late collection policy" />
           <Step n={7} text="Under no circumstances take the child off the premises or hand them to an adult not on their contact list" />
           <Step n={8} text="Log the incident on the Incident Report Form the same day" />
-          <Warn text="Never leave a child unattended. Never take a child off the school premises. When in doubt, call the Area Lead." />
+          <Warn text="Never leave a child unattended. Never take a child off the school premises. When in doubt, call the Super Lead." />
         </Section>
 
         {/* Section 13 */}
@@ -435,19 +435,19 @@ export function HandbookPage() {
           <Step n={2} text="Listen carefully and let them speak" />
           <Step n={3} text="Do not promise confidentiality" />
           <Step n={4} text="As soon as the session ends, write down exactly what was said — word for word" />
-          <Step n={5} text="Report it to your Lead Coach or Area Lead immediately after the session" />
+          <Step n={5} text="Report it to your Lead Coach or Super Lead immediately after the session" />
           <Step n={6} text="Complete the Safeguarding Concern Form the same day" />
-          <Step n={7} text="The Area Lead will escalate to the Designated Safeguarding Lead (DSL)" />
-          <Warn text="If a child is in immediate danger — call 999 first. Then notify your Area Lead." />
+          <Step n={7} text="The Super Lead will escalate to the Designated Safeguarding Lead (DSL)" />
+          <Warn text="If a child is in immediate danger — call 999 first. Then notify your Super Lead." />
 
           <SubHeading text="13.3 — Photography & Images" />
           <Info text="Updated June 2026 — all staff must read and acknowledge this section." />
-          <p className="text-sm text-gray-700 pt-1">Parents give photo consent at enrolment covering ASO marketing and social media. All staff can see a child's consent status in the register. Check before taking any photos — ask your Lead Coach or Area Lead if unsure.</p>
+          <p className="text-sm text-gray-700 pt-1">Parents give photo consent at enrolment covering ASO marketing and social media. All staff can see a child's consent status in the register. Check before taking any photos — ask your Lead Coach or Super Lead if unsure.</p>
           <Warn text="Lead Coaches only may take photographs at sessions. Assistant Coaches and Junior Coaches do not take photos — on any device, at any time." />
 
           <SubHeading text="Before You Take Any Photo (3 checks)" />
-          <Step n={1} text="Confirm with your Area Lead that photography is approved for this session" />
-          <Step n={2} text="Check consent status for every child — ask your Lead Coach or Area Lead if unsure" />
+          <Step n={1} text="Confirm with your Super Lead that photography is approved for this session" />
+          <Step n={2} text="Check consent status for every child — ask your Lead Coach or Super Lead if unsure" />
           <Step n={3} text="Make sure no child without consent will appear in any shot — reposition the group if needed" />
 
           <SubHeading text="What Makes a Safe Photo" />
@@ -477,16 +477,16 @@ export function HandbookPage() {
 
           <SubHeading text="Device Rules" />
           <Bullet text="Use the ASO Coaching App — that is the approved method." />
-          <Bullet text="If your Area Lead has given written approval to use your personal phone for a specific session:" />
+          <Bullet text="If your Super Lead has given written approval to use your personal phone for a specific session:" />
           <Note text="Disable auto-sync to iCloud / Google Photos before the session · Transfer to ASO secure storage within 24 hours · Delete from personal device immediately after — no exceptions" />
 
           <SubHeading text="If a Parent Asks for Photos" />
-          <Note text="Say: 'I'll pass that on — our team will be able to help.' Then tell your Area Lead. Do not share anything directly." />
+          <Note text="Say: 'I'll pass that on — our team will be able to help.' Then tell your Super Lead. Do not share anything directly." />
 
           <SubHeading text="If Something Goes Wrong" />
-          <Bullet text="Lost or stolen device — tell your Area Lead the same day; they will notify the DSL; complete an Incident Report on the app" />
-          <Bullet text="Photo taken of wrong child — delete it immediately from all devices; tell your Lead Coach or Area Lead the same day; do not share it" />
-          <Bullet text="Someone else taking photos that concern you — do not confront them; report to your Area Lead after the session; if a child is at immediate risk — tell school staff and call 999" />
+          <Bullet text="Lost or stolen device — tell your Super Lead the same day; they will notify the DSL; complete an Incident Report on the app" />
+          <Bullet text="Photo taken of wrong child — delete it immediately from all devices; tell your Lead Coach or Super Lead the same day; do not share it" />
+          <Bullet text="Someone else taking photos that concern you — do not confront them; report to your Super Lead after the session; if a child is at immediate risk — tell school staff and call 999" />
           <Note text="You will not get into trouble for raising a concern in good faith. You will get into trouble for saying nothing." />
 
           <SubHeading text="Key Safeguarding Contacts" />
@@ -509,10 +509,10 @@ export function HandbookPage() {
           <Bullet text="Medical conditions affecting participation" />
           <SubHeading text="14.2 Before the Session" />
           <Step n={1} text="Check the register and registration notes for any flagged needs or conditions" />
-          <Step n={2} text="If additional needs are noted, speak to your Area Lead before the session begins" />
-          <Step n={3} text="Your Area Lead will brief you on any specific adjustments or strategies agreed with the parent" />
+          <Step n={2} text="If additional needs are noted, speak to your Super Lead before the session begins" />
+          <Step n={3} text="Your Super Lead will brief you on any specific adjustments or strategies agreed with the parent" />
           <Step n={4} text="Do not make assumptions — every child is different" />
-          <Note text="If a child arrives and you become aware of additional needs that were not disclosed, note it and report to your Area Lead the same day." />
+          <Note text="If a child arrives and you become aware of additional needs that were not disclosed, note it and report to your Super Lead the same day." />
           <SubHeading text="14.3 During the Session — How to Support" />
           <Bullet text="Use clear, simple instructions — break tasks into small steps" />
           <Bullet text="Give children extra time to process and respond — do not rush" />
@@ -525,17 +525,17 @@ export function HandbookPage() {
           <Bullet text="One-to-one dedicated support during sessions due to coach-to-child ratios" />
           <Bullet text="Specialist medical or therapeutic interventions" />
           <Bullet text="Personal care support" />
-          <Info text="If a child's needs cannot be safely met within our current structure, the Area Lead will speak honestly with the parent and explore alternative options." />
+          <Info text="If a child's needs cannot be safely met within our current structure, the Super Lead will speak honestly with the parent and explore alternative options." />
           <SubHeading text="14.5 Parent Attendance — Trial Period" />
           <p className="text-sm text-gray-700">In some cases, a parent or carer may attend sessions during a trial period to support their child. This is only permitted where:</p>
           <Bullet text="The parent holds a valid Enhanced DBS certificate (evidence required)" />
-          <Bullet text="The arrangement has been agreed in advance by the Area Lead" />
+          <Bullet text="The arrangement has been agreed in advance by the Super Lead" />
           <Bullet text="The parent understands they are there to support their child only — not to coach or manage other children" />
           <Bullet text="The trial period is reviewed at the end of each half-term" />
           <Warn text="Parent attendance is a temporary arrangement and must be formally agreed. It is not automatic and does not continue indefinitely." />
           <SubHeading text="14.7 Common Mistakes to Avoid" />
           <Bullet text="Assuming a child's behaviour is intentional when it may be need-related — ask your Lead Coach" />
-          <Bullet text="Making promises to parents about what support you can provide — refer to the Area Lead" />
+          <Bullet text="Making promises to parents about what support you can provide — refer to the Super Lead" />
           <Bullet text="Ignoring a disclosure or observation because you are unsure what to do — always report it" />
           <Bullet text="Treating a child differently in a way that singles them out in front of peers" />
         </Section>
@@ -553,7 +553,7 @@ export function HandbookPage() {
           <Bullet text="Non-branded hoodies or jackets during sessions" />
           <Bullet text="Casual clothing — jeans, oversized tops, sliders" />
           <Bullet text="Anything that could catch on equipment or distract from coaching" />
-          <Note text="If your uniform is damaged or lost, report it to your Area Lead. Do not turn up out of uniform without flagging it first." />
+          <Note text="If your uniform is damaged or lost, report it to your Super Lead. Do not turn up out of uniform without flagging it first." />
         </Section>
 
         {/* Section 16 */}
@@ -561,7 +561,7 @@ export function HandbookPage() {
           <p className="text-sm text-gray-700 pt-2">ASO is built on developing young coaches. If you want to grow, we will support you.</p>
           <SubHeading text="The Coach Pathway" />
           <div className="flex items-center gap-1.5 flex-wrap mt-1">
-            {['Junior Coach (13–16)', '→', 'Assistant Coach (16–18)', '→', 'Lead Coach (18+)', '→', 'Area Lead'].map((item, i) => (
+            {['Junior Coach (13–16)', '→', 'Assistant Coach (16–18)', '→', 'Lead Coach (18+)', '→', 'Super Lead'].map((item, i) => (
               item === '→'
                 ? <span key={i} className="text-gray-400 font-bold text-sm">→</span>
                 : <span key={i} className="bg-[#1a3a6b] text-white text-xs font-bold px-2.5 py-1.5 rounded-lg">{item}</span>
@@ -577,7 +577,7 @@ export function HandbookPage() {
           <Bullet text="Remain on the active rota" />
           <Bullet text="Attend required shadow and CPD sessions" />
           <Warn text="If you leave before completing your term after receiving free training, you may be invoiced for the full course cost." />
-          <Note text="Termly reviews are conducted by your Area Lead. These are not disciplinary — they are designed to support your growth and identify your next steps." />
+          <Note text="Termly reviews are conducted by your Super Lead. These are not disciplinary — they are designed to support your growth and identify your next steps." />
         </Section>
 
         {/* Section 17 */}
@@ -591,11 +591,11 @@ export function HandbookPage() {
           <Bullet text="Lateness without communication" />
           <Bullet text="Using your phone during sessions (except for the register or an emergency)" />
           <Bullet text="Unprofessional behaviour in front of children, parents, or school staff" />
-          <Bullet text="Ignoring messages from your Lead Coach or Area Lead" />
+          <Bullet text="Ignoring messages from your Lead Coach or Super Lead" />
           <Bullet text="Sharing session content or children's information without permission" />
           <SubHeading text="If Standards Are Not Met" />
           <Step n={1} text="Informal conversation with your Lead Coach" />
-          <Step n={2} text="Written feedback from the Area Lead" />
+          <Step n={2} text="Written feedback from the Super Lead" />
           <Step n={3} text="Formal warning from the Operations Director" />
           <Step n={4} text="Removal from the rota" />
           <Warn text="Serious breaches — including safeguarding violations or aggressive conduct — may result in immediate suspension without going through the steps above." />
@@ -619,7 +619,7 @@ export function HandbookPage() {
               <p className="text-xs text-gray-600 leading-snug">{row.what}</p>
             </div>
           ))}
-          <Warn text="If a session becomes unsafe and cannot be managed alone, stop the activity, bring children to a seated position, and call your Area Lead immediately. Do not continue under unsafe conditions." />
+          <Warn text="If a session becomes unsafe and cannot be managed alone, stop the activity, bring children to a seated position, and call your Super Lead immediately. Do not continue under unsafe conditions." />
           <SubHeading text="18.2 Safeguarding When Lone Working" />
           <Bullet text="Never be alone with a single child in a closed or isolated space" />
           <Bullet text="If you need to deal with an individual concern, ensure the rest of the group is visible and in a safe, supervised position" />
@@ -651,17 +651,17 @@ export function HandbookPage() {
         <Section icon={BookOpen} title="Quick Reference Card" subtitle="What to do when things happen">
           {[
             { s: "I'm sick and can't attend", a: 'Call or voice note your Lead Coach before 9am' },
-            { s: "I can't reach my Lead Coach", a: 'Call the Area Lead directly — do not wait' },
-            { s: 'A child says something worrying', a: 'Listen. Don\'t promise confidentiality. Report to Lead Coach → Area Lead → DSL same day' },
-            { s: "A child isn't collected after 15 mins", a: 'Stay with child. Check register. Call parent. If no answer → Area Lead' },
-            { s: 'A child has a medical reaction', a: 'Use epi-pen if prescribed. Call 999. Call Area Lead. Call parent. Log it.' },
+            { s: "I can't reach my Lead Coach", a: 'Call the Super Lead directly — do not wait' },
+            { s: 'A child says something worrying', a: 'Listen. Don\'t promise confidentiality. Report to Lead Coach → Super Lead → DSL same day' },
+            { s: "A child isn't collected after 15 mins", a: 'Stay with child. Check register. Call parent. If no answer → Super Lead' },
+            { s: 'A child has a medical reaction', a: 'Use epi-pen if prescribed. Call 999. Call Super Lead. Call parent. Log it.' },
             { s: 'A parent makes a complaint', a: 'Thank them. Refer to Lead Coach or Naima. Do not make promises.' },
-            { s: 'Equipment is damaged or unsafe', a: 'Do not use it. Report to Area Lead before the session starts.' },
+            { s: 'Equipment is damaged or unsafe', a: 'Do not use it. Report to Super Lead before the session starts.' },
             { s: 'Snack situation is unclear', a: 'Default to no snacks in the hall. Always the safer option.' },
             { s: 'I have a pay query', a: 'Email accounts@activeschool.org.uk — do not use WhatsApp' },
-            { s: 'I want to progress my coaching', a: 'Speak to your Area Lead about the UKAG pathway' },
-            { s: 'A child arrives not on the register', a: 'Do not turn them away. Call Area Lead. Record everything.' },
-            { s: 'Something unsafe in the venue', a: 'Do not start the session. Call Area Lead immediately.' },
+            { s: 'I want to progress my coaching', a: 'Speak to your Super Lead about the UKAG pathway' },
+            { s: 'A child arrives not on the register', a: 'Do not turn them away. Call Super Lead. Record everything.' },
+            { s: 'Something unsafe in the venue', a: 'Do not start the session. Call Super Lead immediately.' },
           ].map(row => <QRRow key={row.s} situation={row.s} action={row.a} />)}
         </Section>
 

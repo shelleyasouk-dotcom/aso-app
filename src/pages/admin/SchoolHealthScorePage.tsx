@@ -60,14 +60,14 @@ const INDICATORS: { key: keyof HealthScoreForm; label: string; green: string; am
   },
   {
     key: 'session_quality', label: '4. Session Quality',
-    green: 'Area Lead observation — Good or Outstanding. No complaints about delivery.',
-    amber: 'Area Lead observation — Requires Improvement. One parent quality complaint.',
+    green: 'Super Lead observation — Good or Outstanding. No complaints about delivery.',
+    amber: 'Super Lead observation — Requires Improvement. One parent quality complaint.',
     red:   'No observation completed. Multiple complaints. School raised delivery concerns.',
   },
   {
     key: 'safeguarding', label: '5. Safeguarding & Incidents',
     green: 'No incidents. Disclosures handled correctly. All reports submitted same day.',
-    amber: 'Minor incident. Report submitted. Parent informed. Area Lead reviewed.',
+    amber: 'Minor incident. Report submitted. Parent informed. Super Lead reviewed.',
     red:   'Serious incident. Report delayed or incomplete. Parent dissatisfied. School concerned.',
   },
   {

@@ -28,7 +28,7 @@ const ROLE_LABELS: Record<string, string> = {
   junior_coach:    'Junior Coach',
   assistant_coach: 'Assistant Coach',
   lead_coach:      'Lead Coach',
-  area_lead:       'Area Lead',
+  area_lead:       'Super Lead',
 }
 
 const ROLE_COLORS: Record<string, string> = {

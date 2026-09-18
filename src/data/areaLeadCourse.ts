@@ -11,10 +11,10 @@ export interface AreaLeadCourse {
 
 export const AREA_LEAD_COURSE: AreaLeadCourse = {
   id: 'area_lead_v1',
-  title: 'Area Lead Development Course',
+  title: 'Super Lead Development Course',
   subtitle: 'Regional Leadership, Coach Support & Quality Assurance',
   description: 'A professional development course for experienced Lead Coaches taking on regional leadership responsibilities within the UKAG framework. Covers school relationships, coach support, quality assurance, and reporting.',
-  certificateTitle: 'UKAG Area Lead Award',
+  certificateTitle: 'UKAG Super Lead Award',
   modules: [
     {
       id: 'regional-leadership',
@@ -31,12 +31,12 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       passThreshold: 3,
       sections: [
         {
-          heading: 'The Area Lead Role',
-          body: 'An Area Lead is the bridge between the coaching teams on the ground and the strategic direction set by directors. You are responsible for the performance, wellbeing, and development of every coach in your region — and for the quality of every session delivered in every school under your remit.',
+          heading: 'The Super Lead Role',
+          body: 'An Super Lead is the bridge between the coaching teams on the ground and the strategic direction set by directors. You are responsible for the performance, wellbeing, and development of every coach in your region — and for the quality of every session delivered in every school under your remit.',
           bullets: [
             'You are accountable for outcomes across multiple schools — not just your own delivery',
             'Your primary tools are visibility, relationships, and standards — not direct delivery',
-            'Directors set direction; Area Leads translate that into on-the-ground action',
+            'Directors set direction; Super Leads translate that into on-the-ground action',
             'You are the first escalation point for lead coaches, school staff, and parents',
           ],
         },
@@ -73,18 +73,18 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       ],
       quiz: [
         {
-          question: 'What is the primary difference between a Lead Coach role and an Area Lead role?',
+          question: 'What is the primary difference between a Lead Coach role and an Super Lead role?',
           options: [
-            'Area Leads deliver more gymnastics sessions each week',
-            'Area Leads are accountable for outcomes across multiple schools, not just their own delivery',
-            'Area Leads report directly to school headteachers',
-            'Area Leads only manage administrative tasks, not coaching quality',
+            'Super Leads deliver more gymnastics sessions each week',
+            'Super Leads are accountable for outcomes across multiple schools, not just their own delivery',
+            'Super Leads report directly to school headteachers',
+            'Super Leads only manage administrative tasks, not coaching quality',
           ],
           correct: 1,
-          explanation: 'The Area Lead role shifts from direct delivery to leadership — you are accountable for every school in your region, leading through the coaches you develop rather than through your own sessions.',
+          explanation: 'The Super Lead role shifts from direct delivery to leadership — you are accountable for every school in your region, leading through the coaches you develop rather than through your own sessions.',
         },
         {
-          question: 'How often should an Area Lead visit each school in their region as a minimum?',
+          question: 'How often should an Super Lead visit each school in their region as a minimum?',
           options: [
             'Once per year',
             'Once per term',
@@ -175,7 +175,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       ],
       quiz: [
         {
-          question: 'How often should an Area Lead observe each lead coach as a minimum?',
+          question: 'How often should an Super Lead observe each lead coach as a minimum?',
           options: [
             'Once per year',
             'At least once per term',
@@ -338,7 +338,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       sections: [
         {
           heading: 'Identifying Coaching Talent',
-          body: 'The best coaches are often found by the people closest to the work. As Area Lead, you are ideally positioned to identify talented individuals before a vacancy exists.',
+          body: 'The best coaches are often found by the people closest to the work. As Super Lead, you are ideally positioned to identify talented individuals before a vacancy exists.',
           bullets: [
             'Note exceptional assistant coaches or Level 1s who demonstrate potential for lead roles',
             'Look for: initiative, natural communication with children, self-correction, reliability, and coachability',
@@ -439,7 +439,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       passThreshold: 3,
       sections: [
         {
-          heading: 'What Quality Assurance Means for Area Leads',
+          heading: 'What Quality Assurance Means for Super Leads',
           body: 'Quality assurance is not about catching coaches out — it is about ensuring every child in your region receives a consistently excellent gymnastics experience. It is a system of improvement, not surveillance.',
           bullets: [
             'QA covers: session safety, UKAG curriculum delivery, coaching language and technique, child engagement and behaviour management',
@@ -460,7 +460,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
         },
         {
           heading: 'UKAG Delivery Standards',
-          body: 'UKAG delivery standards define the minimum quality expected at every level. As Area Lead, you are the keeper of these standards in your region.',
+          body: 'UKAG delivery standards define the minimum quality expected at every level. As Super Lead, you are the keeper of these standards in your region.',
           bullets: [
             'Level 1–3 sessions must use the correct UKAG coreSkills, pathways, and coaching cues — not coach-invented alternatives',
             'Every session must begin with the UKAG warm-up sequence and end with Block & Present',
@@ -481,7 +481,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       ],
       quiz: [
         {
-          question: 'What is the primary purpose of quality assurance in the Area Lead role?',
+          question: 'What is the primary purpose of quality assurance in the Super Lead role?',
           options: [
             'To create a record that can be used in disciplinary proceedings',
             'To ensure every child receives a consistently excellent gymnastics experience',
@@ -542,7 +542,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       sections: [
         {
           heading: 'A Framework for Difficult Situations',
-          body: 'Every Area Lead will face difficult situations — staff conflicts, school complaints, safeguarding concerns, and operational failures. Having a clear framework prevents panic and ensures the right outcome.',
+          body: 'Every Super Lead will face difficult situations — staff conflicts, school complaints, safeguarding concerns, and operational failures. Having a clear framework prevents panic and ensures the right outcome.',
           bullets: [
             'Step 1: Pause and gather facts before acting — do not respond to the first account without checking it',
             'Step 2: Identify who needs to know immediately (director? DSL? school?) and inform them',
@@ -551,8 +551,8 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
           ],
         },
         {
-          heading: 'Safeguarding as Area Lead',
-          body: 'As Area Lead, you are a senior figure in the safeguarding chain for your region. Your responsibility goes beyond knowing the policy — you must ensure it is being followed by every coach in your region.',
+          heading: 'Safeguarding as Super Lead',
+          body: 'As Super Lead, you are a senior figure in the safeguarding chain for your region. Your responsibility goes beyond knowing the policy — you must ensure it is being followed by every coach in your region.',
           bullets: [
             'Know your organisation\'s Designated Safeguarding Lead (DSL) and how to contact them out of hours',
             'Ensure every coach in your region has completed mandatory safeguarding training and that records are current in the app',
@@ -562,7 +562,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
         },
         {
           heading: 'Resolving Staff Conflicts',
-          body: 'Interpersonal conflicts between coaches — or between a coach and a school — are one of the most common and draining problems an Area Lead faces. Early, calm intervention almost always produces better outcomes than avoidance.',
+          body: 'Interpersonal conflicts between coaches — or between a coach and a school — are one of the most common and draining problems an Super Lead faces. Early, calm intervention almost always produces better outcomes than avoidance.',
           bullets: [
             'Speak to each party separately before any joint conversation — establish the facts and each person\'s perspective',
             'Focus the resolution conversation on the professional behaviour required, not on who is right or wrong',
@@ -583,7 +583,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       ],
       quiz: [
         {
-          question: 'What is the first step when facing a difficult situation as Area Lead?',
+          question: 'What is the first step when facing a difficult situation as Super Lead?',
           options: [
             'Contact the school immediately and apologise',
             'Send a written account to your director before doing anything else',
@@ -591,7 +591,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
             'Ask the coach involved to write a self-assessment',
           ],
           correct: 2,
-          explanation: 'Pause and gather facts before acting — responding immediately to a single account without checking is one of the most common Area Lead errors. Then identify who needs to know and inform them promptly.',
+          explanation: 'Pause and gather facts before acting — responding immediately to a single account without checking is one of the most common Super Lead errors. Then identify who needs to know and inform them promptly.',
         },
         {
           question: 'If a child makes a disclosure to a coach in your region, what should happen?',
@@ -602,7 +602,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
             'The school\'s headteacher is notified before the DSL',
           ],
           correct: 1,
-          explanation: 'On receiving a disclosure: listen, do not promise confidentiality, do not investigate — refer immediately to the Designated Safeguarding Lead. No Area Lead or coach should investigate safeguarding concerns themselves.',
+          explanation: 'On receiving a disclosure: listen, do not promise confidentiality, do not investigate — refer immediately to the Designated Safeguarding Lead. No Super Lead or coach should investigate safeguarding concerns themselves.',
         },
         {
           question: 'When resolving a conflict between two coaches, what should the conversation focus on?',
@@ -643,7 +643,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
       passThreshold: 3,
       sections: [
         {
-          heading: 'Using the ASO App as Area Lead',
+          heading: 'Using the ASO App as Super Lead',
           body: 'The ASO app is your regional management dashboard. It gives you real-time visibility of attendance, UKAG progress, coach certifications, absences, and session feedback across every school in your region.',
           bullets: [
             'Check registers weekly — if a school shows repeated low attendance, investigate the cause before the school flags it to you',
@@ -654,7 +654,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
         },
         {
           heading: 'Semester Plan Reviews',
-          body: 'Semester plans and coach feedback reports are the primary written record of what is being delivered in each school. As Area Lead, you review these reports and act on what they reveal.',
+          body: 'Semester plans and coach feedback reports are the primary written record of what is being delivered in each school. As Super Lead, you review these reports and act on what they reveal.',
           bullets: [
             'Review every lead coach\'s semester plan submission — not just a summary. Read the weekly reports',
             'Look for: sessions not delivered, skills not covered, children repeatedly absent, and coach concerns about school behaviour or facilities',
@@ -664,7 +664,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
         },
         {
           heading: 'Key Performance Indicators',
-          body: 'As Area Lead, you are accountable for a set of regional KPIs. Understanding these — and being able to explain movement in them — is a core part of your director relationship.',
+          body: 'As Super Lead, you are accountable for a set of regional KPIs. Understanding these — and being able to explain movement in them — is a core part of your director relationship.',
           bullets: [
             'Attendance rate per school — target and actual; investigate any school below 80% average',
             'UKAG Award completions per term — compared to targets set at semester start',
@@ -674,7 +674,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
         },
         {
           heading: 'Communicating Upward to Directors',
-          body: 'Your director depends on your regional reporting to make good decisions. High-quality upward communication is a professional skill that defines effective Area Leads.',
+          body: 'Your director depends on your regional reporting to make good decisions. High-quality upward communication is a professional skill that defines effective Super Leads.',
           bullets: [
             'Submit your regional report on time, every time — late reports signal poor organisation to your director',
             'Lead with exceptions: "3 schools are below 80% attendance this half-term. Here is why and what I am doing about it."',
@@ -693,7 +693,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
             'Note it in the end-of-semester report',
           ],
           correct: 1,
-          explanation: 'Repeated low attendance signals a problem — with engagement, scheduling, or the school relationship. Investigate and act before the school raises it. Proactivity is what separates strong Area Leads.',
+          explanation: 'Repeated low attendance signals a problem — with engagement, scheduling, or the school relationship. Investigate and act before the school raises it. Proactivity is what separates strong Super Leads.',
         },
         {
           question: 'What is the target response time for written feedback on a lead coach\'s semester plan?',
@@ -707,7 +707,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
           explanation: 'Respond to every semester plan with written feedback within one week of submission. Delayed feedback on semester plans signals that they are not read or valued — coaches disengage from the process.',
         },
         {
-          question: 'Which of these is a key KPI an Area Lead is accountable for?',
+          question: 'Which of these is a key KPI an Super Lead is accountable for?',
           options: [
             'Number of Instagram followers for the ASO account',
             'Number of new coaching techniques introduced per term',
@@ -715,7 +715,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
             'Personal session delivery hours per week',
           ],
           correct: 2,
-          explanation: 'School retention rate — how many schools renewed versus how many were lost, with reason codes for non-renewals — is a core Area Lead KPI. It reflects the overall quality of your school relationships and regional management.',
+          explanation: 'School retention rate — how many schools renewed versus how many were lost, with reason codes for non-renewals — is a core Super Lead KPI. It reflects the overall quality of your school relationships and regional management.',
         },
         {
           question: 'How should you structure your regional report to your director?',
@@ -758,7 +758,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
         },
         {
           heading: 'Difficult Conversations With Schools',
-          body: 'Some of the most important conversations you will have as an Area Lead are ones you would rather avoid — telling a school something went wrong, delivering feedback they do not want to hear, or challenging a school contact\'s behaviour.',
+          body: 'Some of the most important conversations you will have as an Super Lead are ones you would rather avoid — telling a school something went wrong, delivering feedback they do not want to hear, or challenging a school contact\'s behaviour.',
           bullets: [
             'Prepare before the conversation: know the facts, your key points, and the outcome you need',
             'Be direct but professional — vagueness is not kindness. Schools need to know exactly what happened and what you are doing about it',
@@ -769,7 +769,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
         },
         {
           heading: 'Relaying Information to Lead Coaches',
-          body: 'As Area Lead, you are the channel through which decisions, concerns, and feedback flow between the organisation and your coaches. How you relay information is as important as the information itself.',
+          body: 'As Super Lead, you are the channel through which decisions, concerns, and feedback flow between the organisation and your coaches. How you relay information is as important as the information itself.',
           bullets: [
             'Be clear about whether information is directive ("this must change") or advisory ("this is something to consider")',
             'When passing on a school or parent concern, give the coach the facts — not your emotional interpretation of them',

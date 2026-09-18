@@ -186,12 +186,12 @@ export function PortalTermsPage() {
             <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600">
               <li>Attempt to contact the parent or guardian on the registered number</li>
               <li>Attempt the secondary emergency contact if no answer</li>
-              <li>Contact the Area Lead for further guidance</li>
+              <li>Contact the Super Lead for further guidance</li>
             </ol>
             <Callout>Persistent late collection may result in your child's place being reviewed.</Callout>
           </SubSection>
           <SubSection title="6.3 No Self-Dismissal">
-            <p className="text-sm text-gray-600 leading-relaxed">Children will not be permitted to leave the session unaccompanied, regardless of age, unless written permission has been provided in advance and agreed by the Area Lead and school.</p>
+            <p className="text-sm text-gray-600 leading-relaxed">Children will not be permitted to leave the session unaccompanied, regardless of age, unless written permission has been provided in advance and agreed by the Super Lead and school.</p>
           </SubSection>
         </Section>
 

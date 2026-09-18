@@ -2,7 +2,7 @@ import type { Role } from '../types'
 
 export const ROLE_LABELS: Record<Role, string> = {
   director: 'Director',
-  area_lead: 'Area Lead',
+  area_lead: 'Super Lead',
   lead_coach: 'Lead Coach',
   assistant_coach: 'Assistant Coach',
   junior_coach: 'Junior Coach',
@@ -64,22 +64,22 @@ export function canUseCrm(role: Role): boolean {
   return role === 'director' || role === 'area_lead' || role === 'outreach_worker'
 }
 
-// Directors and Area Leads can edit/delete anything to fix errors
+// Directors and Super Leads can edit/delete anything to fix errors
 export function canEditAll(role: Role): boolean {
   return role === 'director' || role === 'area_lead'
 }
 
-// Area Leads can manage children at their schools
+// Super Leads can manage children at their schools
 export function canManageChildren(role: Role): boolean {
   return role === 'director' || role === 'area_lead'
 }
 
-// Area Leads can view and manage staff at their schools
+// Super Leads can view and manage staff at their schools
 export function canManageAreaStaff(role: Role): boolean {
   return role === 'director' || role === 'area_lead'
 }
 
-// Area Leads can edit clock records to fix errors
+// Super Leads can edit clock records to fix errors
 export function canEditClockRecords(role: Role): boolean {
   return role === 'director' || role === 'area_lead'
 }

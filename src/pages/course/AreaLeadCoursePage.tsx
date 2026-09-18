@@ -41,7 +41,7 @@ export function AreaLeadCoursePage() {
   const allDone = doneCount === total
 
   return (
-    <Layout title="Area Lead Course" showBack>
+    <Layout title="Super Lead Course" showBack>
       <div className="flex flex-col gap-4 pb-10">
 
         {/* Header */}
@@ -91,7 +91,7 @@ export function AreaLeadCoursePage() {
             <div className="bg-gradient-to-br from-violet-700 to-purple-900 rounded-2xl p-4 flex items-center gap-3">
               <Award size={28} className="text-violet-300 shrink-0" />
               <div>
-                <p className="font-extrabold text-white text-sm">UKAG Area Lead Award Earned</p>
+                <p className="font-extrabold text-white text-sm">UKAG Super Lead Award Earned</p>
                 <p className="text-xs text-white/60">
                   Completed {new Date(certificate.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
@@ -144,7 +144,7 @@ export function AreaLeadCoursePage() {
           )}
 
           <p className="text-xs text-gray-400 text-center pt-2">
-            Complete each module in order. The UKAG Area Lead Award certificate is awarded on completion and saved to your profile.
+            Complete each module in order. The UKAG Super Lead Award certificate is awarded on completion and saved to your profile.
           </p>
         </div>
       </div>

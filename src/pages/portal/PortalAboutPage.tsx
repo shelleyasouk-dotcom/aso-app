@@ -104,7 +104,7 @@ export function PortalAboutPage() {
                     ? 'bg-purple-100 text-purple-700'
                     : 'bg-blue-100 text-blue-700'
                 }`}>
-                  {coach.role === 'area_lead' ? 'Area Lead' : 'Lead Coach'}
+                  {coach.role === 'area_lead' ? 'Super Lead' : 'Lead Coach'}
                 </span>
               </div>
             ))}
