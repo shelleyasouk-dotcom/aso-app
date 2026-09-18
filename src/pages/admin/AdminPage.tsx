@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import {
-  School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText,
+  School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Banknote,
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
@@ -165,6 +165,13 @@ export function AdminPage() {
         <TileGroup
           title="Finance"
           tiles={[
+            {
+              label: 'Payroll',
+              description: 'Monthly session totals per staff member with rates and CSV export',
+              icon: Banknote,
+              path: '/admin/payroll',
+              color: 'bg-green-50 text-green-700',
+            },
             {
               label: 'Expenses',
               description: 'Review and authorise staff expenses',

@@ -44,6 +44,7 @@ import { CrmPage } from './pages/crm/CrmPage'
 import { CrmContactPage } from './pages/crm/CrmContactPage'
 import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
+import { PayrollPage } from './pages/admin/PayrollPage'
 import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
 import { SessionsPage } from './pages/sessions/SessionsPage'
 import { AbsencesPage } from './pages/absences/AbsencesPage'
@@ -359,6 +360,11 @@ export default function App() {
           <Route path="/expenses/admin" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <ExpensesAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/payroll" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+              <PayrollPage />
             </ProtectedRoute>
           } />
 
