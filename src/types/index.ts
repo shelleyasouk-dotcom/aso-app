@@ -137,6 +137,8 @@ export interface ClockRecord {
   location_override?: string | null
   clock_in: string
   clock_out: string | null
+  session_date?: string | null
+  session_role?: string | null
   created_at: string
   staff?: Profile
   school?: School

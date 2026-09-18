@@ -51,33 +51,27 @@ export function DashboardPage() {
           <ChevronRight size={18} className="text-gray-300 shrink-0" />
         </Card>
 
-        {/* Clock In section */}
+        {/* Session logging section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-              {showSchools ? 'Your Schools This Week' : 'Clock In'}
-            </h3>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Sessions</h3>
             <button
-              onClick={() => navigate('/clock-in')}
+              onClick={() => navigate('/my-timesheet')}
               className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b]"
             >
-              Open <ChevronRight size={14} />
+              My Timesheet <ChevronRight size={14} />
             </button>
           </div>
-          {showSchools ? (
-            <SchoolAssignments staffId={profile.id} />
-          ) : (
-            <Card onClick={() => navigate('/clock-in')} className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#1a3a6b] rounded-xl flex items-center justify-center shrink-0">
-                <School size={18} className="text-white" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-[#1a3a6b] text-sm">Clock In / Out</p>
-                <p className="text-xs text-gray-400 mt-0.5">Record your session time</p>
-              </div>
-              <ChevronRight size={16} className="text-gray-300" />
-            </Card>
-          )}
+          <Card onClick={() => navigate('/clock-in')} className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-[#1a3a6b] rounded-xl flex items-center justify-center shrink-0">
+              <School size={18} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-[#1a3a6b] text-sm">Log a Session</p>
+              <p className="text-xs text-gray-400 mt-0.5">Record which school you coached at today</p>
+            </div>
+            <ChevronRight size={16} className="text-gray-300" />
+          </Card>
         </div>
 
         {/* Pending incident reports — area leads and directors */}
