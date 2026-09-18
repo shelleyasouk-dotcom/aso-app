@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
-import type { School, ClockRecord } from '../../types'
+import type { School } from '../../types'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -19,12 +19,6 @@ const ROLE_COLORS: Record<string, string> = {
   lead_coach:      'bg-[#1a3a6b] text-white',
   assistant_coach: 'bg-purple-600 text-white',
   junior_coach:    'bg-green-600 text-white',
-}
-
-const ROLE_LABELS: Record<string, string> = {
-  lead_coach:      'Lead Coach',
-  assistant_coach: 'Assistant Coach',
-  junior_coach:    'Junior Coach',
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -169,8 +163,6 @@ function SchoolPicker({ schools, mySchoolIds, value, onChange }: {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-type SessionEntry = ClockRecord & { school?: School }
-
 export function ClockInPage() {
   const { profile } = useAuth()
   const navigate = useNavigate()
@@ -187,12 +179,10 @@ export function ClockInPage() {
   const [selectedSchoolId, setSelectedSchoolId] = useState('')
   const [sessionDate, setSessionDate] = useState(searchParams.get('date') ?? todayStr())
   const [sessionRole, setSessionRole] = useState(defaultRole)
-  const [sessions, setSessions] = useState<SessionEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     if (profile?.role) {
@@ -205,10 +195,6 @@ export function ClockInPage() {
     if (profile) loadSchools()
   }, [profile?.id])
 
-  useEffect(() => {
-    if (profile) loadSessions(sessionDate)
-  }, [profile?.id, sessionDate])
-
   async function loadSchools() {
     const [{ data: allSchools }, { data: assignments }] = await Promise.all([
       supabase.from('schools').select('*').order('name'),
@@ -219,16 +205,6 @@ export function ClockInPage() {
     setMySchoolIds(ids)
     if (ids.size === 1) setSelectedSchoolId([...ids][0])
     setLoading(false)
-  }
-
-  async function loadSessions(date: string) {
-    const { data } = await supabase
-      .from('clock_records')
-      .select('*, school:schools(id, name, area)')
-      .eq('staff_id', profile!.id)
-      .eq('session_date', date)
-      .order('clock_in', { ascending: false })
-    setSessions((data as SessionEntry[]) ?? [])
   }
 
   async function handleSubmit() {
@@ -250,15 +226,8 @@ export function ClockInPage() {
     } else {
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
-      await loadSessions(sessionDate)
     }
     setSubmitting(false)
-  }
-
-  async function deleteSession(id: string) {
-    await supabase.from('clock_records').delete().eq('id', id)
-    setSessions(prev => prev.filter(r => r.id !== id))
-    setConfirmDeleteId(null)
   }
 
   const isFuture = sessionDate > todayStr()
@@ -347,71 +316,6 @@ export function ClockInPage() {
         <Button size="lg" fullWidth onClick={handleSubmit} disabled={submitting || !canSubmit}>
           {submitting ? 'Logging…' : 'Log Session'}
         </Button>
-
-        {/* Sessions logged on this date */}
-        {sessions.length > 0 && (
-          <div>
-            <p className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest px-1 mb-2">
-              Logged on {dateToDisplayStr(sessionDate)}
-            </p>
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-              {sessions.map((r, i) => {
-                const role = r.session_role
-                const isConfirming = confirmDeleteId === r.id
-                return (
-                  <div
-                    key={r.id}
-                    className={`px-4 py-3.5 ${i < sessions.length - 1 ? 'border-b border-gray-50' : ''}`}
-                  >
-                    {isConfirming ? (
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm text-gray-600">Remove this session?</p>
-                        <div className="flex gap-2 shrink-0">
-                          <button
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => deleteSession(r.id)}
-                            className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-semibold"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-800 truncate">
-                            {(r.school as any)?.name ?? r.location_override ?? 'Unknown school'}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            {role && (
-                              <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${ROLE_COLORS[role] ?? 'bg-gray-100 text-gray-500'}`}>
-                                {ROLE_LABELS[role] ?? role}
-                              </span>
-                            )}
-                            <span className="text-[11px] text-gray-400">
-                              Logged {new Date(r.clock_in).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => setConfirmDeleteId(r.id)}
-                          className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0"
-                        >
-                          <X size={14} className="text-gray-400" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Link to timesheet */}
         <button
