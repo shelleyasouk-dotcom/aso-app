@@ -7,7 +7,7 @@ import { Layout } from '../../components/layout/Layout'
 import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { ProfilePhoto } from '../../components/ui/ProfilePhoto'
-import { ROLE_LABELS, canManageSchools, clocksInAnywhere } from '../../lib/roles'
+import { ROLE_LABELS } from '../../lib/roles'
 import type { Announcement } from '../../types'
 
 function timeAgo(dateStr: string) {
@@ -26,7 +26,6 @@ export function DashboardPage() {
   if (!profile) return null
 
   const firstName = profile.full_name.split(' ')[0]
-  const showSchools = !canManageSchools(profile.role) && profile.role !== 'area_lead' && !clocksInAnywhere(profile.role)
 
   return (
     <Layout title="ASO Coaching">
@@ -219,44 +218,3 @@ function PendingIncidentsAlert() {
   )
 }
 
-function SchoolAssignments({ staffId }: { staffId: string }) {
-  const [schools, setSchools] = useState<{ name: string; session_day: string; session_time: string }[]>([])
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    supabase
-      .from('staff_school_assignments')
-      .select('school:schools(name, session_day, session_time)')
-      .eq('staff_id', staffId)
-      .then(({ data }) => {
-        if (data) setSchools(data.map((d: any) => d.school).filter(Boolean))
-      })
-  }, [staffId])
-
-  if (schools.length === 0) {
-    return (
-      <Card>
-        <p className="text-gray-500 text-sm">No schools assigned yet. Contact your Area Lead.</p>
-      </Card>
-    )
-  }
-
-  return (
-    <div className="flex flex-col gap-3">
-      {schools.map((school) => (
-        <Card key={school.name} onClick={() => navigate('/clock-in')}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#1a3a6b] rounded-xl flex items-center justify-center shrink-0">
-              <School size={18} className="text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-[#1a3a6b] truncate">{school.name}</p>
-              <p className="text-xs text-gray-500">{school.session_day} · {school.session_time}</p>
-            </div>
-            <ChevronRight size={16} className="text-gray-300 shrink-0" />
-          </div>
-        </Card>
-      ))}
-    </div>
-  )
-}

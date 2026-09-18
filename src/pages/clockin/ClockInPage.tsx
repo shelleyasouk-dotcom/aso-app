@@ -211,7 +211,7 @@ export function ClockInPage() {
 
   async function loadSchools() {
     const [{ data: allSchools }, { data: assignments }] = await Promise.all([
-      supabase.from('schools').select('id, name, area, address').order('name'),
+      supabase.from('schools').select('*').order('name'),
       supabase.from('staff_school_assignments').select('school_id').eq('staff_id', profile!.id),
     ])
     setSchools(allSchools ?? [])
