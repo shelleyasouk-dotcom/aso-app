@@ -90,6 +90,7 @@ import { OrgContactsAdminPage } from './pages/admin/OrgContactsAdminPage'
 import { SchoolSharedDocsAdminPage } from './pages/admin/SchoolSharedDocsAdminPage'
 import { SchoolContactsPage } from './pages/school/SchoolContactsPage'
 import { SchoolCoachesPage } from './pages/school/SchoolCoachesPage'
+import { SchoolReenrolmentPage } from './pages/school/SchoolReenrolmentPage'
 import { CoachOnboardingPage } from './pages/onboarding/CoachOnboardingPage'
 import { OnboardingDashboardPage } from './pages/onboarding/OnboardingDashboardPage'
 import { OnboardingStagePage } from './pages/onboarding/OnboardingStagePage'
@@ -415,6 +416,9 @@ export default function App() {
           } />
           <Route path="/school-portal/coaches" element={
             <ProtectedRoute><SchoolCoachesPage /></ProtectedRoute>
+          } />
+          <Route path="/school-portal/reenrolment" element={
+            <ProtectedRoute><SchoolReenrolmentPage /></ProtectedRoute>
           } />
 
           {/* Admin: school portal view */}

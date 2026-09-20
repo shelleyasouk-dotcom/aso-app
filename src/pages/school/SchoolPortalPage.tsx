@@ -15,6 +15,7 @@ import {
   Briefcase,
   Phone,
   UserCheck,
+  RefreshCw,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -179,8 +180,9 @@ export function SchoolPortalPage() {
     { label: 'Safeguarding',     icon: ShieldCheck,    path: `/school-portal/safeguarding${qs}`, desc: 'DSL & DDSL contacts' },
     { label: 'Impact Reports',   icon: FileText,       path: `/school-portal/reports${qs}`,      desc: 'Termly reports' },
     { label: 'School Info Form', icon: ClipboardCheck, path: `/school-portal/info${qs}`,         desc: school?.facility_form_completed ? 'View submitted form' : 'Action required' },
-    { label: 'Contacts',         icon: Phone,          path: `/school-portal/contacts${qs}`,      desc: 'Area lead, coaches & ASO team' },
-    { label: 'Our Coaches',      icon: UserCheck,      path: `/school-portal/coaches${qs}`,       desc: 'Coaching team & DBS information' },
+    { label: 'Contacts',         icon: Phone,          path: `/school-portal/contacts${qs}`,        desc: 'Area lead, coaches & ASO team' },
+    { label: 'Our Coaches',      icon: UserCheck,      path: `/school-portal/coaches${qs}`,         desc: 'Coaching team & DBS information' },
+    { label: 'Re-enrolment',     icon: RefreshCw,      path: `/school-portal/reenrolment${qs}`,     desc: 'Secure your child\'s place next term' },
   ]
 
   return (
