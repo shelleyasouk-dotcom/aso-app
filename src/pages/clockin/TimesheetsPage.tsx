@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Pencil, Trash2, Plus, Check, X } from 'lucide-react'
+import { Pencil, Trash2, Plus, Check, X, ChevronDown } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -179,13 +179,29 @@ export function TimesheetsPage() {
     setSaving(false)
   }
 
-  const grouped = records.reduce<Record<string, EnrichedRecord[]>>((acc, rec) => {
-    if (!acc[rec.staff_id]) acc[rec.staff_id] = []
-    acc[rec.staff_id].push(rec)
+  // Group by month → staff
+  const byMonth = records.reduce<Record<string, EnrichedRecord[]>>((acc, rec) => {
+    const d = new Date((rec as EnrichedRecord & { session_date?: string }).session_date ?? rec.clock_in)
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    if (!acc[key]) acc[key] = []
+    acc[key].push(rec)
     return acc
   }, {})
 
-  const totalStaff = Object.keys(grouped).length
+  const monthKeys = Object.keys(byMonth).sort((a, b) => b.localeCompare(a))
+
+  // Default: most recent month open
+  const [openMonths, setOpenMonths] = useState<Set<string>>(() => new Set(monthKeys.slice(0, 1)))
+
+  function toggleMonth(key: string) {
+    setOpenMonths(prev => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
+  const totalStaff = new Set(records.map(r => r.staff_id)).size
 
   return (
     <Layout title="Timesheets" showBack>
@@ -257,103 +273,140 @@ export function TimesheetsPage() {
         ) : records.length === 0 ? (
           <Card><p className="text-gray-500 text-center py-4">No records found.</p></Card>
         ) : (
-          Object.entries(grouped).map(([staffId, recs]) => {
-            const member = recs[0].staff
-            const totalMs = recs
-              .filter(r => r.clock_out)
-              .reduce((sum, r) => sum + (new Date(r.clock_out!).getTime() - new Date(r.clock_in).getTime()), 0)
-            const totalHours = (totalMs / 3600000).toFixed(1)
+          monthKeys.map(monthKey => {
+            const monthRecs = byMonth[monthKey]
+            const isOpen = openMonths.has(monthKey)
+            const label = new Date(`${monthKey}-01`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+            const completedCount = monthRecs.filter(r => r.clock_out).length
+            const monthStaffIds = [...new Set(monthRecs.map(r => r.staff_id))]
+
+            // Group by staff within this month
+            const groupedByStaff = monthRecs.reduce<Record<string, EnrichedRecord[]>>((acc, rec) => {
+              if (!acc[rec.staff_id]) acc[rec.staff_id] = []
+              acc[rec.staff_id].push(rec)
+              return acc
+            }, {})
 
             return (
-              <Card key={staffId}>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-bold text-[#1a3a6b]">{member?.full_name}</p>
-                    <Badge color="blue">{member ? ROLE_LABELS[member.role] : ''}</Badge>
+              <div key={monthKey}>
+                {/* Month header */}
+                <button
+                  onClick={() => toggleMonth(monthKey)}
+                  className="w-full flex items-center justify-between bg-[#1a3a6b] text-white px-4 py-3 rounded-2xl mb-2"
+                >
+                  <div className="text-left">
+                    <p className="font-extrabold text-sm">{label}</p>
+                    <p className="text-white/60 text-xs mt-0.5">
+                      {monthStaffIds.length} staff · {completedCount} sessions
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500">Total logged</p>
-                    <p className="font-bold text-[#1a3a6b] text-lg">{totalHours}h</p>
-                  </div>
-                </div>
+                  <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-                <div className="flex flex-col gap-1">
-                  {recs.map(rec => (
-                    <div key={rec.id}>
-                      {!isLeadCoach && editingId === rec.id ? (
-                        <div className="bg-[#f4f6f9] rounded-2xl p-3 flex flex-col gap-2 my-1">
-                          <p className="text-xs font-bold text-[#1a3a6b] mb-1">Edit Record</p>
+                {isOpen && (
+                  <div className="flex flex-col gap-3 mb-4">
+                    {Object.entries(groupedByStaff).map(([staffId, recs]) => {
+                      const member = recs[0].staff
+                      const totalMs = recs
+                        .filter(r => r.clock_out)
+                        .reduce((sum, r) => sum + (new Date(r.clock_out!).getTime() - new Date(r.clock_in).getTime()), 0)
+                      const totalHours = (totalMs / 3600000).toFixed(1)
+
+                      return (
+                        <Card key={staffId}>
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <p className="font-bold text-[#1a3a6b]">{member?.full_name}</p>
+                              <Badge color="blue">{member ? ROLE_LABELS[member.role] : ''}</Badge>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-500">Total logged</p>
+                              <p className="font-bold text-[#1a3a6b] text-lg">{totalHours}h</p>
+                            </div>
+                          </div>
+
                           <div className="flex flex-col gap-1">
-                            <label className="text-xs font-semibold text-gray-600">School</label>
-                            <select className={DT_CLASS} value={editForm.school_id}
-                              onChange={e => setEditForm({ ...editForm, school_id: e.target.value })}>
-                              {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            </select>
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="text-xs font-semibold text-gray-600">Clock In</label>
-                            <input type="datetime-local" className={DT_CLASS}
-                              value={editForm.clock_in} onChange={e => setEditForm({ ...editForm, clock_in: e.target.value })} />
-                          </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="text-xs font-semibold text-gray-600">Clock Out</label>
-                            <input type="datetime-local" className={DT_CLASS}
-                              value={editForm.clock_out} onChange={e => setEditForm({ ...editForm, clock_out: e.target.value })} />
-                          </div>
-                          <div className="flex gap-2 mt-1">
-                            <button onClick={() => setEditingId(null)}
-                              className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">
-                              <X size={14} /> Cancel
-                            </button>
-                            <button onClick={() => saveEdit(rec.id)} disabled={saving}
-                              className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold">
-                              <Check size={14} /> {saving ? '…' : 'Save'}
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-between py-2 border-t border-gray-100 gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-800 truncate">
-                              {rec.school?.name ?? rec.location_override ?? '—'}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {formatDate(rec.clock_in)} · {formatTime(rec.clock_in)}
-                              {rec.clock_out
-                                ? ` – ${formatTime(rec.clock_out)}`
-                                : <span className="text-orange-500"> · No clock-out</span>}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <Badge color={rec.clock_out ? 'green' : 'yellow'}>
-                              {formatDuration(rec.clock_in, rec.clock_out)}
-                            </Badge>
-                            {!isLeadCoach && (
-                              <>
-                                <button onClick={() => { startEdit(rec); setConfirmDeleteId(null) }}
-                                  className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50">
-                                  <Pencil size={14} />
-                                </button>
-                                {confirmDeleteId === rec.id ? (
-                                  <button onClick={() => deleteRecord(rec.id)}
-                                    className="px-2 py-1 rounded-lg bg-red-500 text-white text-xs font-semibold">
-                                    Delete?
-                                  </button>
+                            {recs.map(rec => (
+                              <div key={rec.id}>
+                                {!isLeadCoach && editingId === rec.id ? (
+                                  <div className="bg-[#f4f6f9] rounded-2xl p-3 flex flex-col gap-2 my-1">
+                                    <p className="text-xs font-bold text-[#1a3a6b] mb-1">Edit Record</p>
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-xs font-semibold text-gray-600">School</label>
+                                      <select className={DT_CLASS} value={editForm.school_id}
+                                        onChange={e => setEditForm({ ...editForm, school_id: e.target.value })}>
+                                        {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                      </select>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-xs font-semibold text-gray-600">Clock In</label>
+                                      <input type="datetime-local" className={DT_CLASS}
+                                        value={editForm.clock_in} onChange={e => setEditForm({ ...editForm, clock_in: e.target.value })} />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-xs font-semibold text-gray-600">Clock Out</label>
+                                      <input type="datetime-local" className={DT_CLASS}
+                                        value={editForm.clock_out} onChange={e => setEditForm({ ...editForm, clock_out: e.target.value })} />
+                                    </div>
+                                    <div className="flex gap-2 mt-1">
+                                      <button onClick={() => setEditingId(null)}
+                                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">
+                                        <X size={14} /> Cancel
+                                      </button>
+                                      <button onClick={() => saveEdit(rec.id)} disabled={saving}
+                                        className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold">
+                                        <Check size={14} /> {saving ? '…' : 'Save'}
+                                      </button>
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <button onClick={() => setConfirmDeleteId(rec.id)}
-                                    className="p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50">
-                                    <Trash2 size={14} />
-                                  </button>
+                                  <div className="flex items-center justify-between py-2 border-t border-gray-100 gap-2">
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-gray-800 truncate">
+                                        {rec.school?.name ?? rec.location_override ?? '—'}
+                                      </p>
+                                      <p className="text-xs text-gray-400">
+                                        {formatDate(rec.clock_in)} · {formatTime(rec.clock_in)}
+                                        {rec.clock_out
+                                          ? ` – ${formatTime(rec.clock_out)}`
+                                          : <span className="text-orange-500"> · No clock-out</span>}
+                                      </p>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <Badge color={rec.clock_out ? 'green' : 'yellow'}>
+                                        {formatDuration(rec.clock_in, rec.clock_out)}
+                                      </Badge>
+                                      {!isLeadCoach && (
+                                        <>
+                                          <button onClick={() => { startEdit(rec); setConfirmDeleteId(null) }}
+                                            className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50">
+                                            <Pencil size={14} />
+                                          </button>
+                                          {confirmDeleteId === rec.id ? (
+                                            <button onClick={() => deleteRecord(rec.id)}
+                                              className="px-2 py-1 rounded-lg bg-red-500 text-white text-xs font-semibold">
+                                              Delete?
+                                            </button>
+                                          ) : (
+                                            <button onClick={() => setConfirmDeleteId(rec.id)}
+                                              className="p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50">
+                                              <Trash2 size={14} />
+                                            </button>
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
                                 )}
-                              </>
-                            )}
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </Card>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             )
           })
         )}
