@@ -79,7 +79,7 @@ export function MyAreaPage() {
   const personalTiles: Tile[] = [
     { label: 'My Profile', description: 'Digital ID & certificates', icon: UserCircle, path: '/profile', color: 'bg-indigo-50 text-indigo-700' },
     { label: 'My Timesheet', description: 'View your clock records', icon: Clock, path: '/my-timesheet', color: 'bg-blue-50 text-[#1a3a6b]' },
-    { label: 'My Availability', description: 'Locations & days I can cover', icon: CalendarDays, path: '/coach-pool', color: 'bg-teal-50 text-teal-700' },
+    { label: 'My Availability', description: 'Locations & days I can cover', icon: CalendarDays, path: '/my-availability', color: 'bg-teal-50 text-teal-700' },
     { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-sky-50 text-sky-700' },
     { label: 'Expenses', description: 'Submit travel & mileage', icon: ReceiptText, path: '/expenses', color: 'bg-orange-50 text-orange-700' },
     { label: 'Absences', description: 'Log & manage requests', icon: CalendarOff, path: '/absences', color: 'bg-rose-50 text-rose-700' },
@@ -151,6 +151,7 @@ export function MyAreaPage() {
             tiles={isOutreach
               ? [
                   { label: 'Coach Pool', description: 'Available coaches', icon: UsersRound, path: '/coach-pool', color: 'bg-violet-50 text-violet-700' },
+                  { label: 'Staff Availability', description: 'Who can cover & when', icon: CalendarDays, path: '/admin/staff-availability', color: 'bg-teal-50 text-teal-700' },
                   { label: 'School Outreach', description: 'CRM & school contacts', icon: Building2, path: '/crm', color: 'bg-teal-50 text-teal-700' },
                 ]
               : managementTiles

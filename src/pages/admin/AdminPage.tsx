@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import {
-  School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Banknote,
+  School, Users, BookOpen, Upload, MapPin, Megaphone, FileText, ReceiptText, Banknote, CalendarDays,
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
@@ -165,6 +165,13 @@ export function AdminPage() {
         <TileGroup
           title="Finance"
           tiles={[
+            {
+              label: 'Staff Availability',
+              description: 'View & export who can cover, when and where',
+              icon: CalendarDays,
+              path: '/admin/staff-availability',
+              color: 'bg-teal-50 text-teal-700',
+            },
             {
               label: 'Payroll',
               description: 'Monthly session totals per staff member with rates and CSV export',

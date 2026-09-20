@@ -45,6 +45,8 @@ import { CrmContactPage } from './pages/crm/CrmContactPage'
 import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 import { PayrollPage } from './pages/admin/PayrollPage'
+import { MyAvailabilityPage } from './pages/myarea/MyAvailabilityPage'
+import { StaffAvailabilityPage } from './pages/admin/StaffAvailabilityPage'
 import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
 import { SessionsPage } from './pages/sessions/SessionsPage'
 import { AbsencesPage } from './pages/absences/AbsencesPage'
@@ -365,6 +367,14 @@ export default function App() {
           <Route path="/admin/payroll" element={
             <ProtectedRoute allowedRoles={['director', 'area_lead']}>
               <PayrollPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-availability" element={
+            <ProtectedRoute><MyAvailabilityPage /></ProtectedRoute>
+          } />
+          <Route path="/admin/staff-availability" element={
+            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+              <StaffAvailabilityPage />
             </ProtectedRoute>
           } />
 
