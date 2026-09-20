@@ -67,12 +67,12 @@ export function PortalContactPage() {
       supabase
         .from('profiles')
         .select('id')
-        .eq('role', 'director')
-        .then(({ data: directors }) => {
-          if (!directors || directors.length === 0) return
+        .in('role', ['director', 'operations_manager', 'operations_assistant'])
+        .then(({ data: recipients }) => {
+          if (!recipients || recipients.length === 0) return
           return supabase.from('notifications').insert(
-            directors.map((d: { id: string }) => ({
-              user_id: d.id,
+            recipients.map((r: { id: string }) => ({
+              user_id: r.id,
               title: `New message from ${form.name.trim()}`,
               body: form.message.trim().slice(0, 100) + (form.message.trim().length > 100 ? '…' : ''),
               type: 'contact_message',

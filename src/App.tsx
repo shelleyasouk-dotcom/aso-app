@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
-import { ParentProtectedRoute } from './components/auth/ParentProtectedRoute'
+
 import { PortalHomePage } from './pages/portal/PortalHomePage'
 import { PortalClubsPage } from './pages/portal/PortalClubsPage'
 import { PortalClubDetailPage } from './pages/portal/PortalClubDetailPage'
@@ -10,12 +10,9 @@ import { PortalSportsPage } from './pages/portal/PortalSportsPage'
 import { PortalAffiliationsPage } from './pages/portal/PortalAffiliationsPage'
 import { PortalAboutPage } from './pages/portal/PortalAboutPage'
 import { PortalLoginPage } from './pages/portal/PortalLoginPage'
-import { PortalRegisterPage } from './pages/portal/PortalRegisterPage'
-import { PortalDashboardPage } from './pages/portal/PortalDashboardPage'
 import { PortalForSchoolsPage } from './pages/portal/PortalForSchoolsPage'
 import { PortalClassesPage } from './pages/portal/PortalClassesPage'
 import { PortalSummerCampsPage } from './pages/portal/PortalSummerCampsPage'
-import { PortalMyChildrenPage } from './pages/portal/PortalMyChildrenPage'
 import { SchoolRosterPage } from './pages/school/SchoolRosterPage'
 
 import { LoginPage } from './pages/auth/LoginPage'
@@ -465,14 +462,6 @@ export default function App() {
           <Route path="/portal/for-schools" element={<PortalForSchoolsPage />} />
           <Route path="/portal/summer-camps" element={<PortalSummerCampsPage />} />
           <Route path="/portal/login" element={<PortalLoginPage />} />
-          <Route path="/portal/register" element={<PortalRegisterPage />} />
-          {/* Parent portal — protected (parent login required) */}
-          <Route path="/portal/my-bookings" element={
-            <ParentProtectedRoute><PortalDashboardPage /></ParentProtectedRoute>
-          } />
-          <Route path="/portal/my-children" element={
-            <ParentProtectedRoute><PortalMyChildrenPage /></ParentProtectedRoute>
-          } />
 
           {/* School portal — class roster */}
           <Route path="/school-portal/roster" element={

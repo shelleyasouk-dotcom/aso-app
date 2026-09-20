@@ -36,40 +36,6 @@ function EmailOutageBanner() {
   )
 }
 
-// ─── Heat Warning Banner ──────────────────────────────────────────────────────
-
-const HEAT_WARNING_EXPIRES = new Date('2026-06-28T00:00:00')
-const HEAT_DISMISS_KEY = 'heat_warning_dismissed_v2'
-
-function HeatWarningBanner() {
-  const [dismissed, setDismissed] = useState(() => !!localStorage.getItem(HEAT_DISMISS_KEY))
-
-  if (dismissed || new Date() >= HEAT_WARNING_EXPIRES) return null
-
-  return (
-    <div className="bg-red-600 text-white px-4 py-3">
-      <div className="max-w-4xl mx-auto flex items-start gap-3">
-        <AlertTriangle size={18} className="shrink-0 mt-0.5" />
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm mb-1">🌡️ Extreme heat — session cancellations: Wednesday 24 &amp; Thursday 25 June</p>
-          <p className="text-sm text-white/90 leading-snug">
-            Due to the extreme heat across the UK, all ASO sessions on <strong>Wednesday 24 June</strong> and <strong>Thursday 25 June</strong> have been cancelled and rescheduled.
-            You will have received an email with details of your rescheduled session date.
-            Stay safe in the heat — we look forward to seeing you all next week! 🙂
-          </p>
-        </div>
-        <button
-          onClick={() => { setDismissed(true); localStorage.setItem(HEAT_DISMISS_KEY, '1') }}
-          className="shrink-0 text-white/70 hover:text-white transition-colors mt-0.5"
-          aria-label="Dismiss"
-        >
-          <X size={16} />
-        </button>
-      </div>
-    </div>
-  )
-}
-
 // ─── Nav structure ────────────────────────────────────────────────────────────
 
 type NavItem =
@@ -78,14 +44,13 @@ type NavItem =
 
 const NAV: NavItem[] = [
   { type: 'link', path: '/home', label: 'Home', exact: true },
-  { type: 'link', path: '/portal/classes', label: 'Book a Class', badge: 'New' },
   {
     type: 'dropdown',
     label: 'Activities',
     items: [
-      { path: '/portal/classes',      label: 'Book a Class',  badge: 'New', desc: 'Browse and book gymnastics classes' },
-      { path: '/portal/summer-camps', label: 'Summer Camps',  badge: '☀️',  desc: 'Holiday camps open to all children' },
-      { path: '/portal/sports',       label: 'Sports',                      desc: 'All the sports we coach' },
+      { path: '/portal/classes',      label: 'Book a Class',  desc: 'Book via our Class4Kids booking system' },
+      { path: '/portal/summer-camps', label: 'Holiday Camps', badge: '☀️', desc: 'Summer and holiday camps for all children' },
+      { path: '/portal/sports',       label: 'Our Sports',    desc: 'All the sports we coach' },
     ],
   },
   {
@@ -189,7 +154,6 @@ export function PortalLayout({ children }: PortalLayoutProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <EmailOutageBanner />
-      <HeatWarningBanner />
       {/* Header */}
       <header className="bg-[#1a3a6b] text-white sticky top-0 z-30 shadow-lg">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
@@ -261,14 +225,6 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                         </span>
                       )}
                     </div>
-                    {isParent && (
-                      <button
-                        onClick={() => { navigate('/portal/my-children'); setUserMenuOpen(false) }}
-                        className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 font-medium"
-                      >
-                        My Children
-                      </button>
-                    )}
                     {!isParent && (
                       <button
                         onClick={() => { navigate('/dashboard'); setUserMenuOpen(false) }}
@@ -316,12 +272,6 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => navigate('/portal/register')}
-                  className="text-sm font-bold bg-[#f5c518] text-[#1a3a6b] rounded-lg px-3 py-1.5 hover:bg-yellow-400 transition-colors"
-                >
-                  Register
-                </button>
               </div>
             )}
 
@@ -372,12 +322,6 @@ export function PortalLayout({ children }: PortalLayoutProps) {
                     {item.label}
                   </button>
                 ))}
-                <button
-                  onClick={() => { navigate('/portal/register'); setMenuOpen(false) }}
-                  className="w-full mt-2 py-2.5 text-sm font-bold bg-[#f5c518] text-[#1a3a6b] rounded-lg hover:bg-yellow-400 transition-colors"
-                >
-                  Register
-                </button>
               </div>
             )}
           </div>
@@ -420,9 +364,9 @@ export function PortalLayout({ children }: PortalLayoutProps) {
             <div>
               <p className="font-semibold mb-3 text-sm">For Parents</p>
               <div className="flex flex-col gap-2">
-                <Link to="/portal/login"    className="text-white/60 hover:text-white text-sm transition-colors">Parent Login</Link>
-                <Link to="/portal/register" className="text-white/60 hover:text-white text-sm transition-colors">Create Account</Link>
-                <Link to="/portal/classes"  className="text-white/60 hover:text-white text-sm transition-colors">Book a Class</Link>
+                <Link to="/portal/login"   className="text-white/60 hover:text-white text-sm transition-colors">Parent Login</Link>
+                <Link to="/portal/classes" className="text-white/60 hover:text-white text-sm transition-colors">Book a Class</Link>
+                <Link to="/portal/contact" className="text-white/60 hover:text-white text-sm transition-colors">Contact Us</Link>
               </div>
             </div>
             <div>
