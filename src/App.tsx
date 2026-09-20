@@ -42,6 +42,8 @@ import { CrmContactPage } from './pages/crm/CrmContactPage'
 import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 import { PayrollPage } from './pages/admin/PayrollPage'
+import { PayslipsAdminPage } from './pages/admin/PayslipsAdminPage'
+import { MyPayslipsPage } from './pages/clockin/MyPayslipsPage'
 import { MyAvailabilityPage } from './pages/myarea/MyAvailabilityPage'
 import { StaffAvailabilityPage } from './pages/admin/StaffAvailabilityPage'
 import { CoachPoolPage } from './pages/coachpool/CoachPoolPage'
@@ -366,6 +368,14 @@ export default function App() {
             <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <PayrollPage />
             </ProtectedRoute>
+          } />
+          <Route path="/admin/payslips" element={
+            <ProtectedRoute allowedRoles={['director', 'operations_manager']}>
+              <PayslipsAdminPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-payslips" element={
+            <ProtectedRoute><MyPayslipsPage /></ProtectedRoute>
           } />
           <Route path="/my-availability" element={
             <ProtectedRoute><MyAvailabilityPage /></ProtectedRoute>

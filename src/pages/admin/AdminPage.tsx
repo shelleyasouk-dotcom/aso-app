@@ -4,7 +4,7 @@ import {
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
-  Newspaper, Mail, RectangleHorizontal, ScrollText, ClipboardCheck,
+  Newspaper, Mail, RectangleHorizontal, ScrollText, ClipboardCheck, Wallet,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -179,6 +179,13 @@ export function AdminPage() {
               path: '/admin/payroll',
               color: 'bg-green-50 text-green-700',
             },
+            ...(isDirector ? [{
+              label: 'Payslips',
+              description: 'Generate, review and release monthly payslips',
+              icon: Wallet,
+              path: '/admin/payslips',
+              color: 'bg-indigo-50 text-indigo-700',
+            }] : []),
             {
               label: 'Expenses',
               description: 'Review and authorise staff expenses',
