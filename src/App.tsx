@@ -165,7 +165,7 @@ export default function App() {
             <ProtectedRoute><MyAreaPage /></ProtectedRoute>
           } />
           <Route path="/messages" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}><ContactMessagesPage /></ProtectedRoute>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant']}><ContactMessagesPage /></ProtectedRoute>
           } />
           <Route path="/clock-in" element={
             <ProtectedRoute><ClockInPage /></ProtectedRoute>
@@ -182,12 +182,12 @@ export default function App() {
 
           {/* Director & Super Lead */}
           <Route path="/timesheets" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'senior_lead_coach', 'lead_coach']}>
               <TimesheetsPage />
             </ProtectedRoute>
           } />
           <Route path="/sessions" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'senior_lead_coach', 'lead_coach']}>
               <SessionsPage />
             </ProtectedRoute>
           } />
@@ -201,12 +201,12 @@ export default function App() {
             <ProtectedRoute><WeeklyReportsPage /></ProtectedRoute>
           } />
           <Route path="/area-lead-report/new" element={
-            <ProtectedRoute allowedRoles={['area_lead', 'director']}>
+            <ProtectedRoute allowedRoles={['area_lead', 'director', 'operations_manager']}>
               <AreaLeadWeeklyReportPage />
             </ProtectedRoute>
           } />
           <Route path="/area-lead-reports" element={
-            <ProtectedRoute allowedRoles={['area_lead', 'director']}>
+            <ProtectedRoute allowedRoles={['area_lead', 'director', 'operations_manager']}>
               <AreaLeadReportsViewPage />
             </ProtectedRoute>
           } />
@@ -217,94 +217,94 @@ export default function App() {
             <ProtectedRoute><UKAGLevelPage /></ProtectedRoute>
           } />
           <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <AdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/children" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <ChildrenAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/bulk-import" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <BulkImportPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/area-schools" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <AreaSchoolsPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/announcements" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']} allowFlag="can_post_announcements">
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant', 'marketing_assistant', 'media_tech']} allowFlag="can_post_announcements">
               <AnnouncementsAdminPage />
             </ProtectedRoute>
           } />
 
           {/* Director + Super Lead */}
           <Route path="/admin/schools" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <SchoolsAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/dbs-compliance" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <DBSCompliancePage />
             </ProtectedRoute>
           } />
           <Route path="/admin/staff" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <StaffAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/data-exports" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <DataExportsPage />
             </ProtectedRoute>
           } />
 
           <Route path="/admin/school-health-scores" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant', 'outreach_worker']}>
               <SchoolHealthScorePage />
             </ProtectedRoute>
           } />
 
           <Route path="/admin/lessons-learned" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant', 'outreach_worker']}>
               <LessonsLearnedPage />
             </ProtectedRoute>
           } />
 
           <Route path="/admin/feedback" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <FeedbackAnalyticsPage />
             </ProtectedRoute>
           } />
 
           <Route path="/admin/onboarding" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant']}>
               <OnboardingAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/onboarding/content" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <OnboardingContentPage />
             </ProtectedRoute>
           } />
 
           <Route path="/admin/contact-export" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <ContactExportPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/org-contacts" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant']}>
               <OrgContactsAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/school-shared-docs" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant']}>
               <SchoolSharedDocsAdminPage />
             </ProtectedRoute>
           } />
@@ -344,12 +344,12 @@ export default function App() {
             <ProtectedRoute><HandbookPage /></ProtectedRoute>
           } />
           <Route path="/crm" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'outreach_worker']}>
               <CrmPage />
             </ProtectedRoute>
           } />
           <Route path="/crm/:id" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'outreach_worker']}>
               <CrmContactPage />
             </ProtectedRoute>
           } />
@@ -360,12 +360,12 @@ export default function App() {
             <ProtectedRoute><ExpensesPage /></ProtectedRoute>
           } />
           <Route path="/expenses/admin" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <ExpensesAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/payroll" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <PayrollPage />
             </ProtectedRoute>
           } />
@@ -373,7 +373,7 @@ export default function App() {
             <ProtectedRoute><MyAvailabilityPage /></ProtectedRoute>
           } />
           <Route path="/admin/staff-availability" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'outreach_worker']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'outreach_worker']}>
               <StaffAvailabilityPage />
             </ProtectedRoute>
           } />
@@ -422,34 +422,34 @@ export default function App() {
 
           {/* Admin: school portal view */}
           <Route path="/admin/import-pupils" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <PupilImportPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/school-portal/:id" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <SchoolPortalAdminPage />
             </ProtectedRoute>
           } />
 
           {/* Incident reports — coaches create, area leads/directors review */}
           <Route path="/incidents" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'senior_lead_coach', 'lead_coach', 'assistant_coach']}>
               <IncidentReportsPage />
             </ProtectedRoute>
           } />
           <Route path="/incidents/new" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'senior_lead_coach', 'lead_coach', 'assistant_coach']}>
               <IncidentReportFormPage />
             </ProtectedRoute>
           } />
           <Route path="/incidents/:id" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'senior_lead_coach', 'lead_coach', 'assistant_coach']}>
               <IncidentReportDetailPage />
             </ProtectedRoute>
           } />
           <Route path="/incidents/:id/edit" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'lead_coach', 'assistant_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'senior_lead_coach', 'lead_coach', 'assistant_coach']}>
               <IncidentReportFormPage />
             </ProtectedRoute>
           } />
@@ -492,57 +492,57 @@ export default function App() {
 
           {/* Recruitment — admin */}
           <Route path="/admin/job-adverts" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <JobAdvertsAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/job-applications" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <JobApplicationsAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/lesson-plans" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant', 'senior_lead_coach']}>
               <LessonPlansAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/holiday-camps" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'marketing_assistant']}>
               <HolidayCampsAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/blog" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'marketing_assistant', 'media_tech']}>
               <BlogAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/blog/new" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'marketing_assistant', 'media_tech']}>
               <BlogPostEditorPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/blog/:id/edit" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'marketing_assistant', 'media_tech']}>
               <BlogPostEditorPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/newsletters" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead', 'media_tech']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'marketing_assistant', 'media_tech']}>
               <NewsletterAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/ad-banners" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'marketing_assistant']}>
               <AdBannersAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/staff-contracts" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <StaffContractsAdminPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/job-descriptions" element={
-            <ProtectedRoute allowedRoles={['director', 'area_lead']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <JobDescriptionsAdminPage />
             </ProtectedRoute>
           } />
@@ -554,17 +554,17 @@ export default function App() {
 
           {/* Leadership course — lead coaches and above only */}
           <Route path="/course/leadership" element={
-            <ProtectedRoute allowedRoles={['lead_coach', 'area_lead', 'director']}>
+            <ProtectedRoute allowedRoles={['lead_coach', 'senior_lead_coach', 'area_lead', 'director', 'operations_manager']}>
               <LeadershipCoursePage />
             </ProtectedRoute>
           } />
           <Route path="/course/leadership/certificate" element={
-            <ProtectedRoute allowedRoles={['lead_coach', 'area_lead', 'director']}>
+            <ProtectedRoute allowedRoles={['lead_coach', 'senior_lead_coach', 'area_lead', 'director', 'operations_manager']}>
               <LeadershipCertificatePage />
             </ProtectedRoute>
           } />
           <Route path="/course/leadership/:moduleId" element={
-            <ProtectedRoute allowedRoles={['lead_coach', 'area_lead', 'director']}>
+            <ProtectedRoute allowedRoles={['lead_coach', 'senior_lead_coach', 'area_lead', 'director', 'operations_manager']}>
               <CourseModulePage />
             </ProtectedRoute>
           } />

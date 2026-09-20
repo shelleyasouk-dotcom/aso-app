@@ -70,11 +70,13 @@ export function MyAreaPage() {
   if (!profile) return null
 
   const role = profile.role
-  const isLead = role === 'lead_coach' || role === 'area_lead' || role === 'director'
-
-  const isAreaLead = role === 'area_lead' || role === 'director'
-  const isDirector = role === 'director'
+  const isLead = role === 'lead_coach' || role === 'senior_lead_coach' || role === 'area_lead' || role === 'director'
+  const isAreaLead = role === 'area_lead' || role === 'director' || role === 'operations_manager'
+  const isDirector = role === 'director' || role === 'operations_manager'
   const isOutreach = role === 'outreach_worker'
+  const isOpsAssistant = role === 'operations_assistant'
+  const isMarketing = role === 'marketing_assistant' || role === 'media_tech'
+  const isSeniorLead = role === 'senior_lead_coach'
 
   const personalTiles: Tile[] = [
     { label: 'My Profile', description: 'Digital ID & certificates', icon: UserCircle, path: '/profile', color: 'bg-indigo-50 text-indigo-700' },
@@ -109,7 +111,42 @@ export function MyAreaPage() {
     { label: 'Super Lead Course', description: 'Regional leadership programme', icon: GraduationCap, path: '/course/area-lead', color: 'bg-violet-50 text-violet-700' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
     { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
-    ...(role === 'lead_coach' ? [{ label: 'Staff Timesheets', description: 'View your team\'s hours', icon: Users, path: '/timesheets', color: 'bg-purple-50 text-purple-800' }] : []),
+    ...(role === 'lead_coach' || role === 'senior_lead_coach' ? [{ label: 'Staff Timesheets', description: 'View your team\'s hours', icon: Users, path: '/timesheets', color: 'bg-purple-50 text-purple-800' }] : []),
+  ]
+
+  const seniorLeadTiles: Tile[] = [
+    ...coachDevBaseTiles,
+    { label: 'Semester Plans', description: 'Plans & feedback by week', icon: BookOpen, path: '/lesson-plans', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
+    { label: 'UKAG Library', description: 'Level 1–6 coaching plans', icon: GraduationCap, path: '/ukag', color: 'bg-violet-50 text-violet-800' },
+    { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
+    { label: 'Leadership Course', description: 'Lead Coach certification', icon: Medal, path: '/course/leadership', color: 'bg-yellow-50 text-yellow-700' },
+    { label: 'Apparatus CPD', description: 'Floor, Bars, Beam & Vault', icon: Dumbbell, path: '/course/apparatus', color: 'bg-rose-50 text-rose-700' },
+    { label: 'Super Lead Course', description: 'Regional leadership programme', icon: GraduationCap, path: '/course/area-lead', color: 'bg-violet-50 text-violet-700' },
+    { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
+    { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
+    { label: 'Staff Timesheets', description: 'View your team\'s hours', icon: Users, path: '/timesheets', color: 'bg-purple-50 text-purple-800' },
+    { label: 'Lesson Plans Admin', description: 'Manage plans & CPD content', icon: GraduationCap, path: '/admin/lesson-plans', color: 'bg-indigo-50 text-indigo-700' },
+    { label: 'Coach Onboarding', description: 'Track coach induction progress', icon: ListChecks, path: '/admin/onboarding', color: 'bg-emerald-50 text-emerald-700' },
+  ]
+
+  const operationsAssistantTiles: Tile[] = [
+    { label: 'Reports', description: 'Lesson plans & session feedback', icon: BarChart2, path: '/admin/lesson-plans', color: 'bg-indigo-50 text-indigo-700' },
+    { label: 'Weekly Reports', description: 'Super Lead weekly submissions', icon: ClipboardCheck, path: '/area-lead-reports', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
+    { label: 'Announcements', description: 'Post & manage staff updates', icon: Megaphone, path: '/admin/announcements', color: 'bg-pink-50 text-pink-700' },
+    { label: 'Documents', description: 'Policies & shared documents', icon: FileText, path: '/admin/school-shared-docs', color: 'bg-sky-50 text-sky-700' },
+    { label: 'Coach Onboarding', description: 'Track induction progress', icon: ListChecks, path: '/admin/onboarding', color: 'bg-emerald-50 text-emerald-700' },
+    { label: 'School Health', description: 'RAG status across schools', icon: ShieldAlert, path: '/admin/school-health-scores', color: 'bg-rose-50 text-rose-700' },
+    { label: 'Contacts', description: 'Org safeguarding & contacts', icon: Users, path: '/admin/org-contacts', color: 'bg-teal-50 text-teal-700' },
+    { label: 'Lessons Learned', description: 'Operational improvement log', icon: BookOpen, path: '/admin/lessons-learned', color: 'bg-amber-50 text-amber-700' },
+  ]
+
+  const marketingTiles: Tile[] = [
+    { label: 'Blog & News', description: 'Write & publish articles', icon: BookOpen, path: '/admin/blog', color: 'bg-sky-50 text-sky-700' },
+    { label: 'Newsletters', description: 'Sync Brevo campaigns', icon: Megaphone, path: '/admin/newsletters', color: 'bg-violet-50 text-violet-700' },
+    { label: 'Announcements', description: 'Post & manage staff updates', icon: Megaphone, path: '/admin/announcements', color: 'bg-pink-50 text-pink-700' },
+    { label: 'Holiday Camps', description: 'Manage camp listings', icon: CalendarCheck, path: '/admin/holiday-camps', color: 'bg-amber-50 text-amber-700' },
+    { label: 'Ad Banners', description: 'Homepage & newsletter banners', icon: FileText, path: '/admin/ad-banners', color: 'bg-yellow-50 text-yellow-700' },
+    { label: 'Documents', description: 'Policies & handbooks', icon: FileText, path: '/documents', color: 'bg-blue-50 text-blue-700' },
   ]
 
   const managementTiles: Tile[] = [
@@ -139,9 +176,13 @@ export function MyAreaPage() {
 
         <TileSection title="Personal" tiles={personalTiles} />
 
-        {isLead && <TileSection title="Coaching Development" tiles={coachingTiles} />}
+        {isSeniorLead && <TileSection title="Coaching Development" tiles={seniorLeadTiles} />}
+        {isLead && !isSeniorLead && <TileSection title="Coaching Development" tiles={coachingTiles} />}
         {(role === 'assistant_coach' || role === 'junior_coach') && <TileSection title="Coaching Development" tiles={juniorCoachTiles} />}
-        {!isLead && role !== 'assistant_coach' && role !== 'junior_coach' && (
+        {isOpsAssistant && <TileSection title="Operations" tiles={operationsAssistantTiles} />}
+        {isMarketing && <TileSection title="Marketing & Content" tiles={marketingTiles} />}
+        {!isLead && !isSeniorLead && !isAreaLead && !isOpsAssistant && !isMarketing &&
+         role !== 'assistant_coach' && role !== 'junior_coach' && role !== 'outreach_worker' && (
           <TileSection title="Coaching Development" tiles={coachDevBaseTiles} />
         )}
 
