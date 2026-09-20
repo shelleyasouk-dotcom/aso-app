@@ -180,7 +180,7 @@ export default function App() {
 
           {/* Director & Super Lead */}
           <Route path="/timesheets" element={
-            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'senior_lead_coach', 'lead_coach']}>
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'operations_assistant', 'area_lead', 'senior_lead_coach', 'lead_coach']}>
               <TimesheetsPage />
             </ProtectedRoute>
           } />

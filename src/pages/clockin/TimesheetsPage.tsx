@@ -39,8 +39,7 @@ const DT_CLASS = "w-full px-3 py-2 rounded-xl border border-gray-200 text-sm foc
 
 export function TimesheetsPage() {
   const { profile } = useAuth()
-  const isLeadCoach = profile?.role === 'lead_coach'
-  const isScopedToArea = profile?.role === 'lead_coach' || profile?.role === 'area_lead'
+  const isScopedToArea = profile?.role === 'lead_coach' || profile?.role === 'senior_lead_coach' || profile?.role === 'area_lead'
   const [records, setRecords] = useState<EnrichedRecord[]>([])
   const [staff, setStaff] = useState<Profile[]>([])
   const [schools, setSchools] = useState<School[]>([])
@@ -222,8 +221,7 @@ export function TimesheetsPage() {
           </div>
         )}
 
-        {!isLeadCoach && (
-          <Button variant="primary" size="lg" fullWidth onClick={() => setShowAdd(v => !v)}>
+        <Button variant="primary" size="lg" fullWidth onClick={() => setShowAdd(v => !v)}>
             <Plus size={20} /> Add Missing Clock Record
           </Button>
         )}
@@ -328,7 +326,7 @@ export function TimesheetsPage() {
                           <div className="flex flex-col gap-1">
                             {recs.map(rec => (
                               <div key={rec.id}>
-                                {!isLeadCoach && editingId === rec.id ? (
+                                {editingId === rec.id ? (
                                   <div className="bg-[#f4f6f9] rounded-2xl p-3 flex flex-col gap-2 my-1">
                                     <p className="text-xs font-bold text-[#1a3a6b] mb-1">Edit Record</p>
                                     <div className="flex flex-col gap-1">
@@ -376,8 +374,7 @@ export function TimesheetsPage() {
                                       <Badge color={rec.clock_out ? 'green' : 'yellow'}>
                                         {formatDuration(rec.clock_in, rec.clock_out)}
                                       </Badge>
-                                      {!isLeadCoach && (
-                                        <>
+                                      <>
                                           <button onClick={() => { startEdit(rec); setConfirmDeleteId(null) }}
                                             className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50">
                                             <Pencil size={14} />
@@ -394,7 +391,6 @@ export function TimesheetsPage() {
                                             </button>
                                           )}
                                         </>
-                                      )}
                                     </div>
                                   </div>
                                 )}
