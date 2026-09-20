@@ -227,7 +227,7 @@ export function IncidentReportDetailPage() {
         {/* Review panel for area leads / directors */}
         {canReview && (
           <div className="bg-[#1a3a6b]/5 border border-[#1a3a6b]/20 rounded-2xl px-4 py-5 flex flex-col gap-4">
-            <p className="text-sm font-bold text-[#1a3a6b]">Super Lead Review</p>
+            <p className="text-sm font-bold text-[#1a3a6b]">Senior Lead Review</p>
 
             {/* Further action toggle */}
             <div>

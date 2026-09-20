@@ -90,7 +90,7 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           ],
         },
         {
-          heading: 'Working With Super Leads and Directors',
+          heading: 'Working With Senior Leads and Directors',
           body: 'Your area lead is your support system, not a supervisor in the traditional sense. They want to help you succeed — use them. If something is going wrong, tell your area lead early, not after it becomes a problem.',
           bullets: [
             'Submit all reports on time so your area lead has the full picture',
@@ -608,7 +608,7 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           question: 'Who submits Weekly Reports in the app?',
           options: [
             'All coaches regardless of role',
-            'Lead Coaches, Super Leads, and Directors only',
+            'Lead Coaches, Senior Leads, and Directors only',
             'Assistant coaches only',
             'Directors only',
           ],
@@ -790,7 +790,7 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           ],
         },
         {
-          heading: 'Working With Your Super Lead',
+          heading: 'Working With Your Senior Lead',
           body: 'Your area lead is there to develop you — not just monitor you. Build a real working relationship. Ask for observations. Ask for feedback. Be honest about what you need.',
           bullets: [
             'Request an observation session at least once per semester',

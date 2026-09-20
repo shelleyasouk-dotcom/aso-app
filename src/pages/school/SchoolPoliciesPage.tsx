@@ -56,8 +56,8 @@ const POLICIES: Policy[] = [
           { type: 'numbered', items: [
             'The coach listens calmly, does not ask leading questions, and does not promise confidentiality',
             'The coach records exactly what was said — word for word — as soon as the session ends',
-            'The concern is reported to the Super Lead (Deputy DSL) the same day',
-            'The Super Lead reports to the ASO DSL and the school\'s DSL on the same day',
+            'The concern is reported to the Senior Lead (Deputy DSL) the same day',
+            'The Senior Lead reports to the ASO DSL and the school\'s DSL on the same day',
             'ASO follows KCSIE and local authority referral routes where required',
             'All concerns are recorded on the ASO Safeguarding Concern Form and stored securely',
           ]},
@@ -66,7 +66,7 @@ const POLICIES: Policy[] = [
       },
       {
         heading: '1.4 Local Referral Routes',
-        content: [{ type: 'text', text: 'ASO coaches and Super Leads are briefed on local referral routes into children\'s social care at the point of area onboarding. The specific local authority referral pathway for each area is confirmed with the school\'s DSL at the start of each partnership. In all cases, if there is immediate risk of harm, the police and emergency services are contacted first (999), followed by notification to the school\'s DSL and the ASO DSL.' }],
+        content: [{ type: 'text', text: 'ASO coaches and Senior Leads are briefed on local referral routes into children\'s social care at the point of area onboarding. The specific local authority referral pathway for each area is confirmed with the school\'s DSL at the start of each partnership. In all cases, if there is immediate risk of harm, the police and emergency services are contacted first (999), followed by notification to the school\'s DSL and the ASO DSL.' }],
       },
       {
         heading: '1.5 Online Safety',
@@ -116,7 +116,7 @@ const POLICIES: Policy[] = [
         content: [
           { type: 'text', text: 'Any breach of this Code of Conduct will be taken seriously. Depending on the nature of the breach:' },
           { type: 'bullets', items: [
-            'Minor breaches — informal conversation with Lead Coach or Super Lead',
+            'Minor breaches — informal conversation with Lead Coach or Senior Lead',
             'Repeated or moderate breaches — formal written warning from the Operations Director',
             'Serious breaches — immediate suspension pending investigation',
             'Safeguarding breaches — immediate suspension and referral to relevant authorities',
@@ -148,8 +148,8 @@ const POLICIES: Policy[] = [
       {
         heading: '3.2 How to Raise a Concern',
         content: [{ type: 'numbered', items: [
-          'In the first instance, raise the concern with your Super Lead',
-          'If the concern involves the Super Lead, raise it directly with Naima at info@activeschool.org.uk',
+          'In the first instance, raise the concern with your Senior Lead',
+          'If the concern involves the Senior Lead, raise it directly with Naima at info@activeschool.org.uk',
           'If the concern involves senior management, raise it with the Operations Director at ops@activeschool.org.uk',
           'For safeguarding concerns, always contact the DSL directly: safeguarding@activeschool.org.uk',
           'Concerns can be raised verbally or in writing — written is preferred so there is a clear record',
@@ -212,8 +212,8 @@ const POLICIES: Policy[] = [
             'The Lead Coach stays with the child — the child is never left alone',
             'The Lead Coach contacts the parent or guardian on the registered number',
             'If no answer, the secondary emergency contact is called immediately',
-            'If still no answer, the Super Lead is contacted',
-            'The Super Lead contacts Naima and follows the school\'s late collection protocol',
+            'If still no answer, the Senior Lead is contacted',
+            'The Senior Lead contacts Naima and follows the school\'s late collection protocol',
             'Under no circumstances is the child taken off the premises',
             'Under no circumstances is the child released to an adult not on their contact list',
             'The incident is logged on the Incident Report Form the same day',
@@ -223,7 +223,7 @@ const POLICIES: Policy[] = [
       },
       {
         heading: '4.4 Self-Dismissal',
-        content: [{ type: 'text', text: 'Children will not be permitted to leave a session unaccompanied regardless of age, unless written permission has been provided in advance by the parent and formally agreed by the ASO Super Lead and the school.' }],
+        content: [{ type: 'text', text: 'Children will not be permitted to leave a session unaccompanied regardless of age, unless written permission has been provided in advance by the parent and formally agreed by the ASO Senior Lead and the school.' }],
       },
     ],
   },
@@ -258,7 +258,7 @@ const POLICIES: Policy[] = [
       {
         heading: '5.4 Performance Reviews',
         content: [{ type: 'bullets', items: [
-          'All coaches receive a termly review conducted by their Super Lead',
+          'All coaches receive a termly review conducted by their Senior Lead',
           'Reviews assess delivery quality, safeguarding awareness, reliability, and professional conduct',
           'Any concerns identified at review are addressed through a structured support and improvement process',
           'Review records are maintained on the staff member\'s coach profile',
@@ -290,7 +290,7 @@ const POLICIES: Policy[] = [
         content: [{ type: 'bullets', items: [
           'All equipment used in sessions meets current national guidelines and AfPE guidance',
           'Equipment is checked before every session — damaged or unsafe equipment is not used',
-          'Any damaged equipment is reported to the Super Lead immediately and removed from use',
+          'Any damaged equipment is reported to the Senior Lead immediately and removed from use',
           'Equipment is stored safely and securely at the end of every session',
         ]}],
       },
@@ -305,7 +305,7 @@ const POLICIES: Policy[] = [
       },
       {
         heading: '6.4 Lone Working',
-        content: [{ type: 'text', text: 'ASO operates a clear lone working policy. Coaches are never left alone with a single child in a closed space. Where staffing is reduced, sessions are adapted in line with ASO\'s Lone Working Protocol to ensure the safety of all children. Any lone working situation is reported to the Super Lead and logged.' }],
+        content: [{ type: 'text', text: 'ASO operates a clear lone working policy. Coaches are never left alone with a single child in a closed space. Where staffing is reduced, sessions are adapted in line with ASO\'s Lone Working Protocol to ensure the safety of all children. Any lone working situation is reported to the Senior Lead and logged.' }],
       },
     ],
   },
@@ -358,7 +358,7 @@ const POLICIES: Policy[] = [
           { type: 'numbered', items: [
             'The Lead Coach assesses the situation calmly and ensures the child is safe',
             'Basic first aid is administered where appropriate',
-            'For serious injuries — call 999 immediately. Then notify the Super Lead and parent.',
+            'For serious injuries — call 999 immediately. Then notify the Senior Lead and parent.',
             'The parent or guardian is notified of any injury as soon as possible',
             'All injuries, however minor, are recorded on the ASO Accident Report Form the same day',
             'The school\'s named contact is informed of any injury occurring on their premises',
@@ -392,8 +392,8 @@ const POLICIES: Policy[] = [
         heading: '9.2 Reporting Process',
         content: [{ type: 'numbered', items: [
           'The Lead Coach completes the ASO Incident Report Form on the day of the incident',
-          'The form is submitted to the Super Lead within 24 hours',
-          'The Super Lead reviews and forwards to Naima the same day',
+          'The form is submitted to the Senior Lead within 24 hours',
+          'The Senior Lead reviews and forwards to Naima the same day',
           'Naima retains all incident records in line with GDPR and data retention requirements',
           'Where required, the school\'s named contact is notified the same day',
           'Serious incidents are escalated to the DSL and Operations Director immediately',
@@ -439,7 +439,7 @@ const POLICIES: Policy[] = [
         content: [{ type: 'numbered', items: [
           'Use epi-pen or emergency medication if prescribed and required',
           'Call 999 immediately',
-          'Call the Super Lead immediately',
+          'Call the Senior Lead immediately',
           'Call the parent or guardian',
           'Inform the school\'s named contact',
           'Complete the ASO Incident Report Form the same day',
@@ -480,7 +480,7 @@ const POLICIES: Policy[] = [
         content: [
           { type: 'text', text: 'If a school has a concern about ASO\'s provision:' },
           { type: 'numbered', items: [
-            'Contact the ASO Super Lead directly in the first instance',
+            'Contact the ASO Senior Lead directly in the first instance',
             'If unresolved, contact Naima at info@activeschool.org.uk',
             'If still unresolved, contact the Operations Director at ops@activeschool.org.uk',
             'ASO will acknowledge school complaints within 2 working days and respond in full within 7 working days',
@@ -530,7 +530,7 @@ const POLICIES: Policy[] = [
           { type: 'text', text: 'In cases of persistent disruptive behaviour, physical aggression, or behaviour that puts others at risk:' },
           { type: 'numbered', items: [
             'The Lead Coach speaks with the parent or guardian after the session',
-            'The Super Lead is notified and a behaviour plan is agreed where possible',
+            'The Senior Lead is notified and a behaviour plan is agreed where possible',
             'The school\'s named contact is informed and asked to support where appropriate',
             'If behaviour continues, ASO reserves the right to suspend or permanently remove a child from the programme',
           ]},
@@ -551,7 +551,7 @@ const POLICIES: Policy[] = [
       {
         heading: '13.1 Qualifications by Role',
         content: [{ type: 'table', rows: [
-          ['Qualification', 'Junior Coach', 'Asst. Coach', 'Lead Coach', 'Super Lead'],
+          ['Qualification', 'Junior Coach', 'Asst. Coach', 'Lead Coach', 'Senior Lead'],
           ['Enhanced DBS (incl. barred list)', '✅', '✅', '✅', '✅'],
           ['Safeguarding in Sport (Level 1+)', '✅', '✅', '✅', '✅'],
           ['Annual Safeguarding Refresher (KCSIE)', '✅', '✅', '✅', '✅'],
@@ -577,7 +577,7 @@ const POLICIES: Policy[] = [
       {
         heading: '13.3 Continuous Professional Development',
         content: [{ type: 'bullets', items: [
-          'All ASO coaches are observed termly by their Super Lead',
+          'All ASO coaches are observed termly by their Senior Lead',
           'Annual safeguarding refresher training is mandatory for all staff',
           'ASO funds UKAG qualifications for eligible coaches',
           'CPD records are maintained on each coach\'s staff profile',

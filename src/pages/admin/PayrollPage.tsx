@@ -18,7 +18,7 @@ const SESSION_ROLE_LABELS: Record<string, string> = {
   junior_coach:    'Junior Coach',
   assistant_coach: 'Assistant Coach',
   lead_coach:      'Lead Coach',
-  area_lead:       'Super Lead',
+  area_lead:       'Senior Lead',
   director:        'Director',
 }
 
@@ -297,7 +297,7 @@ export function PayrollPage() {
                 { label: 'Junior Coach', rate: 10, color: 'bg-green-600' },
                 { label: 'Assistant Coach', rate: 15, color: 'bg-purple-600' },
                 { label: 'Lead Coach', rate: 30, color: 'bg-[#1a3a6b]' },
-                { label: 'Super Lead', rate: 35, color: 'bg-amber-600' },
+                { label: 'Senior Lead', rate: 35, color: 'bg-amber-600' },
               ].map(r => (
                 <div key={r.label} className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full shrink-0 ${r.color}`} />

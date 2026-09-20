@@ -108,7 +108,7 @@ export function MyAreaPage() {
     { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
     { label: 'Leadership Course', description: 'Lead Coach certification', icon: Medal, path: '/course/leadership', color: 'bg-yellow-50 text-yellow-700' },
     { label: 'Apparatus CPD', description: 'Floor, Bars, Beam & Vault', icon: Dumbbell, path: '/course/apparatus', color: 'bg-rose-50 text-rose-700' },
-    { label: 'Super Lead Course', description: 'Regional leadership programme', icon: GraduationCap, path: '/course/area-lead', color: 'bg-violet-50 text-violet-700' },
+    { label: 'Senior Lead Course', description: 'Regional leadership programme', icon: GraduationCap, path: '/course/area-lead', color: 'bg-violet-50 text-violet-700' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
     { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
     ...(role === 'lead_coach' || role === 'senior_lead_coach' ? [{ label: 'Staff Timesheets', description: 'View your team\'s hours', icon: Users, path: '/timesheets', color: 'bg-purple-50 text-purple-800' }] : []),
@@ -121,7 +121,7 @@ export function MyAreaPage() {
     { label: 'Awards', description: 'Track UKAG progress', icon: Award, path: '/awards', color: 'bg-green-50 text-green-800' },
     { label: 'Leadership Course', description: 'Lead Coach certification', icon: Medal, path: '/course/leadership', color: 'bg-yellow-50 text-yellow-700' },
     { label: 'Apparatus CPD', description: 'Floor, Bars, Beam & Vault', icon: Dumbbell, path: '/course/apparatus', color: 'bg-rose-50 text-rose-700' },
-    { label: 'Super Lead Course', description: 'Regional leadership programme', icon: GraduationCap, path: '/course/area-lead', color: 'bg-violet-50 text-violet-700' },
+    { label: 'Senior Lead Course', description: 'Regional leadership programme', icon: GraduationCap, path: '/course/area-lead', color: 'bg-violet-50 text-violet-700' },
     { label: 'School Coaches', description: 'Staff at your schools', icon: CalendarCheck, path: '/sessions', color: 'bg-teal-50 text-teal-700' },
     { label: 'Incident Reports', description: 'Log accidents & incidents', icon: ShieldAlert, path: '/incidents', color: 'bg-red-50 text-red-700' },
     { label: 'Staff Timesheets', description: 'View your team\'s hours', icon: Users, path: '/timesheets', color: 'bg-purple-50 text-purple-800' },
@@ -131,7 +131,7 @@ export function MyAreaPage() {
 
   const operationsAssistantTiles: Tile[] = [
     { label: 'Reports', description: 'Lesson plans & session feedback', icon: BarChart2, path: '/admin/lesson-plans', color: 'bg-indigo-50 text-indigo-700' },
-    { label: 'Weekly Reports', description: 'Super Lead weekly submissions', icon: ClipboardCheck, path: '/area-lead-reports', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
+    { label: 'Weekly Reports', description: 'Senior Lead weekly submissions', icon: ClipboardCheck, path: '/area-lead-reports', color: 'bg-[#1a3a6b]/5 text-[#1a3a6b]' },
     { label: 'Announcements', description: 'Post & manage staff updates', icon: Megaphone, path: '/admin/announcements', color: 'bg-pink-50 text-pink-700' },
     { label: 'Documents', description: 'Policies & shared documents', icon: FileText, path: '/admin/school-shared-docs', color: 'bg-sky-50 text-sky-700' },
     { label: 'Coach Onboarding', description: 'Track induction progress', icon: ListChecks, path: '/admin/onboarding', color: 'bg-emerald-50 text-emerald-700' },

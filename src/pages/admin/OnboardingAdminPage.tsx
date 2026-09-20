@@ -100,7 +100,7 @@ function deriveStageStatus(stageId: string, assignments: TaskAssignment[]): Stag
 function roleLabel(role: string) {
   const map: Record<string, string> = {
     lead_coach: 'Lead Coach', assistant_coach: 'Assistant Coach',
-    junior_coach: 'Junior Coach', area_lead: 'Super Lead',
+    junior_coach: 'Junior Coach', area_lead: 'Senior Lead',
     director: 'Director', outreach_worker: 'Outreach Worker',
     media_tech: 'Media & Tech',
   }

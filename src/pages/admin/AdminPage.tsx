@@ -60,7 +60,7 @@ export function AdminPage() {
       <div className="px-4 pt-5 pb-10 flex flex-col gap-6">
 
         <p className="text-sm text-gray-400">
-          {isDirector ? 'Director tools — manage your organisation.' : 'Super Lead tools — manage your schools and coaches.'}
+          {isDirector ? 'Director tools — manage your organisation.' : 'Senior Lead tools — manage your schools and coaches.'}
         </p>
 
         {/* Registers & Children */}

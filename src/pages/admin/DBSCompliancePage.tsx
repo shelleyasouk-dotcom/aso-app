@@ -27,7 +27,7 @@ const ROLE_LABELS: Record<string, string> = {
   junior_coach:    'Junior Coach',
   assistant_coach: 'Assistant Coach',
   lead_coach:      'Lead Coach',
-  area_lead:       'Super Lead',
+  area_lead:       'Senior Lead',
   director:        'Operations Manager',
   outreach_worker: 'Outreach Manager',
   media_tech:      'Marketing Coordinator',

@@ -4,7 +4,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   director:             'Director',
   operations_manager:   'Operations Manager',
   operations_assistant: 'Operations Assistant',
-  area_lead:            'Super Lead',
+  area_lead:            'Senior Lead',
   senior_lead_coach:    'Senior Lead Coach',
   lead_coach:           'Lead Coach',
   assistant_coach:      'Assistant Coach',
@@ -23,7 +23,7 @@ export function isAdmin(role: Role): boolean {
   return role === 'director' || role === 'operations_manager'
 }
 
-/** Super Leads and above */
+/** Senior Leads and above */
 export function isAreaManagement(role: Role): boolean {
   return role === 'director' || role === 'operations_manager' || role === 'area_lead'
 }
@@ -88,7 +88,7 @@ export function canUseCrm(role: Role): boolean {
   return isAreaManagement(role) || role === 'outreach_worker'
 }
 
-/** Directors and Super Leads can edit/delete anything to fix errors */
+/** Directors and Senior Leads can edit/delete anything to fix errors */
 export function canEditAll(role: Role): boolean {
   return isAreaManagement(role)
 }

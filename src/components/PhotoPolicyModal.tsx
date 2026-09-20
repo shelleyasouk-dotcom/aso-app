@@ -68,7 +68,7 @@ export function PhotoPolicyModal() {
           <div className="flex flex-col gap-2">
             <p className="text-xs font-bold text-[#1a3a6b] uppercase tracking-wide">3 checks before any photo</p>
             {[
-              'Super Lead has confirmed photography is approved for this session',
+              'Senior Lead has confirmed photography is approved for this session',
               'You know which children have NOT given consent — you will not photograph them',
               'You are using the ASO app or an ASO-issued device (or have written approval for personal device)',
             ].map((t, i) => (

@@ -148,7 +148,7 @@ function EntryCard({ entry, canEdit, onEdit }: {
             { label: 'Immediate Action Taken', value: entry.immediate_action },
             { label: 'Permanent Change', value: entry.permanent_change },
             ...(entry.prevention ? [{ label: 'What Would Have Prevented This', value: entry.prevention }] : []),
-            ...(entry.reflection ? [{ label: 'Director / Super Lead Reflection', value: entry.reflection }] : []),
+            ...(entry.reflection ? [{ label: 'Director / Senior Lead Reflection', value: entry.reflection }] : []),
             ...(entry.linked_sops ? [{ label: 'Linked SOPs Updated', value: entry.linked_sops }] : []),
           ].map(({ label, value }) => (
             <div key={label}>
@@ -308,7 +308,7 @@ export function LessonsLearnedPage() {
                 placeholder="What process has changed and who owns it…" rows={3} />
               <FieldBlock label="What Would Have Prevented This" value={form.prevention} onChange={setF('prevention')}
                 placeholder="The missing thing that, if it had existed, would have prevented this…" rows={2} />
-              <FieldBlock label="Director / Super Lead Reflection" value={form.reflection} onChange={setF('reflection')}
+              <FieldBlock label="Director / Senior Lead Reflection" value={form.reflection} onChange={setF('reflection')}
                 placeholder="Personal reflection on the event and what it means for the organisation…" rows={3} />
               <FieldBlock label="Linked SOPs / Checklists Updated" value={form.linked_sops} onChange={setF('linked_sops')}
                 placeholder="e.g. New School Launch Checklist | Incident Communication SOP" rows={2} />

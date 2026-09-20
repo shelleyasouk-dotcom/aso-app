@@ -87,7 +87,7 @@ export function SchoolContactsPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const areaLead = (schoolRes.data as any)?.area_lead
       if (areaLead?.full_name) {
-        contacts.push({ full_name: areaLead.full_name, email: areaLead.email, phone: areaLead.phone, roleLabel: 'Super Lead' })
+        contacts.push({ full_name: areaLead.full_name, email: areaLead.email, phone: areaLead.phone, roleLabel: 'Senior Lead' })
       }
 
       // Lead coaches

@@ -178,7 +178,7 @@ export default function App() {
             <ProtectedRoute><ChildSkillsPage /></ProtectedRoute>
           } />
 
-          {/* Director & Super Lead */}
+          {/* Director & Senior Lead */}
           <Route path="/timesheets" element={
             <ProtectedRoute allowedRoles={['director', 'operations_manager', 'operations_assistant', 'area_lead', 'senior_lead_coach', 'lead_coach']}>
               <TimesheetsPage />
@@ -240,7 +240,7 @@ export default function App() {
             </ProtectedRoute>
           } />
 
-          {/* Director + Super Lead */}
+          {/* Director + Senior Lead */}
           <Route path="/admin/schools" element={
             <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <SchoolsAdminPage />

@@ -107,7 +107,7 @@ export function GuidePage() {
           <Step number={2} text="Select the school you're working at from the list." />
           <Step number={3} text="Tap the big Clock In button when your session starts." />
           <Step number={4} text="Open the app again after your session and tap Clock Out." />
-          <Note text="Always clock in at the start and out at the end — this is how your hours are recorded. If you forget, message your Super Lead and they can fix it." />
+          <Note text="Always clock in at the start and out at the end — this is how your hours are recorded. If you forget, message your Senior Lead and they can fix it." />
         </Section>
 
         <Section icon={CalendarOff} title="Logging an absence">
@@ -116,7 +116,7 @@ export function GuidePage() {
           <Step number={3} text="Choose the absence type: Sick Leave, Annual Leave, Personal, Emergency, Training, or Other." />
           <Step number={4} text="Set the start date and (if more than one day) the end date." />
           <Step number={5} text="Add an optional reason, then tap Submit Request." />
-          <Step number={6} text="Your Super Lead will receive a notification and approve or reject the request." />
+          <Step number={6} text="Your Senior Lead will receive a notification and approve or reject the request." />
           <Step number={7} text="You'll get a notification once a decision is made." />
           <Note text="You can see all your past and pending absences in the My Absences tab." />
         </Section>
@@ -145,7 +145,7 @@ export function GuidePage() {
           <Step number={3} text="Choose Mileage (driving), Travel (trains/buses), or Other." />
           <Step number={4} text="For mileage: enter the number of miles — the amount is calculated automatically at 45p per mile." />
           <Step number={5} text="Add a description (e.g. Drive to St Peter's School) and the date." />
-          <Step number={6} text="Tap Submit. Your Super Lead will approve or reject it." />
+          <Step number={6} text="Tap Submit. Your Senior Lead will approve or reject it." />
           <Note text="Submit expenses in the same week where possible." />
         </Section>
 
@@ -241,11 +241,11 @@ export function GuidePage() {
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mb-3">Management</p>
                 </div>
 
-                <Section icon={GraduationCap} title="Super Lead Development Course">
-                  <Step number={1} text="Tap Super Lead Course in Coach Zone." />
+                <Section icon={GraduationCap} title="Senior Lead Development Course">
+                  <Step number={1} text="Tap Senior Lead Course in Coach Zone." />
                   <Step number={2} text="Work through all 8 modules in order: Regional Leadership, Supporting Coaches, School Relationships, Recruitment Support, Quality Assurance, Problem Solving, Reporting Systems, and Communication." />
                   <Step number={3} text="Each module has reading sections and a quiz — you need 3 out of 4 correct to pass." />
-                  <Step number={4} text="Complete all 8 modules to earn the UKAG Super Lead Award certificate, which is saved to your profile." />
+                  <Step number={4} text="Complete all 8 modules to earn the UKAG Senior Lead Award certificate, which is saved to your profile." />
                   <Note text="This course combines online learning with workshop attendance. The certificate is awarded on full completion and is visible on your profile." />
                 </Section>
 

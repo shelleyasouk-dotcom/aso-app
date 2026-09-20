@@ -106,7 +106,7 @@ export function CourseModulePage() {
       const notifTitle = isAnaphylaxis
         ? `${profile.full_name} completed Anaphylaxis Training`
         : isAreaLead
-        ? `${profile.full_name} completed the Super Lead Course`
+        ? `${profile.full_name} completed the Senior Lead Course`
         : courseSlug
         ? `${profile.full_name} completed ${course.title}`
         : `${profile.full_name} completed the Leadership Programme`
