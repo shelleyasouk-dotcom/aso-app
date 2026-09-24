@@ -90,7 +90,7 @@ export function WeeklyReportsPage() {
   }).length
 
   return (
-    <Layout title="Weekly Reports" showBack>
+    <Layout title="Session Reports" showBack>
       <div className="max-w-3xl mx-auto px-4 py-6">
 
         {/* Header */}
@@ -98,12 +98,12 @@ export function WeeklyReportsPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <FileText size={20} className="text-[#1a3a6b]" />
-              <h1 className="text-xl font-extrabold text-gray-900">Weekly Reports</h1>
+              <h1 className="text-xl font-extrabold text-gray-900">Session Reports</h1>
               {unreadCount > 0 && (
                 <span className="bg-[#1a3a6b] text-white text-xs font-bold px-2 py-0.5 rounded-full">{unreadCount} this week</span>
               )}
             </div>
-            <p className="text-sm text-gray-500">End-of-week reports submitted by lead coaches</p>
+            <p className="text-sm text-gray-500">Session reports submitted by any staff member, for any school</p>
           </div>
         </div>
 
@@ -136,7 +136,7 @@ export function WeeklyReportsPage() {
         ) : filtered.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
             <FileText size={36} className="text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-400 text-sm">No reports yet — they'll appear here once lead coaches submit their weekly reports.</p>
+            <p className="text-gray-400 text-sm">No reports yet — they'll appear here once staff submit session reports.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">

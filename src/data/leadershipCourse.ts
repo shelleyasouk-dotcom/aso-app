@@ -74,7 +74,7 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           bullets: [
             'Arrive 15 minutes early to set up safely',
             'Complete the register and attendance record every session',
-            'Submit your weekly report through the app after each week',
+            'Submit a session report through the app after each session',
             'Report any incidents through the app the same day',
             'Ensure your team follow ASO policies at all times',
           ],
@@ -137,7 +137,7 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
         {
           question: 'Which of these is NOT a Lead Coach responsibility?',
           options: [
-            'Submitting weekly reports',
+            'Submitting session reports',
             'Recruiting new coaching staff',
             'Completing registers',
             'Briefing assistant coaches',
@@ -514,19 +514,19 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           heading: 'Your Digital Coaching Record',
           body: 'The ASO app is your professional coaching record. Everything you submit — feedback, incidents, registers, awards — builds a picture of your work over time. It protects you as much as it informs your area lead.',
           bullets: [
-            'Complete your weekly report every week — not at the end of semester',
+            'Complete a session report for every session you deliver — not at the end of semester',
             'Submit incident reports the same day',
             'Your app record is reviewed by area leads and directors',
             'Incomplete records reflect on your professionalism',
           ],
         },
         {
-          heading: 'Semester Plans & Weekly Feedback',
-          body: 'The Semester Plans section holds your 6-week coaching template. Each week has a plan — review it before the session, then submit feedback after.',
+          heading: 'Semester Plans & Session Reports',
+          body: 'The Semester Plans section holds your 6-week coaching template. Each week has a plan — review it before the session, then file a report after.',
           bullets: [
-            'Lead Coaches submit a Weekly Report: days worked, skills covered, award sign-offs',
-            'Assistant and junior coaches leave brief Session Notes',
-            'Reports unlock access to the next week for your team',
+            'Anybody can submit a Session Report: date, school, skills covered, award sign-offs',
+            'File a separate report for each school you work at that week',
+            'Assistant and junior coaches can also leave brief Session Notes',
             'Use the UKAG Library link within each plan to reference skill criteria',
           ],
         },
@@ -561,15 +561,15 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
       ],
       quiz: [
         {
-          question: 'When should you submit a Weekly Report?',
+          question: 'When should you submit a Session Report?',
           options: [
             'At the end of the semester',
-            'After each week of delivery',
+            'After each session you deliver',
             'Only if something went wrong',
             'Once a month',
           ],
           correct: 1,
-          explanation: 'Weekly reports are submitted after each week. They are your coaching record and unlock the next week for your team.',
+          explanation: 'Session reports are submitted after each session — file one per school if you work at more than one in a week. They are your coaching record.',
         },
         {
           question: 'What does the UKAG Awards tracker in the app allow you to do?',
@@ -605,15 +605,15 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           explanation: 'Recording absence is a safeguarding responsibility. Always mark who was and was not present.',
         },
         {
-          question: 'Who submits Weekly Reports in the app?',
+          question: 'Who can submit Session Reports in the app?',
           options: [
-            'All coaches regardless of role',
+            'All staff regardless of role',
             'Lead Coaches, Senior Leads, and Directors only',
             'Assistant coaches only',
             'Directors only',
           ],
-          correct: 1,
-          explanation: 'Weekly Reports are a Lead Coach responsibility. Assistants and juniors leave Session Notes.',
+          correct: 0,
+          explanation: 'Anybody can file a Session Report for any school they work at — search for the school, add the date, and complete the rest.',
         },
       ],
     },
@@ -671,7 +671,7 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           bullets: [
             'Check kit contents at the start of each semester',
             'Refill after any usage — do not wait',
-            'Record kit usage in your weekly report',
+            'Record kit usage in your session report',
             'Alert your area lead if the kit is incomplete before a session',
           ],
         },
@@ -780,11 +780,11 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           ],
         },
         {
-          heading: 'Your Weekly Report as a Development Tool',
-          body: 'Your weekly report is not just admin — it is a record of your professional growth. Over six semesters, it becomes a coaching portfolio.',
+          heading: 'Your Session Report as a Development Tool',
+          body: 'Your session reports are not just admin — they are a record of your professional growth. Over six semesters, they become a coaching portfolio.',
           bullets: [
             'Write honestly — if the session was hard, say so',
-            'Include one thing you tried differently or improved this week',
+            'Include one thing you tried differently or improved that session',
             'Your area lead reads these — they are your development conversation in writing',
             'If you would be proud to show it to a director, submit it',
           ],
@@ -823,7 +823,7 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
           explanation: 'Brief, honest reflection after each session compounds into real development over time.',
         },
         {
-          question: 'How should you use your Weekly Report as a Lead Coach?',
+          question: 'How should you use your Session Report as a Lead Coach?',
           options: [
             'As a quick compliance form to complete as fast as possible',
             'Only when the semester is going well',
@@ -831,7 +831,7 @@ export const LEADERSHIP_COURSE: LeadershipCourse = {
             'To report on what your assistants did wrong',
           ],
           correct: 2,
-          explanation: 'Your weekly report is your professional voice — write it as if your director will read it, because they might.',
+          explanation: 'Your session reports are your professional voice — write them as if your director will read them, because they might.',
         },
         {
           question: 'A junior coach on your team is showing real potential. What is the best thing you can do?',

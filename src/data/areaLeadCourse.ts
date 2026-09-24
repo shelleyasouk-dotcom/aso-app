@@ -656,7 +656,7 @@ export const AREA_LEAD_COURSE: AreaLeadCourse = {
           heading: 'Semester Plan Reviews',
           body: 'Semester plans and coach feedback reports are the primary written record of what is being delivered in each school. As Senior Lead, you review these reports and act on what they reveal.',
           bullets: [
-            'Review every lead coach\'s semester plan submission — not just a summary. Read the weekly reports',
+            'Review every session report submitted by your coaches — not just a summary',
             'Look for: sessions not delivered, skills not covered, children repeatedly absent, and coach concerns about school behaviour or facilities',
             'Respond to every semester plan with written feedback within one week of submission',
             'Use semester plan patterns to inform your observation calendar — focus visits on schools showing delivery concerns',

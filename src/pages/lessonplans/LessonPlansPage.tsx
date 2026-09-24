@@ -8,8 +8,8 @@ import { LESSON_PLANS } from '../../data/lessonPlans'
 import type { AcademicSemester } from '../../types'
 
 const WEEK_ROLE_LABELS: Record<number, string> = {
-  1: 'coach note', 2: 'coach note', 3: 'lead report',
-  4: 'lead report', 5: 'coach note', 6: 'coach note',
+  1: 'coach note', 2: 'coach note', 3: 'session report',
+  4: 'session report', 5: 'coach note', 6: 'coach note',
 }
 
 export function LessonPlansPage() {
@@ -176,11 +176,11 @@ export function LessonPlansPage() {
             <FileText size={18} className="text-[#1a3a6b] shrink-0" />
             <div className="flex-1">
               <p className="text-sm font-extrabold text-[#1a3a6b]">
-                {profile?.role === 'director' || profile?.role === 'area_lead' ? 'View Staff Reports' : 'Weekly Reports'}
+                {profile?.role === 'director' || profile?.role === 'area_lead' ? 'View Staff Reports' : 'Session Reports'}
               </p>
               <p className="text-xs text-gray-500">
                 {profile?.role === 'director' || profile?.role === 'area_lead'
-                  ? 'See all weekly reports submitted by your coaches'
+                  ? 'See all session reports submitted by your coaches'
                   : 'View reports from your school — great for reflection'}
               </p>
             </div>
@@ -283,9 +283,7 @@ export function LessonPlansPage() {
         )}
 
         <p className="px-4 text-xs text-gray-400 text-center">
-          {isLead
-            ? 'Submit your weekly report at the end of each week. Coaches can also add brief session notes.'
-            : 'Tap any week to view the session plan and leave a brief note after your session.'}
+          Tap any week to view the session plan, file a session report for any school, or leave a brief note.
         </p>
       </div>
     </Layout>

@@ -8,6 +8,7 @@ import {
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
+import { SchoolPicker } from '../../components/SchoolPicker'
 import { LESSON_PLANS } from '../../data/lessonPlans'
 import type { SessionFeedback, School, AcademicSemester } from '../../types'
 import type { WeeklyLessonPlan } from '../../data/lessonPlans'
@@ -277,7 +278,10 @@ function Section({
   )
 }
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+function todayStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 export function LessonPlanDetailPage() {
   const { week: weekParam } = useParams<{ week: string }>()
@@ -289,15 +293,16 @@ export function LessonPlanDetailPage() {
   const plan = LESSON_PLANS.find(p => p.week === weekNum)
 
   const navigate = useNavigate()
-  const isLead = profile?.role === 'lead_coach' || profile?.role === 'area_lead' || profile?.role === 'director'
 
   const [semester, setSemester] = useState<AcademicSemester | null>(null)
   const [mySchools, setMySchools] = useState<School[]>([])
+  const [allSchools, setAllSchools] = useState<School[]>([])
   const [existingCoachNote, setExistingCoachNote] = useState<SessionFeedback | null>(null)
-  const [existingLeadReport, setExistingLeadReport] = useState<SessionFeedback | null>(null)
+  const [leadReports, setLeadReports] = useState<SessionFeedback[]>([])
   const [activeTab, setActiveTab] = useState<'plan' | 'note' | 'report'>('plan')
   const [editingNote, setEditingNote] = useState(false)
   const [editingReport, setEditingReport] = useState(false)
+  const [editingReportId, setEditingReportId] = useState<string | null>(null)
   const [downloadingPDF, setDownloadingPDF] = useState(false)
 
   // Coach note form
@@ -307,9 +312,9 @@ export function LessonPlanDetailPage() {
   const [noteChallenges, setNoteChallenges] = useState('')
   const [savingNote, setSavingNote] = useState(false)
 
-  // Lead report form
+  // Session report form
   const [reportSchoolId, setReportSchoolId] = useState('')
-  const [daysWorked, setDaysWorked] = useState<string[]>([])
+  const [reportDate, setReportDate] = useState(todayStr())
   const [skillsCovered, setSkillsCovered] = useState('')
   const [awardSignOffs, setAwardSignOffs] = useState('')
   const [reportHighlights, setReportHighlights] = useState('')
@@ -348,7 +353,11 @@ export function LessonPlanDetailPage() {
         schools = (assignments ?? []).map((a: any) => a.schools).filter(Boolean) as School[]
       }
       setMySchools(schools)
-      if (schools.length === 1) { setNoteSchoolId(schools[0].id); setReportSchoolId(schools[0].id) }
+      if (schools.length === 1) setNoteSchoolId(schools[0].id)
+
+      // Session reports can be filed for ANY school, by anybody — load the full list to search
+      const { data: everySchool } = await supabase.from('schools').select('*').order('name')
+      setAllSchools((everySchool ?? []) as School[])
 
       if (sem) {
         const { data: feedback } = await supabase
@@ -357,18 +366,16 @@ export function LessonPlanDetailPage() {
           .eq('semester_number', sem.semester_number)
           .eq('academic_year', sem.academic_year)
           .eq('week_number', weekNum)
+        const leads: SessionFeedback[] = []
         for (const row of feedback ?? []) {
-          if (row.feedback_type === 'lead') setExistingLeadReport(row as SessionFeedback)
+          if (row.feedback_type === 'lead') leads.push(row as SessionFeedback)
           else setExistingCoachNote(row as SessionFeedback)
         }
+        setLeadReports(leads)
       }
     }
     load()
   }, [profile, semId, weekNum])
-
-  function toggleDay(day: string) {
-    setDaysWorked(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
-  }
 
   async function submitNote() {
     if (!profile || !noteSchoolId || !semester) return
@@ -397,25 +404,48 @@ export function LessonPlanDetailPage() {
     } finally { setSavingNote(false) }
   }
 
+  function startNewReport() {
+    setEditingReportId(null)
+    setReportSchoolId('')
+    setReportDate(todayStr())
+    setSkillsCovered(''); setAwardSignOffs(''); setReportHighlights(''); setReportChallenges(''); setReportPhotos([])
+    setEditingReport(true)
+  }
+
+  function startEditReport(report: SessionFeedback) {
+    setEditingReportId(report.id)
+    setReportSchoolId(report.school_id)
+    setReportDate((report.session_dates ?? [])[0] ?? todayStr())
+    setSkillsCovered((report.skills_covered ?? []).join('\n'))
+    setAwardSignOffs(report.award_sign_offs ?? '')
+    setReportHighlights(report.highlights ?? '')
+    setReportChallenges(report.challenges ?? '')
+    setReportPhotos([])
+    setEditingReport(true)
+  }
+
   async function submitReport() {
-    if (!profile || !reportSchoolId || !semester) return
+    if (!profile || !reportSchoolId || !reportDate || !semester) return
     setSavingReport(true)
     try {
+      const dayName = new Date(reportDate + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long' })
       const payload = {
         semester_number: semester.semester_number, week_number: weekNum,
         academic_year: semester.academic_year,
         school_id: reportSchoolId, coach_id: profile.id,
         feedback_type: 'lead',
-        days_worked: daysWorked,
+        days_worked: [dayName],
+        session_dates: [reportDate],
         skills_covered: skillsCovered.split('\n').map(s => s.trim()).filter(Boolean),
         award_sign_offs: awardSignOffs || null,
         highlights: reportHighlights || null, challenges: reportChallenges || null,
-        overall_notes: null, session_dates: [], photos: [],
+        overall_notes: null, photos: [],
       }
       let reportId: string
-      if (existingLeadReport && editingReport) {
-        await supabase.from('session_feedback').update(payload).eq('id', existingLeadReport.id)
-        reportId = existingLeadReport.id
+      const editingExisting = editingReportId ? leadReports.find(r => r.id === editingReportId) : null
+      if (editingExisting) {
+        await supabase.from('session_feedback').update(payload).eq('id', editingExisting.id)
+        reportId = editingExisting.id
       } else {
         const { data } = await supabase.from('session_feedback').insert(payload).select('id').single()
         reportId = data!.id
@@ -431,16 +461,19 @@ export function LessonPlanDetailPage() {
         }
       }
       if (photoUrls.length > 0) {
-        const existing = existingLeadReport?.photos ?? []
+        const existing = editingExisting?.photos ?? []
         await supabase.from('session_feedback').update({ photos: [...existing, ...photoUrls] }).eq('id', reportId)
       }
       const { data } = await supabase.from('session_feedback').select('*').eq('id', reportId).single()
-      setExistingLeadReport(data as SessionFeedback)
-      setEditingReport(false); setReportPhotos([]); setActiveTab('plan')
+      const savedReport = data as SessionFeedback
+      setLeadReports(prev => editingExisting
+        ? prev.map(r => r.id === reportId ? savedReport : r)
+        : [savedReport, ...prev])
+      setEditingReport(false); setEditingReportId(null); setReportPhotos([])
 
       // Notify area leads and directors on new submissions only (not edits)
-      if (!existingLeadReport) {
-        const schoolName = mySchools.find(s => s.id === reportSchoolId)?.name ?? 'school'
+      if (!editingExisting) {
+        const schoolName = allSchools.find(s => s.id === reportSchoolId)?.name ?? 'school'
         const { data: leaders } = await supabase
           .from('profiles').select('id')
           .in('role', ['area_lead', 'director'])
@@ -449,8 +482,8 @@ export function LessonPlanDetailPage() {
           await supabase.from('notifications').insert(
             (leaders ?? []).map((l: { id: string }) => ({
               user_id: l.id,
-              title: `Week ${weekNum} report from ${profile.full_name}`,
-              body: `${schoolName} · ${semester.label ?? `Semester ${semester.semester_number}`}`,
+              title: `Session report from ${profile.full_name}`,
+              body: `${schoolName} · ${dayName} ${reportDate}`,
               type: 'week_report',
               related_id: reportId,
             }))
@@ -466,7 +499,7 @@ export function LessonPlanDetailPage() {
 
   const isArchived = semester?.is_archived ?? false
   const showNoteForm = activeTab === 'note' && !isArchived && (!existingCoachNote || editingNote)
-  const showReportForm = activeTab === 'report' && !isArchived && (!existingLeadReport || editingReport)
+  const showReportForm = activeTab === 'report' && !isArchived && editingReport
 
   return (
     <Layout title={`Week ${plan.week}`} showBack>
@@ -529,7 +562,7 @@ export function LessonPlanDetailPage() {
             {([
               { id: 'plan', label: 'Session Plan' },
               { id: 'note', label: existingCoachNote ? '✓ My Note' : 'My Note' },
-              ...(isLead ? [{ id: 'report', label: existingLeadReport ? '✓ Report' : 'Weekly Report' }] : []),
+              { id: 'report', label: leadReports.length > 0 ? `✓ Session Reports (${leadReports.length})` : 'Session Report' },
             ] as { id: 'plan' | 'note' | 'report'; label: string }[]).map(tab => (
               <button
                 key={tab.id}
@@ -879,81 +912,115 @@ export function LessonPlanDetailPage() {
           </div>
         )}
 
-        {/* ── LEAD WEEKLY REPORT TAB ── */}
-        {activeTab === 'report' && isLead && (
+        {/* ── SESSION REPORT TAB ── */}
+        {activeTab === 'report' && (
           <div className="px-4 flex flex-col gap-4">
-            {existingLeadReport && !editingReport ? (
+            {!showReportForm ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <p className="font-extrabold text-gray-800">Weekly Report</p>
-                  <button
-                    onClick={() => { setDaysWorked(existingLeadReport.days_worked ?? []); setSkillsCovered((existingLeadReport.skills_covered ?? []).join('\n')); setAwardSignOffs(existingLeadReport.award_sign_offs ?? ''); setReportHighlights(existingLeadReport.highlights ?? ''); setReportChallenges(existingLeadReport.challenges ?? ''); setEditingReport(true) }}
-                    className="flex items-center gap-1.5 text-xs font-bold text-[#1a3a6b] bg-[#1a3a6b]/10 px-3 py-1.5 rounded-full"
-                  >
-                    <Edit2 size={11} /> Edit
-                  </button>
+                  <p className="font-extrabold text-gray-800">Session Reports</p>
+                  {!isArchived && (
+                    <button
+                      onClick={startNewReport}
+                      className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#1a3a6b] px-3 py-1.5 rounded-full"
+                    >
+                      + Add Session Report
+                    </button>
+                  )}
                 </div>
-                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3">
-                  {existingLeadReport.days_worked.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1.5">Days Worked</p>
-                      <div className="flex flex-wrap gap-1.5">{existingLeadReport.days_worked.map(d => <span key={d} className="bg-[#1a3a6b]/10 text-[#1a3a6b] text-xs font-semibold px-2.5 py-1 rounded-full">{d}</span>)}</div>
-                    </div>
-                  )}
-                  {existingLeadReport.skills_covered.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Skills Covered</p>
-                      {existingLeadReport.skills_covered.map(s => <p key={s} className="text-sm text-gray-700">· {s}</p>)}
-                    </div>
-                  )}
-                  {existingLeadReport.award_sign_offs && <div><p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Award Sign-offs</p><p className="text-sm text-gray-700">{existingLeadReport.award_sign_offs}</p></div>}
-                  {existingLeadReport.highlights && <div><p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Group Highlights</p><p className="text-sm text-gray-700">{existingLeadReport.highlights}</p></div>}
-                  {existingLeadReport.challenges && <div><p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Challenges</p><p className="text-sm text-gray-700">{existingLeadReport.challenges}</p></div>}
-                  {existingLeadReport.photos.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1.5">Photos</p>
-                      <div className="grid grid-cols-3 gap-2">{existingLeadReport.photos.map(url => <img key={url} src={url} alt="" className="w-full aspect-square object-cover rounded-xl" />)}</div>
-                    </div>
-                  )}
-                  <p className="text-[10px] text-gray-400">Submitted {new Date(existingLeadReport.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                </div>
+                <p className="text-sm text-gray-500 -mt-1.5">
+                  Anybody can file a session report for any school — add one for each session you deliver this week.
+                </p>
+
+                {leadReports.length === 0 ? (
+                  <div className="bg-white border border-gray-100 rounded-2xl p-6 text-center text-sm text-gray-400">
+                    No session reports filed for this week yet.
+                  </div>
+                ) : (
+                  leadReports.map(report => {
+                    const schoolName = allSchools.find(s => s.id === report.school_id)?.name ?? mySchools.find(s => s.id === report.school_id)?.name ?? 'Unknown school'
+                    const date = (report.session_dates ?? [])[0]
+                    return (
+                      <div key={report.id} className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col gap-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-bold text-gray-800 text-sm">{schoolName}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">
+                              {date ? new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' }) : (report.days_worked ?? []).join(', ')}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => startEditReport(report)}
+                            className="flex items-center gap-1.5 text-xs font-bold text-[#1a3a6b] bg-[#1a3a6b]/10 px-3 py-1.5 rounded-full shrink-0"
+                          >
+                            <Edit2 size={11} /> Edit
+                          </button>
+                        </div>
+                        {report.skills_covered.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Skills Covered</p>
+                            {report.skills_covered.map(s => <p key={s} className="text-sm text-gray-700">· {s}</p>)}
+                          </div>
+                        )}
+                        {report.award_sign_offs && <div><p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Award Sign-offs</p><p className="text-sm text-gray-700">{report.award_sign_offs}</p></div>}
+                        {report.highlights && <div><p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Highlights</p><p className="text-sm text-gray-700">{report.highlights}</p></div>}
+                        {report.challenges && <div><p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1">Challenges</p><p className="text-sm text-gray-700">{report.challenges}</p></div>}
+                        {report.photos.length > 0 && (
+                          <div>
+                            <p className="text-[10px] font-extrabold uppercase tracking-wide text-gray-400 mb-1.5">Photos</p>
+                            <div className="grid grid-cols-3 gap-2">{report.photos.map(url => <img key={url} src={url} alt="" className="w-full aspect-square object-cover rounded-xl" />)}</div>
+                          </div>
+                        )}
+                        <p className="text-[10px] text-gray-400">Submitted {new Date(report.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                      </div>
+                    )
+                  })
+                )}
               </div>
-            ) : showReportForm && (
+            ) : (
               <div className="flex flex-col gap-4">
                 <div>
-                  <p className="font-extrabold text-gray-800">{editingReport ? 'Edit Weekly Report' : 'Weekly Report'}</p>
-                  <p className="text-sm text-gray-500 mt-0.5">Complete at the end of the week. Covers all sessions you delivered across your days.</p>
+                  <p className="font-extrabold text-gray-800">{editingReportId ? 'Edit Session Report' : 'New Session Report'}</p>
+                  <p className="text-sm text-gray-500 mt-0.5">One report per session — file a separate one for each school you work at this week.</p>
                 </div>
-                {mySchools.length > 1 && (
+                <div>
+                  <label className="text-xs font-bold text-gray-600 block mb-1.5">School</label>
+                  <SchoolPicker
+                    schools={allSchools}
+                    mySchoolIds={new Set(mySchools.map(s => s.id))}
+                    value={reportSchoolId}
+                    onChange={setReportSchoolId}
+                    placeholder="Search for a school…"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-gray-600 block mb-1.5">School</label>
-                    <select value={reportSchoolId} onChange={e => setReportSchoolId(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm">
-                      <option value="">Select school…</option>
-                      {mySchools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                    </select>
+                    <label className="text-xs font-bold text-gray-600 block mb-1.5">Date</label>
+                    <input
+                      type="date"
+                      value={reportDate}
+                      max={todayStr()}
+                      onChange={e => setReportDate(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm"
+                    />
                   </div>
-                )}
-                <div>
-                  <label className="text-xs font-bold text-gray-600 block mb-2">Days worked this week</label>
-                  <div className="flex flex-wrap gap-2">
-                    {DAYS.map(day => (
-                      <button key={day} type="button" onClick={() => toggleDay(day)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${daysWorked.includes(day) ? 'bg-[#1a3a6b] text-white' : 'bg-gray-100 text-gray-500'}`}>
-                        {day.slice(0, 3)}
-                      </button>
-                    ))}
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 block mb-1.5">Day</label>
+                    <div className="w-full border border-gray-100 bg-gray-50 rounded-xl px-3 py-2.5 text-sm text-gray-500">
+                      {reportDate ? new Date(reportDate + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long' }) : '—'}
+                    </div>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-gray-600 block mb-1.5">Skills covered this week (one per line)</label>
+                  <label className="text-xs font-bold text-gray-600 block mb-1.5">Skills covered (one per line)</label>
                   <textarea value={skillsCovered} onChange={e => setSkillsCovered(e.target.value)} placeholder={'Forward rolls\nT-balance on beam\nStraight jumps + landing'} rows={4} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-600 block mb-1.5">Award sign-offs completed</label>
-                  <textarea value={awardSignOffs} onChange={e => setAwardSignOffs(e.target.value)} placeholder="Names and skills signed off, or 'none this week'" rows={3} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none" />
+                  <textarea value={awardSignOffs} onChange={e => setAwardSignOffs(e.target.value)} placeholder="Names and skills signed off, or 'none this session'" rows={3} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm resize-none" />
                 </div>
                 {[
-                  { label: 'Group highlights', value: reportHighlights, set: setReportHighlights, placeholder: 'What went really well this week?' },
+                  { label: 'Highlights', value: reportHighlights, set: setReportHighlights, placeholder: 'What went really well?' },
                   { label: 'Challenges or follow-up needed', value: reportChallenges, set: setReportChallenges, placeholder: 'Anything your area lead needs to know about?' },
                 ].map(field => (
                   <div key={field.label}>
@@ -980,13 +1047,10 @@ export function LessonPlanDetailPage() {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  {editingReport && <button onClick={() => setEditingReport(false)} className="flex-1 border border-gray-200 text-gray-600 font-bold text-sm py-3 rounded-2xl">Cancel</button>}
-                  {mySchools.length === 0
-                    ? <p className="w-full text-center text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-2xl py-3 px-4">You don't have a school assigned yet — ask your area lead to add you to a school.</p>
-                    : <button onClick={submitReport} disabled={savingReport || !reportSchoolId} className="flex-1 bg-[#1a3a6b] text-white font-bold text-sm py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50">
-                        <Send size={14} /> {savingReport ? 'Saving…' : editingReport ? 'Save report' : 'Submit report'}
-                      </button>
-                  }
+                  <button onClick={() => { setEditingReport(false); setEditingReportId(null) }} className="flex-1 border border-gray-200 text-gray-600 font-bold text-sm py-3 rounded-2xl">Cancel</button>
+                  <button onClick={submitReport} disabled={savingReport || !reportSchoolId || !reportDate} className="flex-1 bg-[#1a3a6b] text-white font-bold text-sm py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50">
+                    <Send size={14} /> {savingReport ? 'Saving…' : editingReportId ? 'Save report' : 'Submit report'}
+                  </button>
                 </div>
               </div>
             )}
