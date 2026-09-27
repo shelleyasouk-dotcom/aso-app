@@ -6,18 +6,23 @@ import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { SchoolPicker } from '../../components/SchoolPicker'
+import { rateForSessionRole } from '../../lib/sessionRates'
 import type { School } from '../../types'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SESSION_ROLES = [
+  { value: 'area_lead',       label: 'Senior Lead' },
   { value: 'lead_coach',      label: 'Lead Coach' },
+  { value: 'assistant_lead',  label: 'Assistant Lead' },
   { value: 'assistant_coach', label: 'Assistant Coach' },
   { value: 'junior_coach',    label: 'Junior Coach' },
 ]
 
 const ROLE_COLORS: Record<string, string> = {
+  area_lead:       'bg-amber-600 text-white',
   lead_coach:      'bg-[#1a3a6b] text-white',
+  assistant_lead:  'bg-teal-600 text-white',
   assistant_coach: 'bg-purple-600 text-white',
   junior_coach:    'bg-green-600 text-white',
 }
@@ -56,11 +61,14 @@ export function ClockInPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  const defaultRole = profile?.role === 'lead_coach'
-    ? 'lead_coach'
-    : profile?.role === 'assistant_coach'
-    ? 'assistant_coach'
-    : 'junior_coach'
+  function defaultSessionRoleFor(role: string | undefined) {
+    if (role === 'area_lead' || role === 'director' || role === 'senior_lead_coach') return 'area_lead'
+    if (role === 'lead_coach') return 'lead_coach'
+    if (role === 'assistant_coach') return 'assistant_coach'
+    return 'junior_coach'
+  }
+
+  const defaultRole = defaultSessionRoleFor(profile?.role)
 
   const [schools, setSchools] = useState<School[]>([])
   const [mySchoolIds, setMySchoolIds] = useState<Set<string>>(new Set())
@@ -73,10 +81,7 @@ export function ClockInPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (profile?.role) {
-      const r = profile.role
-      setSessionRole(r === 'lead_coach' ? 'lead_coach' : r === 'assistant_coach' ? 'assistant_coach' : 'junior_coach')
-    }
+    if (profile?.role) setSessionRole(defaultSessionRoleFor(profile.role))
   }, [profile?.role])
 
   useEffect(() => {
@@ -168,16 +173,19 @@ export function ClockInPage() {
         {/* Role picker */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4">
           <p className="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Role today</p>
-          <div className="flex gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {SESSION_ROLES.map(r => (
               <button
                 key={r.value}
                 onClick={() => setSessionRole(r.value)}
-                className={`flex-1 py-2.5 rounded-xl text-[11px] font-extrabold transition-colors ${
+                className={`flex flex-col items-center gap-0.5 py-2.5 rounded-xl text-[11px] font-extrabold transition-colors ${
                   sessionRole === r.value ? ROLE_COLORS[r.value] : 'bg-gray-100 text-gray-500 hover:bg-gray-150'
                 }`}
               >
-                {r.label}
+                <span>{r.label}</span>
+                <span className={`text-[10px] font-semibold ${sessionRole === r.value ? 'opacity-80' : 'opacity-60'}`}>
+                  £{rateForSessionRole(r.value)}/session
+                </span>
               </button>
             ))}
           </div>

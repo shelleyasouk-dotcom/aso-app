@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { RefreshCw, ExternalLink, Calendar, CheckCircle, ChevronLeft, HelpCircle } from 'lucide-react'
 import { SchoolLayout } from '../../components/layout/SchoolLayout'
 import { Card } from '../../components/ui/Card'
-import { useSchoolId } from '../../hooks/useSchoolId'
 
 const STEPS = [
   { step: '1', title: 'Check your place', desc: 'Your child\'s place will be held for the first 2 weeks of the new term. After that, spaces go to the waiting list.' },
@@ -32,7 +31,6 @@ const FAQS = [
 
 export function SchoolReenrolmentPage() {
   const navigate = useNavigate()
-  const schoolId = useSchoolId()
 
   return (
     <SchoolLayout title="Re-enrolment">

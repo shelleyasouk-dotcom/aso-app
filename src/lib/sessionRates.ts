@@ -3,6 +3,7 @@
 export const SESSION_RATES: Record<string, number> = {
   junior_coach:    10,
   assistant_coach: 15,
+  assistant_lead:  20,
   lead_coach:      30,
   area_lead:       35,
   director:        35,
@@ -11,6 +12,7 @@ export const SESSION_RATES: Record<string, number> = {
 export const SESSION_ROLE_LABELS: Record<string, string> = {
   junior_coach:    'Junior Coach',
   assistant_coach: 'Assistant Coach',
+  assistant_lead:  'Assistant Lead',
   lead_coach:      'Lead Coach',
   area_lead:       'Senior Lead',
   director:        'Director',

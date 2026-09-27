@@ -222,9 +222,8 @@ export function TimesheetsPage() {
         )}
 
         <Button variant="primary" size="lg" fullWidth onClick={() => setShowAdd(v => !v)}>
-            <Plus size={20} /> Add Missing Clock Record
-          </Button>
-        )}
+          <Plus size={20} /> Add Missing Clock Record
+        </Button>
 
         {showAdd && (
           <Card>
