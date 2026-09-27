@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Select } from '../../components/ui/Input'
 import type { ClockRecord, Profile, School } from '../../types'
 import { ROLE_LABELS } from '../../lib/roles'
+import { SESSION_RATES, SESSION_ROLE_LABELS, rateForSessionRole } from '../../lib/sessionRates'
 
 interface EnrichedRecord extends ClockRecord {
   staff?: Profile
@@ -48,10 +49,10 @@ export function TimesheetsPage() {
   const [loading, setLoading] = useState(true)
 
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ clock_in: '', clock_out: '', school_id: '' })
+  const [editForm, setEditForm] = useState({ clock_in: '', clock_out: '', school_id: '', session_role: '' })
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
   const [showAdd, setShowAdd] = useState(false)
-  const [addForm, setAddForm] = useState({ staff_id: '', school_id: '', clock_in: '', clock_out: '' })
+  const [addForm, setAddForm] = useState({ staff_id: '', school_id: '', clock_in: '', clock_out: '', session_role: '' })
   const [saving, setSaving] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
@@ -136,6 +137,7 @@ export function TimesheetsPage() {
       clock_in: toLocal(rec.clock_in),
       clock_out: rec.clock_out ? toLocal(rec.clock_out) : '',
       school_id: rec.school_id ?? '',
+      session_role: rec.session_role ?? '',
     })
   }
 
@@ -146,6 +148,7 @@ export function TimesheetsPage() {
       clock_in: new Date(editForm.clock_in).toISOString(),
       clock_out: editForm.clock_out ? new Date(editForm.clock_out).toISOString() : null,
       school_id: editForm.school_id || null,
+      session_role: editForm.session_role || null,
     }).eq('id', id)
     if (error) { setActionError(error.message); setSaving(false); return }
     await loadRecords()
@@ -170,10 +173,11 @@ export function TimesheetsPage() {
       school_id: addForm.school_id,
       clock_in: new Date(addForm.clock_in).toISOString(),
       clock_out: addForm.clock_out ? new Date(addForm.clock_out).toISOString() : null,
+      session_role: addForm.session_role || null,
     })
     if (error) { setActionError(error.message); setSaving(false); return }
     await loadRecords()
-    setAddForm({ staff_id: '', school_id: '', clock_in: '', clock_out: '' })
+    setAddForm({ staff_id: '', school_id: '', clock_in: '', clock_out: '', session_role: '' })
     setShowAdd(false)
     setSaving(false)
   }
@@ -209,7 +213,7 @@ export function TimesheetsPage() {
         <div className="bg-[#1a3a6b]/8 rounded-2xl px-4 py-3">
           <p className="text-sm text-[#1a3a6b] font-medium">
             {isScopedToArea ? `Your area — ` : 'Payroll reference — '}
-            {totalStaff} staff · {records.filter(r => r.clock_out).length} completed sessions
+            {totalStaff} staff · {records.filter(r => r.clock_out).length} completed sessions · £{records.reduce((sum, r) => sum + rateForSessionRole(r.session_role ?? null), 0).toFixed(2)}
           </p>
         </div>
 
@@ -238,6 +242,13 @@ export function TimesheetsPage() {
                 onChange={e => setAddForm({ ...addForm, school_id: e.target.value })}>
                 <option value="">Select…</option>
                 {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </Select>
+              <Select label="Session Role (sets pay rate)" value={addForm.session_role}
+                onChange={e => setAddForm({ ...addForm, session_role: e.target.value })}>
+                <option value="">Select…</option>
+                {Object.keys(SESSION_RATES).map(r => (
+                  <option key={r} value={r}>{SESSION_ROLE_LABELS[r]} (£{SESSION_RATES[r]}/session)</option>
+                ))}
               </Select>
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">Clock In</label>
@@ -276,6 +287,7 @@ export function TimesheetsPage() {
             const label = new Date(`${monthKey}-01`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
             const completedCount = monthRecs.filter(r => r.clock_out).length
             const monthStaffIds = [...new Set(monthRecs.map(r => r.staff_id))]
+            const monthTotalPay = monthRecs.reduce((sum, r) => sum + rateForSessionRole(r.session_role ?? null), 0)
 
             // Group by staff within this month
             const groupedByStaff = monthRecs.reduce<Record<string, EnrichedRecord[]>>((acc, rec) => {
@@ -294,7 +306,7 @@ export function TimesheetsPage() {
                   <div className="text-left">
                     <p className="font-extrabold text-sm">{label}</p>
                     <p className="text-white/60 text-xs mt-0.5">
-                      {monthStaffIds.length} staff · {completedCount} sessions
+                      {monthStaffIds.length} staff · {completedCount} sessions · £{monthTotalPay.toFixed(2)}
                     </p>
                   </div>
                   <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -308,6 +320,7 @@ export function TimesheetsPage() {
                         .filter(r => r.clock_out)
                         .reduce((sum, r) => sum + (new Date(r.clock_out!).getTime() - new Date(r.clock_in).getTime()), 0)
                       const totalHours = (totalMs / 3600000).toFixed(1)
+                      const totalPay = recs.reduce((sum, r) => sum + rateForSessionRole(r.session_role ?? null), 0)
 
                       return (
                         <Card key={staffId}>
@@ -319,6 +332,7 @@ export function TimesheetsPage() {
                             <div className="text-right">
                               <p className="text-xs text-gray-500">Total logged</p>
                               <p className="font-bold text-[#1a3a6b] text-lg">{totalHours}h</p>
+                              <p className="text-xs font-semibold text-green-600">£{totalPay.toFixed(2)}</p>
                             </div>
                           </div>
 
@@ -333,6 +347,16 @@ export function TimesheetsPage() {
                                       <select className={DT_CLASS} value={editForm.school_id}
                                         onChange={e => setEditForm({ ...editForm, school_id: e.target.value })}>
                                         {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                      </select>
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                      <label className="text-xs font-semibold text-gray-600">Session Role (sets pay rate)</label>
+                                      <select className={DT_CLASS} value={editForm.session_role}
+                                        onChange={e => setEditForm({ ...editForm, session_role: e.target.value })}>
+                                        <option value="">— None —</option>
+                                        {Object.keys(SESSION_RATES).map(r => (
+                                          <option key={r} value={r}>{SESSION_ROLE_LABELS[r]} (£{SESSION_RATES[r]}/session)</option>
+                                        ))}
                                       </select>
                                     </div>
                                     <div className="flex flex-col gap-1">
@@ -368,6 +392,11 @@ export function TimesheetsPage() {
                                           ? ` – ${formatTime(rec.clock_out)}`
                                           : <span className="text-orange-500"> · No clock-out</span>}
                                       </p>
+                                      {rec.session_role && (
+                                        <p className="text-xs font-semibold text-green-600 mt-0.5">
+                                          {SESSION_ROLE_LABELS[rec.session_role] ?? rec.session_role} · £{rateForSessionRole(rec.session_role)}
+                                        </p>
+                                      )}
                                     </div>
                                     <div className="flex items-center gap-1.5 shrink-0">
                                       <Badge color={rec.clock_out ? 'green' : 'yellow'}>
