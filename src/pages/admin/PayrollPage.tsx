@@ -131,6 +131,8 @@ export function PayrollPage() {
   const [addingManualFor, setAddingManualFor] = useState<string | null>(null) // staffKey `${monthKey}:${staffId}`
   const [manualForm, setManualForm] = useState(EMPTY_MANUAL_FORM)
   const [saving, setSaving] = useState(false)
+  const [bulkRoleFor, setBulkRoleFor] = useState<string | null>(null) // staffId currently picking a bulk role
+  const [bulkMsg, setBulkMsg] = useState<{ staffId: string; text: string } | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -209,6 +211,23 @@ export function PayrollPage() {
     const { error } = await supabase.from('clock_records').update({ session_role: newRole || null }).eq('id', sessionId)
     if (!error) await load()
     setEditingSessionId(null)
+    setSaving(false)
+  }
+
+  async function bulkSetRole(staffId: string, newRole: string) {
+    if (!newRole) return
+    setSaving(true)
+    setBulkMsg(null)
+    const { error, count } = await supabase
+      .from('clock_records')
+      .update({ session_role: newRole }, { count: 'exact' })
+      .is('session_role', null)
+      .eq('staff_id', staffId)
+    if (!error) {
+      setBulkMsg({ staffId, text: `Set ${SESSION_ROLE_LABELS[newRole] ?? newRole} on ${count ?? 0} shift${count === 1 ? '' : 's'} with no role — across every month.` })
+      await load()
+    }
+    setBulkRoleFor(null)
     setSaving(false)
   }
 
@@ -328,6 +347,40 @@ export function PayrollPage() {
                                   <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Session Breakdown</p>
                                 </div>
                               )}
+
+                              {entry.sessions.some(s => !s.session_role) && (
+                                <div className="px-4 py-3 bg-amber-50 border-b border-amber-100">
+                                  {bulkRoleFor === entry.profile.id ? (
+                                    <div className="flex items-center gap-2">
+                                      <select
+                                        className="flex-1 border border-amber-200 rounded-xl px-3 py-2 text-sm bg-white"
+                                        defaultValue=""
+                                        disabled={saving}
+                                        onChange={e => bulkSetRole(entry.profile.id, e.target.value)}
+                                      >
+                                        <option value="" disabled>Select a role to apply…</option>
+                                        {Object.keys(SESSION_RATES).map(r => (
+                                          <option key={r} value={r}>{SESSION_ROLE_LABELS[r]} (£{SESSION_RATES[r]}/session)</option>
+                                        ))}
+                                      </select>
+                                      <button onClick={() => setBulkRoleFor(null)} className="p-2 rounded-xl border border-amber-200 text-amber-700 shrink-0 bg-white">
+                                        <X size={14} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => setBulkRoleFor(entry.profile.id)}
+                                      className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-amber-800"
+                                    >
+                                      <Pencil size={12} /> Set role for all of {entry.profile.full_name.split(' ')[0]}'s shifts with no role (every month)
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                              {bulkMsg?.staffId === entry.profile.id && (
+                                <p className="px-4 py-2 text-xs text-green-700 bg-green-50 border-b border-green-100">{bulkMsg.text}</p>
+                              )}
+
                               {entry.sessions.map((s, i) => {
                                 const role = s.session_role ?? ''
                                 const rate = rateForSessionRole(s.session_role)
