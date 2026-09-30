@@ -255,7 +255,10 @@ export function PayrollPage() {
   }
 
   async function saveManualEntry(staffId: string) {
-    if (!manualForm.description.trim() || !manualForm.date || !manualForm.amount) return
+    if (!manualForm.description.trim() || !manualForm.date || !manualForm.amount) {
+      setActionError('Enter a description, date, and an amount (type it directly, or fill in both Hours and Hourly rate to auto-fill it) before saving.')
+      return
+    }
     setSaving(true)
     setActionError(null)
     const { error } = await supabase.from('manual_pay_entries').insert({
@@ -504,7 +507,7 @@ export function PayrollPage() {
                                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">
                                       <X size={14} /> Cancel
                                     </button>
-                                    <button onClick={() => saveManualEntry(entry.profile.id)} disabled={saving || !manualForm.description.trim() || !manualForm.amount}
+                                    <button onClick={() => saveManualEntry(entry.profile.id)} disabled={saving}
                                       className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold disabled:opacity-50">
                                       <Check size={14} /> {saving ? 'Saving…' : 'Add'}
                                     </button>
@@ -593,6 +596,7 @@ function ManualOnlyAdd({ staffList, existingIds, monthKey, onAdd }: {
   const [staffId, setStaffId] = useState('')
   const [form, setForm] = useState(EMPTY_MANUAL_FORM)
   const [saving, setSaving] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   const existingSet = new Set(existingIds)
   const otherStaff = staffList.filter(s => !existingSet.has(s.id))
@@ -608,7 +612,11 @@ function ManualOnlyAdd({ staffList, existingIds, monthKey, onAdd }: {
   }
 
   async function submit() {
-    if (!staffId || !form.description.trim() || !form.date || !form.amount) return
+    if (!staffId || !form.description.trim() || !form.date || !form.amount) {
+      setValidationError('Select a staff member and enter a description, date, and amount (or fill in Hours + Hourly rate to auto-fill it).')
+      return
+    }
+    setValidationError(null)
     setSaving(true)
     await onAdd(staffId, form)
     setSaving(false)
@@ -648,11 +656,12 @@ function ManualOnlyAdd({ staffList, existingIds, monthKey, onAdd }: {
       </div>
       <input type="number" placeholder="Amount (£)" step="0.01" value={form.amount} onChange={e => update({ amount: e.target.value })}
         className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+      {validationError && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{validationError}</p>}
       <div className="flex gap-2 mt-1">
         <button onClick={() => setOpen(false)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">
           <X size={14} /> Cancel
         </button>
-        <button onClick={submit} disabled={saving || !staffId || !form.description.trim() || !form.amount}
+        <button onClick={submit} disabled={saving}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold disabled:opacity-50">
           <Check size={14} /> {saving ? 'Saving…' : 'Add'}
         </button>
