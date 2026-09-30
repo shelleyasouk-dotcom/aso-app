@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Car, Train, ReceiptText, Check, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { Car, Train, ReceiptText, Check, X, ChevronDown, ChevronUp, Lock, CheckCircle2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -9,6 +9,14 @@ import type { Expense, ExpenseType } from '../../types'
 
 type EnrichedExpense = Omit<Expense, 'staff'> & {
   staff?: { full_name: string; role: string }
+}
+
+interface MonthConfirmation {
+  month: string
+  confirmed_by: string | null
+  confirmed_at: string
+  total_amount: number
+  confirmer?: { full_name: string }
 }
 
 const TYPE_LABELS: Record<ExpenseType, string> = {
@@ -31,6 +39,10 @@ interface GroupedStaff {
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function monthLabel(monthKey: string) {
+  return new Date(`${monthKey}-01`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 }
 
 function statusBadge(status: string) {
@@ -114,10 +126,14 @@ function ExpenseAdminRow({ expense, onApprove, onReject, saving }: ExpenseAdminR
 
 export function ExpensesAdminPage() {
   const { profile } = useAuth()
+  const isAdmin = profile?.role === 'director' || profile?.role === 'operations_manager'
   const [expenses, setExpenses] = useState<EnrichedExpense[]>([])
+  const [confirmations, setConfirmations] = useState<Record<string, MonthConfirmation>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [confirming, setConfirming] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<'pending' | 'approved' | 'rejected' | ''>('pending')
+  const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
 
   useEffect(() => { load() }, [])
 
@@ -127,6 +143,17 @@ export function ExpensesAdminPage() {
       .select('*, staff:profiles!staff_id(full_name, role)')
       .order('date', { ascending: false })
     if (data) setExpenses(data)
+
+    if (isAdmin) {
+      const { data: confirmData } = await supabase
+        .from('expense_month_confirmations')
+        .select('*, confirmer:profiles!confirmed_by(full_name)')
+      const map: Record<string, MonthConfirmation> = {}
+      for (const row of confirmData ?? []) {
+        map[(row as any).month.slice(0, 7)] = row as MonthConfirmation
+      }
+      setConfirmations(map)
+    }
     setLoading(false)
   }
 
@@ -156,6 +183,34 @@ export function ExpensesAdminPage() {
     setSaving(false)
   }
 
+  async function confirmMonth(monthKey: string, total: number) {
+    if (!profile) return
+    setConfirming(monthKey)
+    const { error } = await supabase.from('expense_month_confirmations').upsert({
+      month: `${monthKey}-01`,
+      confirmed_by: profile.id,
+      confirmed_at: new Date().toISOString(),
+      total_amount: total,
+    }, { onConflict: 'month' })
+    if (!error) {
+      setConfirmations(prev => ({
+        ...prev,
+        [monthKey]: {
+          month: `${monthKey}-01`,
+          confirmed_by: profile.id,
+          confirmed_at: new Date().toISOString(),
+          total_amount: total,
+          confirmer: { full_name: profile.full_name },
+        },
+      }))
+    }
+    setConfirming(null)
+  }
+
+  function toggleMonth(key: string) {
+    setOpenMonths(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
+
   const filtered = filterStatus ? expenses.filter(e => e.status === filterStatus) : expenses
 
   const grouped = filtered.reduce<Record<string, GroupedStaff>>((acc, e) => {
@@ -168,6 +223,17 @@ export function ExpensesAdminPage() {
 
   const pendingCount = expenses.filter(e => e.status === 'pending').length
   const pendingTotal = expenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
+
+  // ── Admin-only: approved expenses grouped by month → staff ──────────────────
+  const approvedByMonth = expenses
+    .filter(e => e.status === 'approved')
+    .reduce<Record<string, EnrichedExpense[]>>((acc, e) => {
+      const key = e.date.slice(0, 7)
+      if (!acc[key]) acc[key] = []
+      acc[key].push(e)
+      return acc
+    }, {})
+  const monthKeys = Object.keys(approvedByMonth).sort((a, b) => b.localeCompare(a))
 
   return (
     <Layout title="Expenses" showBack>
@@ -215,6 +281,95 @@ export function ExpensesAdminPage() {
               ))}
             </Card>
           ))
+        )}
+
+        {/* ── Admin-only: Monthly Tally ── */}
+        {isAdmin && !loading && (
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Lock size={14} className="text-gray-400" />
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Monthly Tally — Admin Only</p>
+            </div>
+            <p className="text-xs text-gray-400 -mt-2">
+              Approved expenses by month. Confirm a month once it's final — the total then feeds into that month's payslips.
+            </p>
+
+            {monthKeys.length === 0 ? (
+              <Card className="text-center py-6">
+                <p className="text-sm text-gray-400">No approved expenses yet.</p>
+              </Card>
+            ) : (
+              monthKeys.map(mk => {
+                const monthExpenses = approvedByMonth[mk]
+                const isOpen = openMonths.has(mk)
+                const total = monthExpenses.reduce((s, e) => s + e.amount, 0)
+                const confirmation = confirmations[mk]
+                const isConfirmed = !!confirmation
+
+                const byStaff = monthExpenses.reduce<Record<string, GroupedStaff>>((acc, e) => {
+                  if (!acc[e.staff_id]) acc[e.staff_id] = { staffId: e.staff_id, staffName: (e.staff as any)?.full_name ?? 'Unknown', expenses: [] }
+                  acc[e.staff_id].expenses.push(e)
+                  return acc
+                }, {})
+
+                return (
+                  <div key={mk}>
+                    <button
+                      onClick={() => toggleMonth(mk)}
+                      className="w-full flex items-center justify-between bg-[#1a3a6b] text-white px-4 py-3 rounded-2xl mb-2"
+                    >
+                      <div className="text-left">
+                        <p className="font-extrabold text-sm">{monthLabel(mk)}</p>
+                        <p className="text-white/60 text-xs mt-0.5">
+                          {Object.keys(byStaff).length} staff · £{total.toFixed(2)}
+                          {isConfirmed && ' · Confirmed'}
+                        </p>
+                      </div>
+                      <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isOpen && (
+                      <div className="flex flex-col gap-2 mb-2">
+                        {isConfirmed ? (
+                          <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-3 flex items-center gap-2.5">
+                            <CheckCircle2 size={16} className="text-green-600 shrink-0" />
+                            <p className="text-xs text-green-800">
+                              Confirmed by {confirmation.confirmer?.full_name ?? 'admin'} on{' '}
+                              {new Date(confirmation.confirmed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              {' — '}£{confirmation.total_amount.toFixed(2)} owed
+                            </p>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => confirmMonth(mk, total)}
+                            disabled={confirming === mk}
+                            className="w-full flex items-center justify-center gap-2 bg-[#f5c518] text-[#1a3a6b] font-bold py-2.5 rounded-2xl text-sm disabled:opacity-60"
+                          >
+                            <CheckCircle2 size={15} /> {confirming === mk ? 'Confirming…' : `Confirm ${monthLabel(mk)} — £${total.toFixed(2)} owed`}
+                          </button>
+                        )}
+
+                        {Object.values(byStaff).map(g => (
+                          <Card key={g.staffId} className="flex items-center justify-between py-3">
+                            <div>
+                              <p className="font-semibold text-[#1a3a6b] text-sm">{g.staffName}</p>
+                              <p className="text-xs text-gray-400">{g.expenses.length} item{g.expenses.length !== 1 ? 's' : ''}</p>
+                            </div>
+                            <p className="font-bold text-[#1a3a6b]">£{g.expenses.reduce((s, e) => s + e.amount, 0).toFixed(2)}</p>
+                          </Card>
+                        ))}
+
+                        <div className="bg-[#1a3a6b]/8 rounded-2xl px-4 py-3 flex items-center justify-between">
+                          <p className="text-xs font-bold text-[#1a3a6b]">{monthLabel(mk)} total owed</p>
+                          <p className="font-extrabold text-[#1a3a6b]">£{total.toFixed(2)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
+          </div>
         )}
 
       </div>
