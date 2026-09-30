@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Pencil, Trash2, Plus, Check, X, ChevronDown } from 'lucide-react'
+import { Pencil, Trash2, Plus, Check, X, ChevronDown, ShieldCheck, CheckCircle2, AlertTriangle, Clock3 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -14,6 +14,17 @@ import { SESSION_RATES, SESSION_ROLE_LABELS, rateForSessionRole } from '../../li
 interface EnrichedRecord extends ClockRecord {
   staff?: Profile
   school?: School
+}
+
+interface TimesheetConfirmation {
+  staff_id: string
+  month: string
+  confirmed_at: string | null
+  confirmed_note: string | null
+  has_issue: boolean
+  authorized_by: string | null
+  authorized_at: string | null
+  authorizer?: { full_name: string }
 }
 
 function toLocal(iso: string) {
@@ -53,6 +64,9 @@ export function TimesheetsPage() {
   const [unratedByStaff, setUnratedByStaff] = useState<{ staffId: string; name: string; role: string; count: number; mappable: boolean }[]>([])
   const [backfilling, setBackfilling] = useState(false)
   const [backfillMsg, setBackfillMsg] = useState<string | null>(null)
+
+  const [confirmations, setConfirmations] = useState<Record<string, TimesheetConfirmation>>({})
+  const [authorizing, setAuthorizing] = useState<string | null>(null)
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ clock_in: '', clock_out: '', school_id: '', session_role: '' })
@@ -187,6 +201,35 @@ export function TimesheetsPage() {
     await checkUnrated()
     await loadRecords()
     setBackfilling(false)
+  }
+
+  const loadConfirmations = useCallback(async () => {
+    if (!isAdmin) return
+    const { data } = await supabase
+      .from('timesheet_month_confirmations')
+      .select('*, authorizer:profiles!authorized_by(full_name)')
+    const map: Record<string, TimesheetConfirmation> = {}
+    for (const row of (data ?? []) as TimesheetConfirmation[]) {
+      map[`${row.staff_id}:${row.month.slice(0, 7)}`] = row
+    }
+    setConfirmations(map)
+  }, [isAdmin])
+
+  useEffect(() => { loadConfirmations() }, [loadConfirmations])
+
+  async function authorizeMonth(staffId: string, monthKey: string) {
+    if (!profile) return
+    const key = `${staffId}:${monthKey}`
+    setAuthorizing(key)
+    const { error } = await supabase.from('timesheet_month_confirmations').upsert({
+      staff_id: staffId,
+      month: `${monthKey}-01`,
+      authorized_by: profile.id,
+      authorized_at: new Date().toISOString(),
+    }, { onConflict: 'staff_id,month' })
+    if (!error) await loadConfirmations()
+    else setActionError(error.message)
+    setAuthorizing(null)
   }
 
   function startEdit(rec: EnrichedRecord) {
@@ -523,6 +566,73 @@ export function TimesheetsPage() {
               </div>
             )
           })
+        )}
+
+        {/* ── Admin-only: Timesheet Authorization ── */}
+        {isAdmin && !loading && monthKeys.length > 0 && (
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck size={14} className="text-gray-400" />
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Timesheet Authorization — Admin Only</p>
+            </div>
+            <p className="text-xs text-gray-400 -mt-2">
+              Staff confirm their own hours are correct from My Timesheet. Once confirmed, authorize here — the authorized total then feeds into that month's payslip.
+            </p>
+
+            {monthKeys.map(monthKey => {
+              const monthRecs = byMonth[monthKey]
+              const staffMap = new Map<string, string>()
+              monthRecs.forEach(r => { if (r.staff) staffMap.set(r.staff_id, r.staff.full_name) })
+              const staffEntries = [...staffMap.entries()].sort((a, b) => a[1].localeCompare(b[1]))
+
+              return (
+                <div key={monthKey} className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                  <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+                    <p className="text-xs font-extrabold text-[#1a3a6b]">
+                      {new Date(`${monthKey}-01`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+                    </p>
+                  </div>
+                  {staffEntries.map(([staffId, name]) => {
+                    const c = confirmations[`${staffId}:${monthKey}`]
+                    const key = `${staffId}:${monthKey}`
+                    return (
+                      <div key={staffId} className="px-4 py-3 flex items-center justify-between gap-3 border-b border-gray-50 last:border-0">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-800 truncate">{name}</p>
+                          {c?.authorized_at ? (
+                            <p className="text-xs text-green-600 flex items-center gap-1 mt-0.5">
+                              <CheckCircle2 size={11} /> Authorized by {c.authorizer?.full_name ?? 'admin'} · {new Date(c.authorized_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </p>
+                          ) : c?.has_issue ? (
+                            <p className="text-xs text-amber-600 flex items-center gap-1 mt-0.5">
+                              <AlertTriangle size={11} /> Flagged an issue: "{c.confirmed_note}"
+                            </p>
+                          ) : c?.confirmed_at ? (
+                            <p className="text-xs text-blue-600 flex items-center gap-1 mt-0.5">
+                              <CheckCircle2 size={11} /> Confirmed {new Date(c.confirmed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+                              <Clock3 size={11} /> Not yet confirmed by staff
+                            </p>
+                          )}
+                        </div>
+                        {!c?.authorized_at && (
+                          <button
+                            onClick={() => authorizeMonth(staffId, monthKey)}
+                            disabled={authorizing === key}
+                            className="shrink-0 flex items-center gap-1.5 bg-[#1a3a6b] text-white text-xs font-bold px-3 py-1.5 rounded-xl disabled:opacity-60"
+                          >
+                            {authorizing === key ? 'Authorizing…' : 'Authorize'}
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
     </Layout>

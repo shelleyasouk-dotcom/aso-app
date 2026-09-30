@@ -1,25 +1,34 @@
 import { useState, useEffect } from 'react'
-import { Calendar, MapPin, Plus, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { Calendar, MapPin, Plus, ChevronLeft, ChevronRight, X, CheckCircle2, ShieldCheck, AlertTriangle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
+import { SESSION_ROLE_LABELS } from '../../lib/sessionRates'
 import type { ClockRecord, School } from '../../types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SessionEntry = ClockRecord & { school?: School }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const ROLE_LABELS: Record<string, string> = {
-  lead_coach:      'Lead Coach',
-  assistant_coach: 'Assistant Coach',
-  junior_coach:    'Junior Coach',
+interface MonthConfirmation {
+  id: string
+  month: string
+  confirmed_at: string | null
+  confirmed_note: string | null
+  has_issue: boolean
+  authorized_by: string | null
+  authorized_at: string | null
 }
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const ROLE_LABELS = SESSION_ROLE_LABELS
+
 const ROLE_COLORS: Record<string, string> = {
+  area_lead:       'bg-amber-600 text-white',
   lead_coach:      'bg-[#1a3a6b] text-white',
+  assistant_lead:  'bg-teal-600 text-white',
   assistant_coach: 'bg-purple-600 text-white',
   junior_coach:    'bg-green-600 text-white',
 }
@@ -74,6 +83,14 @@ export function MyTimesheetPage() {
   const [loading, setLoading] = useState(true)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
+  const [confirmation, setConfirmation] = useState<MonthConfirmation | null>(null)
+  const [showIssueForm, setShowIssueForm] = useState(false)
+  const [issueNote, setIssueNote] = useState('')
+  const [confirming, setConfirming] = useState(false)
+  const [confirmMsg, setConfirmMsg] = useState<string | null>(null)
+
+  const monthKey = `${year}-${String(month).padStart(2, '0')}`
+
   useEffect(() => {
     if (profile) load()
   }, [profile?.id, year, month])
@@ -86,15 +103,27 @@ export function MyTimesheetPage() {
     const endDate = `${endYear}-${String(endMonth).padStart(2, '0')}-01`
 
     // Fetch by session_date first (new records), then also catch old records by clock_in date
-    const { data } = await supabase
-      .from('clock_records')
-      .select('*, school:schools(id, name, area)')
-      .eq('staff_id', profile!.id)
-      .gte('session_date', startDate)
-      .lt('session_date', endDate)
-      .order('session_date', { ascending: false })
-      .order('clock_in', { ascending: false })
+    const [{ data }, { data: confirmData }] = await Promise.all([
+      supabase
+        .from('clock_records')
+        .select('*, school:schools(id, name, area)')
+        .eq('staff_id', profile!.id)
+        .gte('session_date', startDate)
+        .lt('session_date', endDate)
+        .order('session_date', { ascending: false })
+        .order('clock_in', { ascending: false }),
+      supabase
+        .from('timesheet_month_confirmations')
+        .select('*')
+        .eq('staff_id', profile!.id)
+        .eq('month', startDate)
+        .maybeSingle(),
+    ])
     setRecords((data as SessionEntry[]) ?? [])
+    setConfirmation((confirmData as MonthConfirmation) ?? null)
+    setShowIssueForm(false)
+    setIssueNote('')
+    setConfirmMsg(null)
     setLoading(false)
   }
 
@@ -102,6 +131,57 @@ export function MyTimesheetPage() {
     await supabase.from('clock_records').delete().eq('id', id)
     setRecords(prev => prev.filter(r => r.id !== id))
     setConfirmDeleteId(null)
+  }
+
+  async function confirmHours() {
+    if (!profile) return
+    setConfirming(true)
+    const startDate = `${monthKey}-01`
+    const { error } = await supabase.from('timesheet_month_confirmations').upsert({
+      staff_id: profile.id,
+      month: startDate,
+      confirmed_at: new Date().toISOString(),
+      confirmed_note: null,
+      has_issue: false,
+    }, { onConflict: 'staff_id,month' })
+    if (!error) {
+      await load()
+      setConfirmMsg('Thanks — your hours are confirmed.')
+    }
+    setConfirming(false)
+  }
+
+  async function submitIssue() {
+    if (!profile || !issueNote.trim()) return
+    setConfirming(true)
+    const startDate = `${monthKey}-01`
+    const { error } = await supabase.from('timesheet_month_confirmations').upsert({
+      staff_id: profile.id,
+      month: startDate,
+      confirmed_at: null,
+      confirmed_note: issueNote.trim(),
+      has_issue: true,
+    }, { onConflict: 'staff_id,month' })
+    if (!error) {
+      const { data: admins } = await supabase
+        .from('profiles').select('id')
+        .in('role', ['director', 'operations_manager'])
+      if (admins && admins.length > 0) {
+        await supabase.from('notifications').insert(
+          admins.map((a: { id: string }) => ({
+            user_id: a.id,
+            title: `${profile.full_name} flagged an issue with their ${monthLabel(year, month)} timesheet`,
+            body: issueNote.trim().slice(0, 150),
+            type: 'timesheet_issue',
+            related_id: null,
+            read: false,
+          }))
+        )
+      }
+      await load()
+      setConfirmMsg('Sent — the admin team will follow up on this.')
+    }
+    setConfirming(false)
   }
 
   function prevMonth() {
@@ -177,6 +257,97 @@ export function MyTimesheetPage() {
             <p className="text-white/30 text-sm">No sessions logged this month</p>
           )}
         </div>
+
+        {/* Confirmation card */}
+        {!loading && records.length > 0 && (
+          <div className={`rounded-2xl border p-4 flex flex-col gap-3 ${
+            confirmation?.authorized_at ? 'bg-green-50 border-green-200'
+            : confirmation?.confirmed_at ? 'bg-blue-50 border-blue-200'
+            : confirmation?.has_issue ? 'bg-amber-50 border-amber-200'
+            : 'bg-white border-gray-100 shadow-sm'
+          }`}>
+            {confirmation?.authorized_at ? (
+              <div className="flex items-start gap-2.5">
+                <ShieldCheck size={18} className="text-green-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-green-800">Authorized for payroll</p>
+                  <p className="text-xs text-green-700 mt-0.5">
+                    Confirmed by you on {new Date(confirmation.confirmed_at!).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })},
+                    authorized on {new Date(confirmation.authorized_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.
+                  </p>
+                </div>
+              </div>
+            ) : confirmation?.confirmed_at ? (
+              <div className="flex items-start gap-2.5">
+                <CheckCircle2 size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-blue-800">You've confirmed these hours</p>
+                  <p className="text-xs text-blue-700 mt-0.5">
+                    Confirmed {new Date(confirmation.confirmed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} — waiting on the admin team to authorize.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <p className="text-sm font-bold text-[#1a3a6b]">Please review and confirm your hours</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Check every date above is correct, including anything added on your behalf, then confirm — or let us know if something needs fixing.
+                  </p>
+                </div>
+
+                {confirmation?.has_issue && confirmation.confirmed_note && (
+                  <div className="bg-amber-100 border border-amber-200 rounded-xl px-3 py-2 flex items-start gap-2">
+                    <AlertTriangle size={13} className="text-amber-600 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800">You flagged: "{confirmation.confirmed_note}" — the admin team has been notified.</p>
+                  </div>
+                )}
+
+                {confirmMsg && <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">{confirmMsg}</p>}
+
+                {showIssueForm ? (
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      value={issueNote}
+                      onChange={e => setIssueNote(e.target.value)}
+                      placeholder="What needs fixing? e.g. 'Missing my session on the 12th at St Peter's'"
+                      rows={3}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={() => setShowIssueForm(false)} className="flex-1 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">
+                        Cancel
+                      </button>
+                      <button
+                        onClick={submitIssue}
+                        disabled={confirming || !issueNote.trim()}
+                        className="flex-1 py-2 rounded-xl bg-amber-600 text-white text-sm font-semibold disabled:opacity-50"
+                      >
+                        {confirming ? 'Sending…' : 'Send to admin'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowIssueForm(true)}
+                      className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600"
+                    >
+                      Something's wrong
+                    </button>
+                    <button
+                      onClick={confirmHours}
+                      disabled={confirming}
+                      className="flex-1 py-2.5 rounded-xl bg-[#1a3a6b] text-white text-sm font-bold disabled:opacity-60"
+                    >
+                      {confirming ? 'Confirming…' : 'Confirm hours are correct'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Add session button */}
         <button
