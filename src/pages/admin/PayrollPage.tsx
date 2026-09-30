@@ -129,6 +129,7 @@ interface MonthGroup {
 }
 
 const EMPTY_MANUAL_FORM = { description: '', date: '', hours: '', hourly_rate: '', amount: '' }
+const EMPTY_SESSION_FORM = { staff_id: '', school_id: '', date: '', session_role: '' }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -136,6 +137,7 @@ export function PayrollPage() {
   const { profile } = useAuth()
   const [months, setMonths] = useState<MonthGroup[]>([])
   const [staffList, setStaffList] = useState<Pick<Profile, 'id' | 'full_name' | 'role'>[]>([])
+  const [schools, setSchools] = useState<School[]>([])
   const [loading, setLoading] = useState(true)
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
   const [expandedStaff, setExpandedStaff] = useState<Set<string>>(new Set())
@@ -151,12 +153,15 @@ export function PayrollPage() {
   const [confirmations, setConfirmations] = useState<Record<string, TimesheetConfirmation>>({})
   const [authorizing, setAuthorizing] = useState<string | null>(null)
 
+  const [showAddSession, setShowAddSession] = useState(false)
+  const [sessionForm, setSessionForm] = useState(EMPTY_SESSION_FORM)
+
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
 
-    const [{ data: sessionData }, { data: manualData }, { data: allStaff }, { data: confirmData }] = await Promise.all([
+    const [{ data: sessionData }, { data: manualData }, { data: allStaff }, { data: confirmData }, { data: allSchools }] = await Promise.all([
       supabase
         .from('clock_records')
         .select('id, session_date, session_role, clock_in, staff_id, school:schools(id, name), staff:profiles!staff_id(id, full_name, role)')
@@ -169,9 +174,11 @@ export function PayrollPage() {
         .order('date', { ascending: false }),
       supabase.from('profiles').select('id, full_name, role').not('role', 'in', '(parent,school)').order('full_name'),
       supabase.from('timesheet_month_confirmations').select('*, authorizer:profiles!authorized_by(full_name)'),
+      supabase.from('schools').select('id, name, area').order('name'),
     ])
 
     setStaffList((allStaff ?? []) as Pick<Profile, 'id' | 'full_name' | 'role'>[])
+    setSchools((allSchools ?? []) as School[])
 
     const confirmMap: Record<string, TimesheetConfirmation> = {}
     for (const row of (confirmData ?? []) as TimesheetConfirmation[]) {
@@ -237,6 +244,30 @@ export function PayrollPage() {
     if (error) setActionError(error.message)
     else await load()
     setAuthorizing(null)
+  }
+
+  async function addMissingSession() {
+    if (!sessionForm.staff_id || !sessionForm.school_id || !sessionForm.date || !sessionForm.session_role) {
+      setActionError('Select a staff member, school, date, and role before adding.')
+      return
+    }
+    setSaving(true)
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').insert({
+      staff_id: sessionForm.staff_id,
+      school_id: sessionForm.school_id,
+      session_date: sessionForm.date,
+      session_role: sessionForm.session_role,
+      clock_in: `${sessionForm.date}T12:00:00`,
+    })
+    if (error) {
+      setActionError(error.message)
+    } else {
+      await load()
+      setShowAddSession(false)
+      setSessionForm(EMPTY_SESSION_FORM)
+    }
+    setSaving(false)
   }
 
   function toggleMonth(key: string) {
@@ -339,6 +370,54 @@ export function PayrollPage() {
               <p className="text-xs text-red-400 mt-1">
                 Looks like the manual_pay_entries table hasn't been created yet — run supabase/add_manual_pay_entries.sql in the Supabase SQL editor.
               </p>
+            )}
+          </div>
+        )}
+
+        {!loading && (
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4">
+            {!showAddSession ? (
+              <button
+                onClick={() => setShowAddSession(true)}
+                className="w-full flex items-center justify-center gap-2 text-sm font-bold text-[#1a3a6b]"
+              >
+                <Plus size={16} /> Add missing session
+              </button>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Add Missing Session</p>
+                <select value={sessionForm.staff_id} onChange={e => setSessionForm(f => ({ ...f, staff_id: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                  <option value="">Select staff member…</option>
+                  {staffList.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+                </select>
+                <select value={sessionForm.school_id} onChange={e => setSessionForm(f => ({ ...f, school_id: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                  <option value="">Select school…</option>
+                  {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="date" value={sessionForm.date} onChange={e => setSessionForm(f => ({ ...f, date: e.target.value }))}
+                    className="border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+                  <select value={sessionForm.session_role} onChange={e => setSessionForm(f => ({ ...f, session_role: e.target.value }))}
+                    className="border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    <option value="">Role…</option>
+                    {Object.keys(SESSION_RATES).map(r => (
+                      <option key={r} value={r}>{SESSION_ROLE_LABELS[r]} (£{SESSION_RATES[r]})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <button onClick={() => { setShowAddSession(false); setSessionForm(EMPTY_SESSION_FORM) }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">
+                    <X size={14} /> Cancel
+                  </button>
+                  <button onClick={addMissingSession} disabled={saving}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold disabled:opacity-50">
+                    <Check size={14} /> {saving ? 'Saving…' : 'Add session'}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}

@@ -201,6 +201,7 @@ export function TimesheetsPage() {
       clock_out: editForm.clock_out ? new Date(editForm.clock_out).toISOString() : null,
       school_id: editForm.school_id || null,
       session_role: editForm.session_role || null,
+      session_date: editForm.clock_in.slice(0, 10),
     }).eq('id', id)
     if (error) { setActionError(error.message); setSaving(false); return }
     await loadRecords()
@@ -226,6 +227,7 @@ export function TimesheetsPage() {
       clock_in: new Date(addForm.clock_in).toISOString(),
       clock_out: addForm.clock_out ? new Date(addForm.clock_out).toISOString() : null,
       session_role: addForm.session_role || null,
+      session_date: addForm.clock_in.slice(0, 10),
     })
     if (error) { setActionError(error.message); setSaving(false); return }
     await loadRecords()
