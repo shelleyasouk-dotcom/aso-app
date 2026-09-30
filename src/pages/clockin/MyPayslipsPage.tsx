@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 
 interface BreakdownItem {
-  kind: 'session' | 'expense' | 'salary'
+  kind: 'session' | 'expense' | 'salary' | 'manual'
   date: string
   label: string
   amount: number

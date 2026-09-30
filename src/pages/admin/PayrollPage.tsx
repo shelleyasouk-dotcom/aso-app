@@ -1,26 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Download, ChevronDown, ChevronUp, Banknote } from 'lucide-react'
+import { Download, ChevronDown, ChevronUp, Banknote, Plus, Trash2, Pencil, X, Check } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
+import { SESSION_RATES, SESSION_ROLE_LABELS, rateForSessionRole } from '../../lib/sessionRates'
 import type { Profile, School } from '../../types'
-
-// ─── Rates ────────────────────────────────────────────────────────────────────
-
-const SESSION_RATES: Record<string, number> = {
-  junior_coach:    10,
-  assistant_coach: 15,
-  lead_coach:      30,
-  area_lead:       35,
-  director:        35,
-}
-
-const SESSION_ROLE_LABELS: Record<string, string> = {
-  junior_coach:    'Junior Coach',
-  assistant_coach: 'Assistant Coach',
-  lead_coach:      'Lead Coach',
-  area_lead:       'Senior Lead',
-  director:        'Director',
-}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,9 +16,20 @@ interface SessionRow {
   school?: Pick<School, 'id' | 'name'>
 }
 
+interface ManualEntry {
+  id: string
+  staff_id: string
+  date: string
+  description: string
+  hours: number | null
+  hourly_rate: number | null
+  amount: number
+}
+
 interface StaffEntry {
   profile: Pick<Profile, 'id' | 'full_name' | 'role'>
   sessions: SessionRow[]
+  manualEntries: ManualEntry[]
   total: number
 }
 
@@ -45,11 +39,6 @@ function formatDate(dateStr: string) {
   return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', {
     weekday: 'short', day: 'numeric', month: 'short',
   })
-}
-
-function rateFor(sessionRole: string | null): number {
-  if (!sessionRole) return 0
-  return SESSION_RATES[sessionRole] ?? 0
 }
 
 function fmt(p: number) {
@@ -65,7 +54,7 @@ function exportCSV(entries: StaffEntry[], monthKey: string) {
 
   rows.push([`ASO Coaching — Payroll Export — ${label}`])
   rows.push([])
-  rows.push(['Staff Name', 'Profile Role', 'Session Date', 'Day', 'School', 'Session Role', 'Rate (£)'])
+  rows.push(['Staff Name', 'Profile Role', 'Date', 'Day', 'Type', 'Detail', 'Rate (£)', 'Amount (£)'])
 
   let grandTotal = 0
 
@@ -75,28 +64,39 @@ function exportCSV(entries: StaffEntry[], monthKey: string) {
       const day = d.toLocaleDateString('en-GB', { weekday: 'long' })
       const date = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
       const role = s.session_role ?? ''
-      const rate = rateFor(s.session_role)
+      const rate = rateForSessionRole(s.session_role)
       rows.push([
         entry.profile.full_name,
         SESSION_ROLE_LABELS[entry.profile.role] ?? entry.profile.role,
-        date,
-        day,
-        (s.school as any)?.name ?? '',
-        SESSION_ROLE_LABELS[role] ?? role,
-        rate.toFixed(2),
+        date, day, 'Session',
+        `${(s.school as any)?.name ?? ''}${role ? ` · ${SESSION_ROLE_LABELS[role] ?? role}` : ''}`,
+        rate.toFixed(2), rate.toFixed(2),
+      ])
+    })
+
+    entry.manualEntries.forEach(m => {
+      const d = new Date(m.date + 'T12:00:00')
+      const day = d.toLocaleDateString('en-GB', { weekday: 'long' })
+      const date = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      rows.push([
+        entry.profile.full_name,
+        SESSION_ROLE_LABELS[entry.profile.role] ?? entry.profile.role,
+        date, day, 'Manual',
+        `${m.description}${m.hours ? ` · ${m.hours}h @ £${(m.hourly_rate ?? 0).toFixed(2)}/hr` : ''}`,
+        (m.hourly_rate ?? '').toString(), m.amount.toFixed(2),
       ])
     })
 
     rows.push([
-      `SUBTOTAL: ${entry.profile.full_name}`, '', '', '',
-      `${entry.sessions.length} session${entry.sessions.length !== 1 ? 's' : ''}`,
+      `SUBTOTAL: ${entry.profile.full_name}`, '', '', '', '',
+      `${entry.sessions.length} session${entry.sessions.length !== 1 ? 's' : ''} + ${entry.manualEntries.length} manual`,
       '', entry.total.toFixed(2),
     ])
     grandTotal += entry.total
     rows.push([])
   })
 
-  rows.push(['GRAND TOTAL', '', '', '', '', '', grandTotal.toFixed(2)])
+  rows.push(['GRAND TOTAL', '', '', '', '', '', '', grandTotal.toFixed(2)])
 
   const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -116,44 +116,72 @@ interface MonthGroup {
   sessionCount: number
 }
 
+const EMPTY_MANUAL_FORM = { description: '', date: '', hours: '', hourly_rate: '', amount: '' }
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function PayrollPage() {
   const [months, setMonths] = useState<MonthGroup[]>([])
+  const [staffList, setStaffList] = useState<Pick<Profile, 'id' | 'full_name' | 'role'>[]>([])
   const [loading, setLoading] = useState(true)
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
   const [expandedStaff, setExpandedStaff] = useState<Set<string>>(new Set())
+
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
+  const [addingManualFor, setAddingManualFor] = useState<string | null>(null) // staffKey `${monthKey}:${staffId}`
+  const [manualForm, setManualForm] = useState(EMPTY_MANUAL_FORM)
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
 
-    const { data } = await supabase
-      .from('clock_records')
-      .select('id, session_date, session_role, clock_in, staff_id, school:schools(id, name), staff:profiles!staff_id(id, full_name, role)')
-      .not('session_date', 'is', null)
-      .order('session_date', { ascending: false })
-      .order('clock_in', { ascending: true })
+    const [{ data: sessionData }, { data: manualData }, { data: allStaff }] = await Promise.all([
+      supabase
+        .from('clock_records')
+        .select('id, session_date, session_role, clock_in, staff_id, school:schools(id, name), staff:profiles!staff_id(id, full_name, role)')
+        .not('session_date', 'is', null)
+        .order('session_date', { ascending: false })
+        .order('clock_in', { ascending: true }),
+      supabase
+        .from('manual_pay_entries')
+        .select('*, staff:profiles!staff_id(id, full_name, role)')
+        .order('date', { ascending: false }),
+      supabase.from('profiles').select('id, full_name, role').not('role', 'in', '(parent,school)').order('full_name'),
+    ])
 
-    if (!data) { setLoading(false); return }
+    setStaffList((allStaff ?? []) as Pick<Profile, 'id' | 'full_name' | 'role'>[])
 
-    // Group by month key
-    const byMonth: Record<string, Record<string, { profile: Pick<Profile, 'id' | 'full_name' | 'role'>; sessions: SessionRow[] }>> = {}
-    data.forEach((row: any) => {
+    const byMonth: Record<string, Record<string, { profile: Pick<Profile, 'id' | 'full_name' | 'role'>; sessions: SessionRow[]; manualEntries: ManualEntry[] }>> = {}
+
+    ;(sessionData ?? []).forEach((row: any) => {
       if (!row.staff || !row.session_date) return
-      const mk = row.session_date.slice(0, 7) // YYYY-MM
+      const mk = row.session_date.slice(0, 7)
       if (!byMonth[mk]) byMonth[mk] = {}
       const sid = row.staff_id
-      if (!byMonth[mk][sid]) byMonth[mk][sid] = { profile: row.staff, sessions: [] }
+      if (!byMonth[mk][sid]) byMonth[mk][sid] = { profile: row.staff, sessions: [], manualEntries: [] }
       byMonth[mk][sid].sessions.push(row as SessionRow)
+    })
+
+    ;(manualData ?? []).forEach((row: any) => {
+      if (!row.staff || !row.date) return
+      const mk = row.date.slice(0, 7)
+      if (!byMonth[mk]) byMonth[mk] = {}
+      const sid = row.staff_id
+      if (!byMonth[mk][sid]) byMonth[mk][sid] = { profile: row.staff, sessions: [], manualEntries: [] }
+      byMonth[mk][sid].manualEntries.push(row as ManualEntry)
     })
 
     const result: MonthGroup[] = Object.keys(byMonth)
       .sort((a, b) => b.localeCompare(a))
       .map(mk => {
         const entries: StaffEntry[] = Object.values(byMonth[mk])
-          .map(e => ({ ...e, total: e.sessions.reduce((sum, s) => sum + rateFor(s.session_role), 0) }))
+          .map(e => ({
+            ...e,
+            total: e.sessions.reduce((sum, s) => sum + rateForSessionRole(s.session_role), 0)
+              + e.manualEntries.reduce((sum, m) => sum + m.amount, 0),
+          }))
           .sort((a, b) => a.profile.full_name.localeCompare(b.profile.full_name))
         return {
           monthKey: mk,
@@ -165,7 +193,6 @@ export function PayrollPage() {
       })
 
     setMonths(result)
-    // Open most recent month by default
     if (result.length > 0) setOpenMonths(new Set([result[0].monthKey]))
     setLoading(false)
   }
@@ -175,6 +202,57 @@ export function PayrollPage() {
   }
   function toggleStaff(key: string) {
     setExpandedStaff(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
+
+  async function changeSessionRole(sessionId: string, newRole: string) {
+    setSaving(true)
+    const { error } = await supabase.from('clock_records').update({ session_role: newRole || null }).eq('id', sessionId)
+    if (!error) await load()
+    setEditingSessionId(null)
+    setSaving(false)
+  }
+
+  function updateManualForm(patch: Partial<typeof EMPTY_MANUAL_FORM>) {
+    setManualForm(prev => {
+      const next = { ...prev, ...patch }
+      const h = parseFloat(next.hours)
+      const r = parseFloat(next.hourly_rate)
+      if (!isNaN(h) && !isNaN(r) && ('hours' in patch || 'hourly_rate' in patch)) {
+        next.amount = (h * r).toFixed(2)
+      }
+      return next
+    })
+  }
+
+  function startAddManual(staffKey: string, monthKey: string) {
+    setAddingManualFor(staffKey)
+    setManualForm({ ...EMPTY_MANUAL_FORM, date: `${monthKey}-15` })
+  }
+
+  async function saveManualEntry(staffId: string) {
+    if (!manualForm.description.trim() || !manualForm.date || !manualForm.amount) return
+    setSaving(true)
+    const { error } = await supabase.from('manual_pay_entries').insert({
+      staff_id: staffId,
+      date: manualForm.date,
+      description: manualForm.description.trim(),
+      hours: manualForm.hours ? parseFloat(manualForm.hours) : null,
+      hourly_rate: manualForm.hourly_rate ? parseFloat(manualForm.hourly_rate) : null,
+      amount: parseFloat(manualForm.amount),
+    })
+    if (!error) {
+      await load()
+      setAddingManualFor(null)
+      setManualForm(EMPTY_MANUAL_FORM)
+    }
+    setSaving(false)
+  }
+
+  async function deleteManualEntry(id: string) {
+    setSaving(true)
+    const { error } = await supabase.from('manual_pay_entries').delete().eq('id', id)
+    if (!error) await load()
+    setSaving(false)
   }
 
   return (
@@ -222,6 +300,7 @@ export function PayrollPage() {
                     {mg.entries.map(entry => {
                       const staffKey = `${mg.monthKey}:${entry.profile.id}`
                       const isStaffOpen = expandedStaff.has(staffKey)
+                      const isAddingManual = addingManualFor === staffKey
                       return (
                         <div key={staffKey} className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
                           <button
@@ -232,6 +311,7 @@ export function PayrollPage() {
                               <p className="font-bold text-[#1a3a6b] text-sm">{entry.profile.full_name}</p>
                               <p className="text-xs text-gray-400 mt-0.5">
                                 {entry.sessions.length} session{entry.sessions.length !== 1 ? 's' : ''}
+                                {entry.manualEntries.length > 0 && ` · ${entry.manualEntries.length} manual`}
                               </p>
                             </div>
                             <p className="font-extrabold text-[#1a3a6b] text-base shrink-0">{fmt(entry.total)}</p>
@@ -243,25 +323,126 @@ export function PayrollPage() {
 
                           {isStaffOpen && (
                             <div className="border-t border-gray-50">
-                              <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                                <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Session Breakdown</p>
-                              </div>
+                              {entry.sessions.length > 0 && (
+                                <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                                  <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Session Breakdown</p>
+                                </div>
+                              )}
                               {entry.sessions.map((s, i) => {
                                 const role = s.session_role ?? ''
-                                const rate = rateFor(s.session_role)
+                                const rate = rateForSessionRole(s.session_role)
+                                const isEditingRole = editingSessionId === s.id
                                 return (
-                                  <div key={s.id} className={`px-4 py-3 flex items-center gap-3 ${i < entry.sessions.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-semibold text-gray-700">{formatDate(s.session_date)}</p>
-                                      <p className="text-xs text-gray-400 truncate mt-0.5">
-                                        {(s.school as any)?.name ?? 'Unknown school'}
-                                        {role && ` · ${SESSION_ROLE_LABELS[role] ?? role}`}
-                                      </p>
+                                  <div key={s.id} className={`px-4 py-3 ${i < entry.sessions.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-gray-700">{formatDate(s.session_date)}</p>
+                                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                                          {(s.school as any)?.name ?? 'Unknown school'}
+                                          {role && ` · ${SESSION_ROLE_LABELS[role] ?? role}`}
+                                          {!role && <span className="text-red-500"> · No role set</span>}
+                                        </p>
+                                      </div>
+                                      <p className="text-sm font-bold text-gray-700 shrink-0">{fmt(rate)}</p>
+                                      <button
+                                        onClick={() => setEditingSessionId(isEditingRole ? null : s.id)}
+                                        className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50 shrink-0"
+                                      >
+                                        <Pencil size={13} />
+                                      </button>
                                     </div>
-                                    <p className="text-sm font-bold text-gray-700 shrink-0">{fmt(rate)}</p>
+                                    {isEditingRole && (
+                                      <div className="mt-2 flex items-center gap-2">
+                                        <select
+                                          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                                          defaultValue={role}
+                                          disabled={saving}
+                                          onChange={e => changeSessionRole(s.id, e.target.value)}
+                                        >
+                                          <option value="">— No role —</option>
+                                          {Object.keys(SESSION_RATES).map(r => (
+                                            <option key={r} value={r}>{SESSION_ROLE_LABELS[r]} (£{SESSION_RATES[r]}/session)</option>
+                                          ))}
+                                        </select>
+                                        <button onClick={() => setEditingSessionId(null)} className="p-2 rounded-xl border border-gray-200 text-gray-500 shrink-0">
+                                          <X size={14} />
+                                        </button>
+                                      </div>
+                                    )}
                                   </div>
                                 )
                               })}
+
+                              {entry.manualEntries.length > 0 && (
+                                <div className="px-4 py-2 bg-gray-50 border-b border-t border-gray-100">
+                                  <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Manual Entries</p>
+                                </div>
+                              )}
+                              {entry.manualEntries.map((m, i) => (
+                                <div key={m.id} className={`px-4 py-3 flex items-center gap-3 ${i < entry.manualEntries.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-700">{m.description}</p>
+                                    <p className="text-xs text-gray-400 truncate mt-0.5">
+                                      {formatDate(m.date)}
+                                      {m.hours != null && ` · ${m.hours}h @ £${(m.hourly_rate ?? 0).toFixed(2)}/hr`}
+                                    </p>
+                                  </div>
+                                  <p className="text-sm font-bold text-gray-700 shrink-0">{fmt(m.amount)}</p>
+                                  <button
+                                    onClick={() => deleteManualEntry(m.id)}
+                                    disabled={saving}
+                                    className="p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50 shrink-0"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              ))}
+
+                              {/* Add manual entry */}
+                              {isAddingManual ? (
+                                <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex flex-col gap-2">
+                                  <input
+                                    type="text" placeholder="Description (e.g. Admin hours — newsletter prep)"
+                                    value={manualForm.description}
+                                    onChange={e => updateManualForm({ description: e.target.value })}
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                                  />
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <input type="date" value={manualForm.date}
+                                      onChange={e => updateManualForm({ date: e.target.value })}
+                                      className="border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+                                    <div />
+                                    <input type="number" placeholder="Hours" step="0.25" value={manualForm.hours}
+                                      onChange={e => updateManualForm({ hours: e.target.value })}
+                                      className="border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+                                    <input type="number" placeholder="Hourly rate (£)" step="0.01" value={manualForm.hourly_rate}
+                                      onChange={e => updateManualForm({ hourly_rate: e.target.value })}
+                                      className="border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+                                  </div>
+                                  <input type="number" placeholder="Amount (£) — auto-fills from hours × rate, or enter directly" step="0.01"
+                                    value={manualForm.amount}
+                                    onChange={e => updateManualForm({ amount: e.target.value })}
+                                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+                                  <div className="flex gap-2 mt-1">
+                                    <button onClick={() => { setAddingManualFor(null); setManualForm(EMPTY_MANUAL_FORM) }}
+                                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">
+                                      <X size={14} /> Cancel
+                                    </button>
+                                    <button onClick={() => saveManualEntry(entry.profile.id)} disabled={saving || !manualForm.description.trim() || !manualForm.amount}
+                                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold disabled:opacity-50">
+                                      <Check size={14} /> {saving ? 'Saving…' : 'Add'}
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => startAddManual(staffKey, mg.monthKey)}
+                                  className="w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold text-[#1a3a6b] border-t border-gray-100"
+                                >
+                                  <Plus size={13} /> Add manual entry (e.g. admin hours)
+                                </button>
+                              )}
+
                               <div className="px-4 py-3 bg-[#1a3a6b]/5 flex items-center justify-between">
                                 <p className="text-xs font-bold text-[#1a3a6b]">Subtotal</p>
                                 <p className="text-sm font-extrabold text-[#1a3a6b]">{fmt(entry.total)}</p>
@@ -271,6 +452,21 @@ export function PayrollPage() {
                         </div>
                       )
                     })}
+
+                    {/* Add a manual-only entry for staff with no sessions this month */}
+                    <ManualOnlyAdd staffList={staffList} existingIds={mg.entries.map(e => e.profile.id)} monthKey={mg.monthKey}
+                      onAdd={async (staffId, form) => {
+                        setSaving(true)
+                        await supabase.from('manual_pay_entries').insert({
+                          staff_id: staffId, date: form.date, description: form.description.trim(),
+                          hours: form.hours ? parseFloat(form.hours) : null,
+                          hourly_rate: form.hourly_rate ? parseFloat(form.hourly_rate) : null,
+                          amount: parseFloat(form.amount),
+                        })
+                        await load()
+                        setSaving(false)
+                      }}
+                    />
 
                     {/* Month total footer */}
                     <div className="bg-[#1a3a6b]/8 rounded-2xl px-5 py-3 flex items-center justify-between">
@@ -289,17 +485,12 @@ export function PayrollPage() {
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4">
             <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-3">Session Rates</p>
             <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: 'Junior Coach', rate: 10, color: 'bg-green-600' },
-                { label: 'Assistant Coach', rate: 15, color: 'bg-purple-600' },
-                { label: 'Lead Coach', rate: 30, color: 'bg-[#1a3a6b]' },
-                { label: 'Senior Lead', rate: 35, color: 'bg-amber-600' },
-              ].map(r => (
-                <div key={r.label} className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${r.color}`} />
+              {Object.keys(SESSION_RATES).filter(r => r !== 'director').map(r => (
+                <div key={r} className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full shrink-0 bg-[#1a3a6b]" />
                   <div>
-                    <p className="text-xs font-semibold text-gray-600">{r.label}</p>
-                    <p className="text-xs text-gray-400">{fmt(r.rate)}/session</p>
+                    <p className="text-xs font-semibold text-gray-600">{SESSION_ROLE_LABELS[r]}</p>
+                    <p className="text-xs text-gray-400">{fmt(SESSION_RATES[r])}/session</p>
                   </div>
                 </div>
               ))}
@@ -309,5 +500,85 @@ export function PayrollPage() {
 
       </div>
     </Layout>
+  )
+}
+
+// ─── Add a manual-only entry (for staff with no sessions logged that month) ────
+
+function ManualOnlyAdd({ staffList, existingIds, monthKey, onAdd }: {
+  staffList: Pick<Profile, 'id' | 'full_name' | 'role'>[]
+  existingIds: string[]
+  monthKey: string
+  onAdd: (staffId: string, form: typeof EMPTY_MANUAL_FORM) => Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
+  const [staffId, setStaffId] = useState('')
+  const [form, setForm] = useState(EMPTY_MANUAL_FORM)
+  const [saving, setSaving] = useState(false)
+
+  const existingSet = new Set(existingIds)
+  const otherStaff = staffList.filter(s => !existingSet.has(s.id))
+
+  function update(patch: Partial<typeof EMPTY_MANUAL_FORM>) {
+    setForm(prev => {
+      const next = { ...prev, ...patch }
+      const h = parseFloat(next.hours)
+      const r = parseFloat(next.hourly_rate)
+      if (!isNaN(h) && !isNaN(r) && ('hours' in patch || 'hourly_rate' in patch)) next.amount = (h * r).toFixed(2)
+      return next
+    })
+  }
+
+  async function submit() {
+    if (!staffId || !form.description.trim() || !form.date || !form.amount) return
+    setSaving(true)
+    await onAdd(staffId, form)
+    setSaving(false)
+    setOpen(false)
+    setStaffId('')
+    setForm(EMPTY_MANUAL_FORM)
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => { setOpen(true); setForm({ ...EMPTY_MANUAL_FORM, date: `${monthKey}-15` }) }}
+        className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl border-2 border-dashed border-gray-200 text-xs font-bold text-gray-400 hover:border-[#1a3a6b]/30 hover:text-[#1a3a6b] transition-colors"
+      >
+        <Plus size={13} /> Add pay for someone not shown above
+      </button>
+    )
+  }
+
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 flex flex-col gap-2">
+      <select value={staffId} onChange={e => setStaffId(e.target.value)} className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+        <option value="">Select staff member…</option>
+        {otherStaff.map(s => <option key={s.id} value={s.id}>{s.full_name}</option>)}
+      </select>
+      <input type="text" placeholder="Description (e.g. Admin hours)" value={form.description}
+        onChange={e => update({ description: e.target.value })}
+        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+      <div className="grid grid-cols-2 gap-2">
+        <input type="date" value={form.date} onChange={e => update({ date: e.target.value })}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+        <div />
+        <input type="number" placeholder="Hours" step="0.25" value={form.hours} onChange={e => update({ hours: e.target.value })}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+        <input type="number" placeholder="Hourly rate (£)" step="0.01" value={form.hourly_rate} onChange={e => update({ hourly_rate: e.target.value })}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+      </div>
+      <input type="number" placeholder="Amount (£)" step="0.01" value={form.amount} onChange={e => update({ amount: e.target.value })}
+        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm" />
+      <div className="flex gap-2 mt-1">
+        <button onClick={() => setOpen(false)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">
+          <X size={14} /> Cancel
+        </button>
+        <button onClick={submit} disabled={saving || !staffId || !form.description.trim() || !form.amount}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-semibold disabled:opacity-50">
+          <Check size={14} /> {saving ? 'Saving…' : 'Add'}
+        </button>
+      </div>
+    </div>
   )
 }

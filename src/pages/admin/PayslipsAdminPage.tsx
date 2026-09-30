@@ -32,7 +32,7 @@ interface Payslip {
 }
 
 interface BreakdownItem {
-  kind: 'session' | 'expense' | 'salary'
+  kind: 'session' | 'expense' | 'salary' | 'manual'
   date: string
   label: string
   amount: number
@@ -129,6 +129,13 @@ export function PayslipsAdminPage() {
       .gte('date', start)
       .lt('date', end)
 
+    // 5. Manual pay entries in period (e.g. admin hours added from Payroll)
+    const { data: manualEntries } = await supabase
+      .from('manual_pay_entries')
+      .select('id, staff_id, date, description, hours, hourly_rate, amount')
+      .gte('date', start)
+      .lt('date', end)
+
     const rows: any[] = []
 
     for (const person of staff) {
@@ -137,14 +144,23 @@ export function PayslipsAdminPage() {
       const staffSessions = (sessions ?? []).filter((s: any) => s.staff_id === person.id)
       const staffExpenses = (expenses ?? []).filter((e: any) => e.staff_id === person.id)
       const expensesTotal = staffExpenses.reduce((sum: number, e: any) => sum + Number(e.amount), 0)
+      const staffManual = (manualEntries ?? []).filter((m: any) => m.staff_id === person.id)
+      const manualTotal = staffManual.reduce((sum: number, m: any) => sum + Number(m.amount), 0)
 
       const breakdown: BreakdownItem[] = []
       staffExpenses.forEach((e: any) => breakdown.push({
         kind: 'expense', date: e.date, label: e.description, amount: Number(e.amount),
       }))
+      staffManual.forEach((m: any) => breakdown.push({
+        kind: 'manual',
+        date: m.date,
+        label: m.hours ? `${m.description} · ${m.hours}h @ £${Number(m.hourly_rate ?? 0).toFixed(2)}/hr` : m.description,
+        amount: Number(m.amount),
+      }))
 
       if (isPaye) {
-        const monthlyGross = employment?.pay_frequency === 'monthly' ? Number(employment.pay_rate ?? 0) : 0
+        const baseMonthlyGross = employment?.pay_frequency === 'monthly' ? Number(employment.pay_rate ?? 0) : 0
+        const monthlyGross = baseMonthlyGross + manualTotal
         if (monthlyGross <= 0 && staffSessions.length === 0) continue // nothing to pay this month
 
         const estimate = estimatePaye({
@@ -155,7 +171,7 @@ export function PayslipsAdminPage() {
           pensionEmployeePercent: Number(employment?.pension_employee_percent ?? 5),
         })
 
-        breakdown.unshift({ kind: 'salary', date: start, label: 'Monthly salary', amount: monthlyGross })
+        breakdown.unshift({ kind: 'salary', date: start, label: 'Monthly salary', amount: baseMonthlyGross })
 
         rows.push({
           staff_id: person.id,
@@ -175,7 +191,7 @@ export function PayslipsAdminPage() {
           generated_at: new Date().toISOString(),
         })
       } else {
-        if (staffSessions.length === 0 && expensesTotal === 0) continue // nothing to pay this month
+        if (staffSessions.length === 0 && expensesTotal === 0 && manualTotal === 0) continue // nothing to pay this month
 
         let sessionGross = 0
         staffSessions.forEach((s: any) => {
@@ -189,19 +205,21 @@ export function PayslipsAdminPage() {
           })
         })
 
+        const gross = sessionGross + manualTotal
+
         rows.push({
           staff_id: person.id,
           period_month: start,
           employment_type: 'self_employed',
           session_count: staffSessions.length,
           session_gross: sessionGross,
-          salary_gross: 0,
-          gross_pay: sessionGross,
+          salary_gross: manualTotal,
+          gross_pay: gross,
           expenses_total: expensesTotal,
           tax_deducted: 0,
           ni_deducted: 0,
           pension_deducted: 0,
-          net_pay: sessionGross + expensesTotal,
+          net_pay: gross + expensesTotal,
           breakdown,
           status: 'draft',
           generated_at: new Date().toISOString(),
@@ -306,8 +324,9 @@ export function PayslipsAdminPage() {
           </div>
           {genMsg && <p className="text-xs text-gray-500">{genMsg}</p>}
           <p className="text-[11px] text-gray-400">
-            Pulls session earnings + approved expenses for self-employed coaches, and monthly salary + tax/NI/pension
-            estimate for PAYE staff (contract type = Employee). Creates drafts — nothing is visible to staff until released.
+            Pulls session earnings + approved expenses + any manual entries (added from Payroll) for self-employed coaches,
+            and monthly salary + manual entries + tax/NI/pension estimate for PAYE staff (contract type = Employee).
+            Creates drafts — nothing is visible to staff until released.
           </p>
         </div>
 
