@@ -131,6 +131,7 @@ export function PayrollPage() {
   const [addingManualFor, setAddingManualFor] = useState<string | null>(null) // staffKey `${monthKey}:${staffId}`
   const [manualForm, setManualForm] = useState(EMPTY_MANUAL_FORM)
   const [saving, setSaving] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
   const [bulkRoleFor, setBulkRoleFor] = useState<string | null>(null) // staffId currently picking a bulk role
   const [bulkMsg, setBulkMsg] = useState<{ staffId: string; text: string } | null>(null)
 
@@ -208,8 +209,10 @@ export function PayrollPage() {
 
   async function changeSessionRole(sessionId: string, newRole: string) {
     setSaving(true)
+    setActionError(null)
     const { error } = await supabase.from('clock_records').update({ session_role: newRole || null }).eq('id', sessionId)
-    if (!error) await load()
+    if (error) setActionError(error.message)
+    else await load()
     setEditingSessionId(null)
     setSaving(false)
   }
@@ -218,12 +221,15 @@ export function PayrollPage() {
     if (!newRole) return
     setSaving(true)
     setBulkMsg(null)
+    setActionError(null)
     const { error, count } = await supabase
       .from('clock_records')
       .update({ session_role: newRole }, { count: 'exact' })
       .is('session_role', null)
       .eq('staff_id', staffId)
-    if (!error) {
+    if (error) {
+      setActionError(error.message)
+    } else {
       setBulkMsg({ staffId, text: `Set ${SESSION_ROLE_LABELS[newRole] ?? newRole} on ${count ?? 0} shift${count === 1 ? '' : 's'} with no role — across every month.` })
       await load()
     }
@@ -251,6 +257,7 @@ export function PayrollPage() {
   async function saveManualEntry(staffId: string) {
     if (!manualForm.description.trim() || !manualForm.date || !manualForm.amount) return
     setSaving(true)
+    setActionError(null)
     const { error } = await supabase.from('manual_pay_entries').insert({
       staff_id: staffId,
       date: manualForm.date,
@@ -259,7 +266,9 @@ export function PayrollPage() {
       hourly_rate: manualForm.hourly_rate ? parseFloat(manualForm.hourly_rate) : null,
       amount: parseFloat(manualForm.amount),
     })
-    if (!error) {
+    if (error) {
+      setActionError(error.message)
+    } else {
       await load()
       setAddingManualFor(null)
       setManualForm(EMPTY_MANUAL_FORM)
@@ -269,14 +278,28 @@ export function PayrollPage() {
 
   async function deleteManualEntry(id: string) {
     setSaving(true)
+    setActionError(null)
     const { error } = await supabase.from('manual_pay_entries').delete().eq('id', id)
-    if (!error) await load()
+    if (error) setActionError(error.message)
+    else await load()
     setSaving(false)
   }
 
   return (
     <Layout title="Payroll" showBack>
       <div className="px-4 pt-5 pb-10 flex flex-col gap-4 max-w-2xl mx-auto w-full">
+
+        {actionError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+            <p className="text-sm font-semibold text-red-700 mb-0.5">Action failed</p>
+            <p className="text-xs text-red-600">{actionError}</p>
+            {actionError.toLowerCase().includes('does not exist') && (
+              <p className="text-xs text-red-400 mt-1">
+                Looks like the manual_pay_entries table hasn't been created yet — run supabase/add_manual_pay_entries.sql in the Supabase SQL editor.
+              </p>
+            )}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex flex-col gap-3">
@@ -510,13 +533,15 @@ export function PayrollPage() {
                     <ManualOnlyAdd staffList={staffList} existingIds={mg.entries.map(e => e.profile.id)} monthKey={mg.monthKey}
                       onAdd={async (staffId, form) => {
                         setSaving(true)
-                        await supabase.from('manual_pay_entries').insert({
+                        setActionError(null)
+                        const { error } = await supabase.from('manual_pay_entries').insert({
                           staff_id: staffId, date: form.date, description: form.description.trim(),
                           hours: form.hours ? parseFloat(form.hours) : null,
                           hourly_rate: form.hourly_rate ? parseFloat(form.hourly_rate) : null,
                           amount: parseFloat(form.amount),
                         })
-                        await load()
+                        if (error) setActionError(error.message)
+                        else await load()
                         setSaving(false)
                       }}
                     />
