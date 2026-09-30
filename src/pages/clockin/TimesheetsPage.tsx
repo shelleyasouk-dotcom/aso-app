@@ -399,10 +399,6 @@ export function TimesheetsPage() {
                   <div className="flex flex-col gap-3 mb-4">
                     {Object.entries(groupedByStaff).map(([staffId, recs]) => {
                       const member = recs[0].staff
-                      const totalMs = recs
-                        .filter(r => r.clock_out)
-                        .reduce((sum, r) => sum + (new Date(r.clock_out!).getTime() - new Date(r.clock_in).getTime()), 0)
-                      const totalHours = (totalMs / 3600000).toFixed(1)
                       const totalPay = recs.reduce((sum, r) => sum + rateForSessionRole(r.session_role ?? null), 0)
 
                       return (
@@ -413,8 +409,8 @@ export function TimesheetsPage() {
                               <Badge color="blue">{member ? ROLE_LABELS[member.role] : ''}</Badge>
                             </div>
                             <div className="text-right">
-                              <p className="text-xs text-gray-500">Total logged</p>
-                              <p className="font-bold text-[#1a3a6b] text-lg">{totalHours}h</p>
+                              <p className="text-xs text-gray-500">Sessions worked</p>
+                              <p className="font-bold text-[#1a3a6b] text-lg">{recs.length}</p>
                               <p className="text-xs font-semibold text-green-600">£{totalPay.toFixed(2)}</p>
                             </div>
                           </div>
