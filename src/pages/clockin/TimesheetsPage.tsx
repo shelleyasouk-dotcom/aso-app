@@ -41,12 +41,18 @@ const DT_CLASS = "w-full px-3 py-2 rounded-xl border border-gray-200 text-sm foc
 export function TimesheetsPage() {
   const { profile } = useAuth()
   const isScopedToArea = profile?.role === 'lead_coach' || profile?.role === 'senior_lead_coach' || profile?.role === 'area_lead'
+  const isAdmin = profile?.role === 'director' || profile?.role === 'operations_manager'
   const [records, setRecords] = useState<EnrichedRecord[]>([])
   const [staff, setStaff] = useState<Profile[]>([])
   const [schools, setSchools] = useState<School[]>([])
   const [areaStaffIds, setAreaStaffIds] = useState<string[] | null>(null)
   const [filterStaff, setFilterStaff] = useState('')
   const [loading, setLoading] = useState(true)
+
+  const [unratedCount, setUnratedCount] = useState<number | null>(null)
+  const [unratedByStaff, setUnratedByStaff] = useState<{ staffId: string; name: string; role: string; count: number; mappable: boolean }[]>([])
+  const [backfilling, setBackfilling] = useState(false)
+  const [backfillMsg, setBackfillMsg] = useState<string | null>(null)
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ clock_in: '', clock_out: '', school_id: '', session_role: '' })
@@ -129,6 +135,59 @@ export function TimesheetsPage() {
     if (isScopedToArea && areaStaffIds === null) return
     loadRecords()
   }, [loadRecords, isScopedToArea, areaStaffIds])
+
+  const checkUnrated = useCallback(async () => {
+    if (!isAdmin) return
+    const { data } = await supabase
+      .from('clock_records')
+      .select('id, staff_id, staff:profiles!staff_id(full_name, role)')
+      .is('session_role', null)
+      .limit(5000)
+    const rows = data ?? []
+    setUnratedCount(rows.length)
+    const byStaff: Record<string, { staffId: string; name: string; role: string; count: number; mappable: boolean }> = {}
+    for (const row of rows as any[]) {
+      const sid = row.staff_id
+      const role = row.staff?.role ?? 'unknown'
+      if (!byStaff[sid]) {
+        byStaff[sid] = {
+          staffId: sid,
+          name: row.staff?.full_name ?? 'Unknown',
+          role,
+          count: 0,
+          mappable: role in SESSION_RATES,
+        }
+      }
+      byStaff[sid].count++
+    }
+    setUnratedByStaff(Object.values(byStaff).sort((a, b) => b.count - a.count))
+  }, [isAdmin])
+
+  useEffect(() => { checkUnrated() }, [checkUnrated])
+
+  async function runBackfill() {
+    setBackfilling(true)
+    setBackfillMsg(null)
+    let updated = 0
+    let skippedStaff = 0
+    for (const entry of unratedByStaff) {
+      if (!entry.mappable) { skippedStaff++; continue }
+      const { error, count } = await supabase
+        .from('clock_records')
+        .update({ session_role: entry.role }, { count: 'exact' })
+        .is('session_role', null)
+        .eq('staff_id', entry.staffId)
+      if (!error) updated += count ?? entry.count
+    }
+    setBackfillMsg(
+      skippedStaff > 0
+        ? `Updated ${updated} record${updated !== 1 ? 's' : ''}. ${skippedStaff} staff member${skippedStaff !== 1 ? 's' : ''} skipped — their role has no session rate set, so those need setting manually.`
+        : `Updated ${updated} record${updated !== 1 ? 's' : ''} using each person's current role.`
+    )
+    await checkUnrated()
+    await loadRecords()
+    setBackfilling(false)
+  }
 
   function startEdit(rec: EnrichedRecord) {
     setEditingId(rec.id)
@@ -223,6 +282,37 @@ export function TimesheetsPage() {
             <p className="text-xs text-red-600">{actionError}</p>
             <p className="text-xs text-red-400 mt-1">This is usually an RLS policy — see the SQL fix below.</p>
           </div>
+        )}
+
+        {isAdmin && unratedCount !== null && unratedCount > 0 && (
+          <Card className="bg-amber-50 border border-amber-200">
+            <p className="font-semibold text-amber-800 text-sm mb-1">
+              {unratedCount} old record{unratedCount !== 1 ? 's' : ''} logged before session rates — no pay allocated
+            </p>
+            <p className="text-xs text-amber-700 mb-3">
+              These were clocked in the old way, before a role/rate was attached to each session. We can set the rate using each person's current role.
+            </p>
+            <div className="flex flex-col gap-1.5 mb-3">
+              {unratedByStaff.map(u => (
+                <div key={u.staffId} className="flex items-center justify-between text-xs">
+                  <span className="text-amber-900">{u.name} · {u.count} record{u.count !== 1 ? 's' : ''}</span>
+                  {u.mappable ? (
+                    <span className="font-semibold text-amber-900">{SESSION_ROLE_LABELS[u.role] ?? u.role} · £{rateForSessionRole(u.role)}/session</span>
+                  ) : (
+                    <span className="font-semibold text-red-500">No rate for "{u.role}" — set manually</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            {backfillMsg && <p className="text-xs text-amber-900 bg-amber-100 rounded-xl px-3 py-2 mb-3">{backfillMsg}</p>}
+            <button
+              onClick={runBackfill}
+              disabled={backfilling}
+              className="w-full bg-amber-600 text-white font-bold text-sm py-2.5 rounded-xl disabled:opacity-60"
+            >
+              {backfilling ? 'Backfilling…' : 'Backfill using current role'}
+            </button>
+          </Card>
         )}
 
         <Button variant="primary" size="lg" fullWidth onClick={() => setShowAdd(v => !v)}>
