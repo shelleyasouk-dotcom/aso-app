@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Download, ChevronDown, ChevronUp, Banknote, Plus, Trash2, Pencil, X, Check } from 'lucide-react'
+import { Download, ChevronDown, ChevronUp, Banknote, Plus, Trash2, Pencil, X, Check, ShieldCheck, CheckCircle2, AlertTriangle, Clock3 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 import { SESSION_RATES, SESSION_ROLE_LABELS, rateForSessionRole } from '../../lib/sessionRates'
 import type { Profile, School } from '../../types'
@@ -31,6 +32,17 @@ interface StaffEntry {
   sessions: SessionRow[]
   manualEntries: ManualEntry[]
   total: number
+}
+
+interface TimesheetConfirmation {
+  staff_id: string
+  month: string
+  confirmed_at: string | null
+  confirmed_note: string | null
+  has_issue: boolean
+  authorized_by: string | null
+  authorized_at: string | null
+  authorizer?: { full_name: string }
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -121,6 +133,7 @@ const EMPTY_MANUAL_FORM = { description: '', date: '', hours: '', hourly_rate: '
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function PayrollPage() {
+  const { profile } = useAuth()
   const [months, setMonths] = useState<MonthGroup[]>([])
   const [staffList, setStaffList] = useState<Pick<Profile, 'id' | 'full_name' | 'role'>[]>([])
   const [loading, setLoading] = useState(true)
@@ -135,12 +148,15 @@ export function PayrollPage() {
   const [bulkRoleFor, setBulkRoleFor] = useState<string | null>(null) // staffId currently picking a bulk role
   const [bulkMsg, setBulkMsg] = useState<{ staffId: string; text: string } | null>(null)
 
+  const [confirmations, setConfirmations] = useState<Record<string, TimesheetConfirmation>>({})
+  const [authorizing, setAuthorizing] = useState<string | null>(null)
+
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
 
-    const [{ data: sessionData }, { data: manualData }, { data: allStaff }] = await Promise.all([
+    const [{ data: sessionData }, { data: manualData }, { data: allStaff }, { data: confirmData }] = await Promise.all([
       supabase
         .from('clock_records')
         .select('id, session_date, session_role, clock_in, staff_id, school:schools(id, name), staff:profiles!staff_id(id, full_name, role)')
@@ -152,9 +168,16 @@ export function PayrollPage() {
         .select('*, staff:profiles!staff_id(id, full_name, role)')
         .order('date', { ascending: false }),
       supabase.from('profiles').select('id, full_name, role').not('role', 'in', '(parent,school)').order('full_name'),
+      supabase.from('timesheet_month_confirmations').select('*, authorizer:profiles!authorized_by(full_name)'),
     ])
 
     setStaffList((allStaff ?? []) as Pick<Profile, 'id' | 'full_name' | 'role'>[])
+
+    const confirmMap: Record<string, TimesheetConfirmation> = {}
+    for (const row of (confirmData ?? []) as TimesheetConfirmation[]) {
+      confirmMap[`${row.staff_id}:${row.month.slice(0, 7)}`] = row
+    }
+    setConfirmations(confirmMap)
 
     const byMonth: Record<string, Record<string, { profile: Pick<Profile, 'id' | 'full_name' | 'role'>; sessions: SessionRow[]; manualEntries: ManualEntry[] }>> = {}
 
@@ -198,6 +221,22 @@ export function PayrollPage() {
     setMonths(result)
     if (result.length > 0) setOpenMonths(new Set([result[0].monthKey]))
     setLoading(false)
+  }
+
+  async function authorizeMonth(staffId: string, monthKey: string) {
+    if (!profile) return
+    const key = `${staffId}:${monthKey}`
+    setAuthorizing(key)
+    setActionError(null)
+    const { error } = await supabase.from('timesheet_month_confirmations').upsert({
+      staff_id: staffId,
+      month: `${monthKey}-01`,
+      authorized_by: profile.id,
+      authorized_at: new Date().toISOString(),
+    }, { onConflict: 'staff_id,month' })
+    if (error) setActionError(error.message)
+    else await load()
+    setAuthorizing(null)
   }
 
   function toggleMonth(key: string) {
@@ -365,6 +404,46 @@ export function PayrollPage() {
                               : <ChevronDown size={16} className="text-gray-300 shrink-0" />
                             }
                           </button>
+
+                          {(() => {
+                            const c = confirmations[`${entry.profile.id}:${mg.monthKey}`]
+                            const authKey = `${entry.profile.id}:${mg.monthKey}`
+                            return (
+                              <div className={`px-4 py-2.5 border-t flex items-center justify-between gap-2 ${
+                                c?.authorized_at ? 'bg-green-50 border-green-100'
+                                : c?.has_issue ? 'bg-amber-50 border-amber-100'
+                                : c?.confirmed_at ? 'bg-blue-50 border-blue-100'
+                                : 'bg-gray-50 border-gray-100'
+                              }`}>
+                                {c?.authorized_at ? (
+                                  <p className="text-xs text-green-700 flex items-center gap-1.5">
+                                    <ShieldCheck size={12} /> Authorized by {c.authorizer?.full_name ?? 'admin'} · {new Date(c.authorized_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                  </p>
+                                ) : c?.has_issue ? (
+                                  <p className="text-xs text-amber-700 flex items-center gap-1.5 min-w-0">
+                                    <AlertTriangle size={12} className="shrink-0" /> <span className="truncate">Flagged: "{c.confirmed_note}"</span>
+                                  </p>
+                                ) : c?.confirmed_at ? (
+                                  <p className="text-xs text-blue-700 flex items-center gap-1.5">
+                                    <CheckCircle2 size={12} /> Staff confirmed {new Date(c.confirmed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                                    <Clock3 size={12} /> Not yet confirmed by staff
+                                  </p>
+                                )}
+                                {!c?.authorized_at && (
+                                  <button
+                                    onClick={() => authorizeMonth(entry.profile.id, mg.monthKey)}
+                                    disabled={authorizing === authKey}
+                                    className="shrink-0 flex items-center gap-1 bg-[#1a3a6b] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg disabled:opacity-60"
+                                  >
+                                    {authorizing === authKey ? 'Authorizing…' : 'Authorize'}
+                                  </button>
+                                )}
+                              </div>
+                            )
+                          })()}
 
                           {isStaffOpen && (
                             <div className="border-t border-gray-50">

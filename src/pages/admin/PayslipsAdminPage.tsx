@@ -136,7 +136,16 @@ export function PayslipsAdminPage() {
       .gte('date', start)
       .lt('date', end)
 
+    // 6. Timesheet authorization for the period — session-based pay requires the
+    // month to be authorized in Payroll before a payslip can be generated
+    const { data: confirmations } = await supabase
+      .from('timesheet_month_confirmations')
+      .select('staff_id, authorized_at')
+      .eq('month', start)
+    const authorizedStaffIds = new Set((confirmations ?? []).filter((c: any) => c.authorized_at).map((c: any) => c.staff_id))
+
     const rows: any[] = []
+    let skippedUnauthorized = 0
 
     for (const person of staff) {
       const employment = employmentByStaff.get(person.id)
@@ -193,6 +202,11 @@ export function PayslipsAdminPage() {
       } else {
         if (staffSessions.length === 0 && expensesTotal === 0 && manualTotal === 0) continue // nothing to pay this month
 
+        if (staffSessions.length > 0 && !authorizedStaffIds.has(person.id)) {
+          skippedUnauthorized++
+          continue // sessions logged but timesheet not yet authorized in Payroll
+        }
+
         let sessionGross = 0
         staffSessions.forEach((s: any) => {
           const rate = rateForSessionRole(s.session_role)
@@ -229,7 +243,11 @@ export function PayslipsAdminPage() {
 
     if (rows.length === 0) {
       setGenerating(false)
-      setGenMsg('No pay activity found for that month.')
+      setGenMsg(
+        skippedUnauthorized > 0
+          ? `No payslips generated — ${skippedUnauthorized} staff member${skippedUnauthorized !== 1 ? 's have' : ' has'} sessions logged but their timesheet isn't authorized yet. Authorize it in Payroll first.`
+          : 'No pay activity found for that month.'
+      )
       return
     }
 
@@ -237,7 +255,10 @@ export function PayslipsAdminPage() {
     if (error) {
       setGenMsg(`Error: ${error.message}`)
     } else {
-      setGenMsg(`Generated ${rows.length} draft payslip${rows.length !== 1 ? 's' : ''} for ${monthLabel(genMonth)}.`)
+      setGenMsg(
+        `Generated ${rows.length} draft payslip${rows.length !== 1 ? 's' : ''} for ${monthLabel(genMonth)}.`
+        + (skippedUnauthorized > 0 ? ` Skipped ${skippedUnauthorized} staff member${skippedUnauthorized !== 1 ? 's' : ''} — timesheet not yet authorized in Payroll.` : '')
+      )
       setOpenMonths(prev => new Set([...prev, genMonth]))
       await load()
     }
@@ -326,7 +347,8 @@ export function PayslipsAdminPage() {
           <p className="text-[11px] text-gray-400">
             Pulls session earnings + approved expenses + any manual entries (added from Payroll) for self-employed coaches,
             and monthly salary + manual entries + tax/NI/pension estimate for PAYE staff (contract type = Employee).
-            Creates drafts — nothing is visible to staff until released.
+            Creates drafts — nothing is visible to staff until released. Coaches with sessions logged but no timesheet
+            authorization in Payroll are skipped until you authorize them there.
           </p>
         </div>
 
