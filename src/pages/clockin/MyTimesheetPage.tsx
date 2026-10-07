@@ -143,10 +143,12 @@ export function MyTimesheetPage() {
       confirmed_at: new Date().toISOString(),
       confirmed_note: null,
       has_issue: false,
+      authorized_at: new Date().toISOString(),
+      authorized_by: null,
     }, { onConflict: 'staff_id,month' })
     if (!error) {
       await load()
-      setConfirmMsg('Thanks — your hours are confirmed.')
+      setConfirmMsg('Thanks — your hours are confirmed and sent through for payroll.')
     }
     setConfirming(false)
   }

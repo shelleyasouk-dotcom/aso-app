@@ -347,8 +347,8 @@ export function PayslipsAdminPage() {
           <p className="text-[11px] text-gray-400">
             Pulls session earnings + approved expenses + any manual entries (added from Payroll) for self-employed coaches,
             and monthly salary + manual entries + tax/NI/pension estimate for PAYE staff (contract type = Employee).
-            Creates drafts — nothing is visible to staff until released. Coaches with sessions logged but no timesheet
-            authorization in Payroll are skipped until you authorize them there.
+            Creates drafts — nothing is visible to staff until released. Coaches are auto-authorized as soon as they confirm
+            their hours from My Timesheet — anyone who hasn't confirmed yet is skipped until you authorize them manually in Payroll.
           </p>
         </div>
 

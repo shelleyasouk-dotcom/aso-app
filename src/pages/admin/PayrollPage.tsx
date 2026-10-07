@@ -590,7 +590,7 @@ export function PayrollPage() {
                               }`}>
                                 {c?.authorized_at ? (
                                   <p className="text-xs text-green-700 flex items-center gap-1.5">
-                                    <ShieldCheck size={12} /> Authorized by {c.authorizer?.full_name ?? 'admin'} · {new Date(c.authorized_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                                    <ShieldCheck size={12} /> {c.authorized_by ? `Authorized by ${c.authorizer?.full_name ?? 'admin'}` : 'Auto-authorized on staff confirmation'} · {new Date(c.authorized_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                                   </p>
                                 ) : c?.has_issue ? (
                                   <p className="text-xs text-amber-700 flex items-center gap-1.5 min-w-0">
