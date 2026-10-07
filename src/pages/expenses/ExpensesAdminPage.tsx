@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Car, Train, ReceiptText, Check, X, ChevronDown, ChevronUp, Lock, CheckCircle2 } from 'lucide-react'
+import { Car, Train, ReceiptText, Check, X, ChevronDown, ChevronUp, Lock, CheckCircle2, Pencil, Trash2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -55,13 +55,71 @@ interface ExpenseAdminRowProps {
   expense: EnrichedExpense
   onApprove: (id: string, note: string) => void
   onReject: (id: string, note: string) => void
+  onSaveEdit: (id: string, fields: { date: string; type: ExpenseType; description: string; miles: number | null; amount: number }) => Promise<void>
+  onDelete: (id: string) => Promise<void>
   saving: boolean
 }
 
-function ExpenseAdminRow({ expense, onApprove, onReject, saving }: ExpenseAdminRowProps) {
+function ExpenseAdminRow({ expense, onApprove, onReject, onSaveEdit, onDelete, saving }: ExpenseAdminRowProps) {
   const [expanded, setExpanded] = useState(expense.status === 'pending')
   const [note, setNote] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [editForm, setEditForm] = useState({
+    date: expense.date, type: expense.type, description: expense.description,
+    miles: expense.miles != null ? String(expense.miles) : '', amount: String(expense.amount),
+  })
   const Icon = TYPE_ICONS[expense.type]
+
+  function startEdit() {
+    setEditForm({
+      date: expense.date, type: expense.type, description: expense.description,
+      miles: expense.miles != null ? String(expense.miles) : '', amount: String(expense.amount),
+    })
+    setEditing(true)
+    setConfirmingDelete(false)
+  }
+
+  async function saveEdit() {
+    if (!editForm.description.trim() || !editForm.date || !editForm.amount) return
+    await onSaveEdit(expense.id, {
+      date: editForm.date, type: editForm.type, description: editForm.description.trim(),
+      miles: editForm.miles ? parseFloat(editForm.miles) : null, amount: parseFloat(editForm.amount),
+    })
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div className="border-b border-gray-100 last:border-0 py-3 flex flex-col gap-2">
+        <p className="text-xs font-bold text-[#1a3a6b]">Edit Expense</p>
+        <div className="grid grid-cols-3 gap-1.5">
+          {(['mileage', 'travel', 'other'] as ExpenseType[]).map(t => (
+            <button key={t} onClick={() => setEditForm(f => ({ ...f, type: t }))}
+              className={`py-2 rounded-lg text-xs font-medium border ${editForm.type === t ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]' : 'border-gray-200 text-gray-600'}`}>
+              {TYPE_LABELS[t]}
+            </button>
+          ))}
+        </div>
+        <input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))}
+          className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm" />
+        <input type="text" placeholder="Description" value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+          className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm" />
+        {editForm.type === 'mileage' && (
+          <input type="number" placeholder="Miles" value={editForm.miles} onChange={e => setEditForm(f => ({ ...f, miles: e.target.value }))}
+            className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm" />
+        )}
+        <input type="number" step="0.01" placeholder="Amount (£)" value={editForm.amount} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))}
+          className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm" />
+        <div className="flex gap-2">
+          <button onClick={() => setEditing(false)} className="flex-1 py-2 rounded-xl border border-gray-200 text-sm text-gray-600">Cancel</button>
+          <button onClick={saveEdit} disabled={saving} className="flex-1 py-2 rounded-xl bg-[#1a3a6b] text-white text-sm font-medium disabled:opacity-50">
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="border-b border-gray-100 last:border-0 py-3">
@@ -120,6 +178,28 @@ function ExpenseAdminRow({ expense, onApprove, onReject, saving }: ExpenseAdminR
       {expanded && expense.status !== 'pending' && expense.admin_note && (
         <p className="mt-2 pl-12 text-xs text-gray-500">{expense.admin_note}</p>
       )}
+      {expanded && (
+        confirmingDelete ? (
+          <div className="mt-3 pl-12 flex items-center gap-2">
+            <p className="text-xs text-gray-600 font-medium flex-1">Cancel this expense?</p>
+            <button onClick={() => setConfirmingDelete(false)} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold">
+              Keep
+            </button>
+            <button onClick={() => onDelete(expense.id)} disabled={saving} className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-semibold disabled:opacity-50">
+              Cancel it
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3 pl-12 flex items-center gap-3">
+            <button onClick={startEdit} className="flex items-center gap-1 text-xs font-semibold text-[#1a3a6b]">
+              <Pencil size={12} /> Edit
+            </button>
+            <button onClick={() => setConfirmingDelete(true)} className="flex items-center gap-1 text-xs font-semibold text-red-500">
+              <Trash2 size={12} /> Cancel
+            </button>
+          </div>
+        )
+      )}
     </div>
   )
 }
@@ -135,6 +215,7 @@ export function ExpensesAdminPage() {
   const [filterStatus, setFilterStatus] = useState<'pending' | 'approved' | 'rejected' | ''>('pending')
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
   const [openListMonths, setOpenListMonths] = useState<Set<string>>(new Set())
+  const [actionError, setActionError] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -184,6 +265,24 @@ export function ExpensesAdminPage() {
       admin_note: note || null,
     }).eq('id', id)
     setExpenses(prev => prev.map(e => e.id === id ? { ...e, status: 'rejected', admin_note: note || null } : e))
+    setSaving(false)
+  }
+
+  async function saveEdit(id: string, fields: { date: string; type: ExpenseType; description: string; miles: number | null; amount: number }) {
+    setSaving(true)
+    setActionError(null)
+    const { error } = await supabase.from('expenses').update(fields).eq('id', id)
+    if (error) setActionError(error.message)
+    else setExpenses(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e))
+    setSaving(false)
+  }
+
+  async function deleteExpense(id: string) {
+    setSaving(true)
+    setActionError(null)
+    const { error } = await supabase.from('expenses').delete().eq('id', id)
+    if (error) setActionError(error.message)
+    else setExpenses(prev => prev.filter(e => e.id !== id))
     setSaving(false)
   }
 
@@ -250,6 +349,13 @@ export function ExpensesAdminPage() {
     <Layout title="Expenses" showBack>
       <div className="px-4 pt-6 flex flex-col gap-4 pb-8">
 
+        {actionError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+            <p className="text-sm font-semibold text-red-700 mb-0.5">Action failed</p>
+            <p className="text-xs text-red-600">{actionError}</p>
+          </div>
+        )}
+
         {pendingCount > 0 && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
             <p className="font-semibold text-amber-800 text-sm">
@@ -307,7 +413,7 @@ export function ExpensesAdminPage() {
                           £{group.expenses.reduce((s, e) => s + e.amount, 0).toFixed(2)} · {group.expenses.length} item{group.expenses.length !== 1 ? 's' : ''}
                         </p>
                         {group.expenses.map(e => (
-                          <ExpenseAdminRow key={e.id} expense={e} onApprove={approve} onReject={reject} saving={saving} />
+                          <ExpenseAdminRow key={e.id} expense={e} onApprove={approve} onReject={reject} onSaveEdit={saveEdit} onDelete={deleteExpense} saving={saving} />
                         ))}
                       </Card>
                     ))}
