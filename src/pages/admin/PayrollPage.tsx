@@ -156,13 +156,12 @@ function splitName(fullName: string): { first: string; last: string } {
   return { first: parts[0], last: parts.slice(1).join(' ') }
 }
 
-function exportBankCSV(
+function buildBankRows(
   entries: StaffEntry[],
-  monthKey: string,
+  refSuffix: string,
+  kind: 'payroll' | 'expenses',
   bankDetails: Map<string, { bank_account_name: string | null; bank_sort_code: string | null; bank_account_number: string | null }>
-) {
-  const [year, month] = monthKey.split('-')
-  const refSuffix = refMonthYear(monthKey)
+): string[][] {
   const rows: string[][] = []
   rows.push(['DO NOT ALTER THIS TEMPLATE', '', '', '', '', '', ''])
   rows.push(['Sort Code', 'Account Number', 'First Name', 'Last Name', 'Business Name', 'Reference', 'Amount (GBP)'])
@@ -173,26 +172,52 @@ function exportBankCSV(
     const sortCode = bank?.bank_sort_code ?? ''
     const accountNumber = bank?.bank_account_number ?? ''
 
-    const workAmount = entry.sessions.reduce((sum, s) => sum + rateForSessionRole(s.session_role), 0)
-      + entry.manualEntries.reduce((sum, m) => sum + m.amount, 0)
-    const expenseAmount = entry.expenses.reduce((sum, x) => sum + x.amount, 0)
-
-    if (workAmount > 0) {
-      rows.push([sortCode, accountNumber, first, last, '', `ASO ${refSuffix}`, workAmount.toFixed(2)])
-    }
-    if (expenseAmount > 0) {
-      rows.push([sortCode, accountNumber, first, last, '', `TRAVEL ${refSuffix}`, expenseAmount.toFixed(2)])
+    if (kind === 'payroll') {
+      const workAmount = entry.sessions.reduce((sum, s) => sum + rateForSessionRole(s.session_role), 0)
+        + entry.manualEntries.reduce((sum, m) => sum + m.amount, 0)
+      if (workAmount > 0) {
+        rows.push([sortCode, accountNumber, first, last, '', `ASO ${refSuffix}`, workAmount.toFixed(2)])
+      }
+    } else {
+      const expenseAmount = entry.expenses.reduce((sum, x) => sum + x.amount, 0)
+      if (expenseAmount > 0) {
+        rows.push([sortCode, accountNumber, first, last, '', `TRAVEL ${refSuffix}`, expenseAmount.toFixed(2)])
+      }
     }
   })
 
+  return rows
+}
+
+function downloadCSV(rows: string[][], filename: string) {
   const csv = rows.map(r => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `ASO_BankPayments_${year}_${month}.csv`
+  a.download = filename
   a.click()
   URL.revokeObjectURL(url)
+}
+
+function exportPayrollBankCSV(
+  entries: StaffEntry[],
+  monthKey: string,
+  bankDetails: Map<string, { bank_account_name: string | null; bank_sort_code: string | null; bank_account_number: string | null }>
+) {
+  const [year, month] = monthKey.split('-')
+  const rows = buildBankRows(entries, refMonthYear(monthKey), 'payroll', bankDetails)
+  downloadCSV(rows, `ASO_BankPayroll_${year}_${month}.csv`)
+}
+
+function exportExpensesBankCSV(
+  entries: StaffEntry[],
+  monthKey: string,
+  bankDetails: Map<string, { bank_account_name: string | null; bank_sort_code: string | null; bank_account_number: string | null }>
+) {
+  const [year, month] = monthKey.split('-')
+  const rows = buildBankRows(entries, refMonthYear(monthKey), 'expenses', bankDetails)
+  downloadCSV(rows, `ASO_BankExpenses_${year}_${month}.csv`)
 }
 
 interface MonthGroup {
@@ -541,22 +566,29 @@ export function PayrollPage() {
                       {mg.entries.length} staff · {mg.sessionCount} sessions · {fmt(mg.total)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      onClick={e => { e.stopPropagation(); exportCSV(mg.entries, mg.monthKey) }}
-                      className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors"
-                    >
-                      <Download size={13} /> Full
-                    </button>
-                    <button
-                      onClick={e => { e.stopPropagation(); exportBankCSV(mg.entries, mg.monthKey, bankDetails) }}
-                      className="flex items-center gap-1.5 bg-[#f5c518] text-[#1a3a6b] px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors"
-                    >
-                      <Download size={13} /> Bank
-                    </button>
-                    <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                  </div>
+                  <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
+
+                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                  <button
+                    onClick={() => exportCSV(mg.entries, mg.monthKey)}
+                    className="flex items-center gap-1.5 bg-[#1a3a6b]/8 text-[#1a3a6b] px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors"
+                  >
+                    <Download size={13} /> Full CSV
+                  </button>
+                  <button
+                    onClick={() => exportPayrollBankCSV(mg.entries, mg.monthKey, bankDetails)}
+                    className="flex items-center gap-1.5 bg-[#f5c518] text-[#1a3a6b] px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors"
+                  >
+                    <Download size={13} /> Bank: Payroll
+                  </button>
+                  <button
+                    onClick={() => exportExpensesBankCSV(mg.entries, mg.monthKey, bankDetails)}
+                    className="flex items-center gap-1.5 bg-orange-100 text-orange-700 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors"
+                  >
+                    <Download size={13} /> Bank: Expenses
+                  </button>
+                </div>
 
                 {isOpen && (
                   <div className="flex flex-col gap-3 mb-2">
