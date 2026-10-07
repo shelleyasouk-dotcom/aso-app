@@ -150,6 +150,12 @@ function refMonthYear(monthKey: string): string {
   return `${MONTH_ABBR[parseInt(month, 10) - 1]}${year.slice(2)}`
 }
 
+function splitName(fullName: string): { first: string; last: string } {
+  const parts = fullName.trim().split(/\s+/)
+  if (parts.length === 1) return { first: parts[0], last: '' }
+  return { first: parts[0], last: parts.slice(1).join(' ') }
+}
+
 function exportBankCSV(
   entries: StaffEntry[],
   monthKey: string,
@@ -158,11 +164,12 @@ function exportBankCSV(
   const [year, month] = monthKey.split('-')
   const refSuffix = refMonthYear(monthKey)
   const rows: string[][] = []
-  rows.push(['Name', 'Sort Code', 'Account Number', 'Amount', 'Reference'])
+  rows.push(['DO NOT ALTER THIS TEMPLATE', '', '', '', '', '', ''])
+  rows.push(['Sort Code', 'Account Number', 'First Name', 'Last Name', 'Business Name', 'Reference', 'Amount (GBP)'])
 
   entries.forEach(entry => {
     const bank = bankDetails.get(entry.profile.id)
-    const name = bank?.bank_account_name?.trim() || entry.profile.full_name
+    const { first, last } = splitName(bank?.bank_account_name?.trim() || entry.profile.full_name)
     const sortCode = bank?.bank_sort_code ?? ''
     const accountNumber = bank?.bank_account_number ?? ''
 
@@ -171,14 +178,14 @@ function exportBankCSV(
     const expenseAmount = entry.expenses.reduce((sum, x) => sum + x.amount, 0)
 
     if (workAmount > 0) {
-      rows.push([name, sortCode, accountNumber, workAmount.toFixed(2), `ASO ${refSuffix}`])
+      rows.push([sortCode, accountNumber, first, last, '', `ASO ${refSuffix}`, workAmount.toFixed(2)])
     }
     if (expenseAmount > 0) {
-      rows.push([name, sortCode, accountNumber, expenseAmount.toFixed(2), `TRAVEL ${refSuffix}`])
+      rows.push([sortCode, accountNumber, first, last, '', `TRAVEL ${refSuffix}`, expenseAmount.toFixed(2)])
     }
   })
 
-  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const csv = rows.map(r => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
