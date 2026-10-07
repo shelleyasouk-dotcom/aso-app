@@ -243,6 +243,7 @@ export function PayrollPage() {
   const [expandedStaff, setExpandedStaff] = useState<Set<string>>(new Set())
 
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null)
+  const [confirmDeleteSessionId, setConfirmDeleteSessionId] = useState<string | null>(null)
   const [addingManualFor, setAddingManualFor] = useState<string | null>(null) // staffKey `${monthKey}:${staffId}`
   const [manualForm, setManualForm] = useState(EMPTY_MANUAL_FORM)
   const [saving, setSaving] = useState(false)
@@ -403,6 +404,16 @@ export function PayrollPage() {
     if (error) setActionError(error.message)
     else await load()
     setEditingSessionId(null)
+    setSaving(false)
+  }
+
+  async function deleteSession(sessionId: string) {
+    setSaving(true)
+    setActionError(null)
+    const { error } = await supabase.from('clock_records').delete().eq('id', sessionId)
+    if (error) setActionError(error.message)
+    else await load()
+    setConfirmDeleteSessionId(null)
     setSaving(false)
   }
 
@@ -702,42 +713,67 @@ export function PayrollPage() {
                                 const role = s.session_role ?? ''
                                 const rate = rateForSessionRole(s.session_role)
                                 const isEditingRole = editingSessionId === s.id
+                                const isConfirmingDelete = confirmDeleteSessionId === s.id
                                 return (
                                   <div key={s.id} className={`px-4 py-3 ${i < entry.sessions.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                                    <div className="flex items-center gap-3">
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-gray-700">{formatDate(s.session_date)}</p>
-                                        <p className="text-xs text-gray-400 truncate mt-0.5">
-                                          {(s.school as any)?.name ?? 'Unknown school'}
-                                          {role && ` · ${SESSION_ROLE_LABELS[role] ?? role}`}
-                                          {!role && <span className="text-red-500"> · No role set</span>}
+                                    {isConfirmingDelete ? (
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-sm text-gray-600 font-medium flex-1">
+                                          Delete this session ({formatDate(s.session_date)})?
                                         </p>
-                                      </div>
-                                      <p className="text-sm font-bold text-gray-700 shrink-0">{fmt(rate)}</p>
-                                      <button
-                                        onClick={() => setEditingSessionId(isEditingRole ? null : s.id)}
-                                        className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50 shrink-0"
-                                      >
-                                        <Pencil size={13} />
-                                      </button>
-                                    </div>
-                                    {isEditingRole && (
-                                      <div className="mt-2 flex items-center gap-2">
-                                        <select
-                                          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
-                                          defaultValue={role}
-                                          disabled={saving}
-                                          onChange={e => changeSessionRole(s.id, e.target.value)}
-                                        >
-                                          <option value="">— No role —</option>
-                                          {Object.keys(SESSION_RATES).map(r => (
-                                            <option key={r} value={r}>{SESSION_ROLE_LABELS[r]} (£{SESSION_RATES[r]}/session)</option>
-                                          ))}
-                                        </select>
-                                        <button onClick={() => setEditingSessionId(null)} className="p-2 rounded-xl border border-gray-200 text-gray-500 shrink-0">
-                                          <X size={14} />
+                                        <button onClick={() => setConfirmDeleteSessionId(null)}
+                                          className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-semibold shrink-0">
+                                          Keep
+                                        </button>
+                                        <button onClick={() => deleteSession(s.id)} disabled={saving}
+                                          className="px-3 py-1.5 rounded-lg bg-red-500 text-white text-xs font-semibold shrink-0 disabled:opacity-50">
+                                          Delete
                                         </button>
                                       </div>
+                                    ) : (
+                                      <>
+                                        <div className="flex items-center gap-3">
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-gray-700">{formatDate(s.session_date)}</p>
+                                            <p className="text-xs text-gray-400 truncate mt-0.5">
+                                              {(s.school as any)?.name ?? 'Unknown school'}
+                                              {role && ` · ${SESSION_ROLE_LABELS[role] ?? role}`}
+                                              {!role && <span className="text-red-500"> · No role set</span>}
+                                            </p>
+                                          </div>
+                                          <p className="text-sm font-bold text-gray-700 shrink-0">{fmt(rate)}</p>
+                                          <button
+                                            onClick={() => setEditingSessionId(isEditingRole ? null : s.id)}
+                                            className="p-1.5 rounded-lg text-[#1a3a6b] hover:bg-blue-50 shrink-0"
+                                          >
+                                            <Pencil size={13} />
+                                          </button>
+                                          <button
+                                            onClick={() => { setConfirmDeleteSessionId(s.id); setEditingSessionId(null) }}
+                                            className="p-1.5 rounded-lg text-red-300 hover:text-red-500 hover:bg-red-50 shrink-0"
+                                          >
+                                            <Trash2 size={13} />
+                                          </button>
+                                        </div>
+                                        {isEditingRole && (
+                                          <div className="mt-2 flex items-center gap-2">
+                                            <select
+                                              className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm"
+                                              defaultValue={role}
+                                              disabled={saving}
+                                              onChange={e => changeSessionRole(s.id, e.target.value)}
+                                            >
+                                              <option value="">— No role —</option>
+                                              {Object.keys(SESSION_RATES).map(r => (
+                                                <option key={r} value={r}>{SESSION_ROLE_LABELS[r]} (£{SESSION_RATES[r]}/session)</option>
+                                              ))}
+                                            </select>
+                                            <button onClick={() => setEditingSessionId(null)} className="p-2 rounded-xl border border-gray-200 text-gray-500 shrink-0">
+                                              <X size={14} />
+                                            </button>
+                                          </div>
+                                        )}
+                                      </>
                                     )}
                                   </div>
                                 )
