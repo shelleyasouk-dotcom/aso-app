@@ -134,6 +134,7 @@ export function ExpensesAdminPage() {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState<'pending' | 'approved' | 'rejected' | ''>('pending')
   const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
+  const [openListMonths, setOpenListMonths] = useState<Set<string>>(new Set())
 
   useEffect(() => { load() }, [])
 
@@ -142,7 +143,10 @@ export function ExpensesAdminPage() {
       .from('expenses')
       .select('*, staff:profiles!staff_id(full_name, role)')
       .order('date', { ascending: false })
-    if (data) setExpenses(data)
+    if (data) {
+      setExpenses(data)
+      if (data.length > 0) setOpenListMonths(new Set([data[0].date.slice(0, 7)]))
+    }
 
     if (isAdmin) {
       const { data: confirmData } = await supabase
@@ -213,13 +217,20 @@ export function ExpensesAdminPage() {
 
   const filtered = filterStatus ? expenses.filter(e => e.status === filterStatus) : expenses
 
-  const grouped = filtered.reduce<Record<string, GroupedStaff>>((acc, e) => {
-    if (!acc[e.staff_id]) {
-      acc[e.staff_id] = { staffId: e.staff_id, staffName: (e.staff as any)?.full_name ?? 'Unknown', expenses: [] }
+  const groupedByMonth = filtered.reduce<Record<string, Record<string, GroupedStaff>>>((acc, e) => {
+    const mk = e.date.slice(0, 7)
+    if (!acc[mk]) acc[mk] = {}
+    if (!acc[mk][e.staff_id]) {
+      acc[mk][e.staff_id] = { staffId: e.staff_id, staffName: (e.staff as any)?.full_name ?? 'Unknown', expenses: [] }
     }
-    acc[e.staff_id].expenses.push(e)
+    acc[mk][e.staff_id].expenses.push(e)
     return acc
   }, {})
+  const listMonthKeys = Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a))
+
+  function toggleListMonth(key: string) {
+    setOpenListMonths(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
 
   const pendingCount = expenses.filter(e => e.status === 'pending').length
   const pendingTotal = expenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
@@ -264,23 +275,47 @@ export function ExpensesAdminPage() {
 
         {loading ? (
           <p className="text-center text-gray-400 py-8">Loading…</p>
-        ) : Object.keys(grouped).length === 0 ? (
+        ) : listMonthKeys.length === 0 ? (
           <Card className="text-center py-8">
             <ReceiptText size={36} className="text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">No expenses found.</p>
           </Card>
         ) : (
-          Object.values(grouped).map(group => (
-            <Card key={group.staffId}>
-              <p className="font-bold text-[#1a3a6b] mb-1">{group.staffName}</p>
-              <p className="text-xs text-gray-400 mb-3">
-                £{group.expenses.reduce((s, e) => s + e.amount, 0).toFixed(2)} · {group.expenses.length} item{group.expenses.length !== 1 ? 's' : ''}
-              </p>
-              {group.expenses.map(e => (
-                <ExpenseAdminRow key={e.id} expense={e} onApprove={approve} onReject={reject} saving={saving} />
-              ))}
-            </Card>
-          ))
+          listMonthKeys.map(mk => {
+            const monthGroups = Object.values(groupedByMonth[mk])
+            const isOpen = openListMonths.has(mk)
+            const monthTotal = monthGroups.reduce((s, g) => s + g.expenses.reduce((ss, e) => ss + e.amount, 0), 0)
+            const monthCount = monthGroups.reduce((s, g) => s + g.expenses.length, 0)
+            return (
+              <div key={mk}>
+                <button
+                  onClick={() => toggleListMonth(mk)}
+                  className="w-full flex items-center justify-between bg-[#1a3a6b] text-white px-4 py-3 rounded-2xl mb-2"
+                >
+                  <div className="text-left">
+                    <p className="font-extrabold text-sm">{new Date(`${mk}-01`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</p>
+                    <p className="text-white/60 text-xs mt-0.5">£{monthTotal.toFixed(2)} · {monthCount} item{monthCount !== 1 ? 's' : ''}</p>
+                  </div>
+                  <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isOpen && (
+                  <div className="flex flex-col gap-3 mb-2">
+                    {monthGroups.map(group => (
+                      <Card key={group.staffId}>
+                        <p className="font-bold text-[#1a3a6b] mb-1">{group.staffName}</p>
+                        <p className="text-xs text-gray-400 mb-3">
+                          £{group.expenses.reduce((s, e) => s + e.amount, 0).toFixed(2)} · {group.expenses.length} item{group.expenses.length !== 1 ? 's' : ''}
+                        </p>
+                        {group.expenses.map(e => (
+                          <ExpenseAdminRow key={e.id} expense={e} onApprove={approve} onReject={reject} saving={saving} />
+                        ))}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })
         )}
 
         {/* ── Admin-only: Monthly Tally ── */}

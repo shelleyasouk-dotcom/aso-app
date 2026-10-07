@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Car, Train, ReceiptText, X, Check, Clock, CheckCircle2 } from 'lucide-react'
+import { Plus, Car, Train, ReceiptText, X, Check, Clock, CheckCircle2, ChevronDown } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -73,6 +73,7 @@ export function ExpensesPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [openMonths, setOpenMonths] = useState<Set<string>>(new Set())
   const { state: form, setState: setForm, clearDraft } = useLocalDraft('draft:expense:new', {
     date: new Date().toISOString().slice(0, 10),
     type: 'mileage' as ExpenseType,
@@ -89,7 +90,10 @@ export function ExpensesPage() {
       .select('*')
       .eq('staff_id', profile!.id)
       .order('date', { ascending: false })
-    if (data) setExpenses(data)
+    if (data) {
+      setExpenses(data)
+      if (data.length > 0) setOpenMonths(new Set([data[0].date.slice(0, 7)]))
+    }
     setLoading(false)
   }
 
@@ -122,7 +126,10 @@ export function ExpensesPage() {
       miles: form.miles ? parseFloat(form.miles) : null,
       amount: parseFloat(form.amount),
     }).select().single()
-    if (data) setExpenses(prev => [data, ...prev])
+    if (data) {
+      setExpenses(prev => [data, ...prev])
+      setOpenMonths(prev => new Set([...prev, data.date.slice(0, 7)]))
+    }
     clearDraft()
     setForm({ date: new Date().toISOString().slice(0, 10), type: 'mileage', description: '', miles: '', amount: '' })
     setShowForm(false)
@@ -131,6 +138,18 @@ export function ExpensesPage() {
 
   const totalPending = expenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0)
   const totalApproved = expenses.filter(e => e.status === 'approved').reduce((s, e) => s + e.amount, 0)
+
+  const byMonth = expenses.reduce<Record<string, Expense[]>>((acc, e) => {
+    const mk = e.date.slice(0, 7)
+    if (!acc[mk]) acc[mk] = []
+    acc[mk].push(e)
+    return acc
+  }, {})
+  const monthKeys = Object.keys(byMonth).sort((a, b) => b.localeCompare(a))
+
+  function toggleMonth(key: string) {
+    setOpenMonths(prev => { const n = new Set(prev); n.has(key) ? n.delete(key) : n.add(key); return n })
+  }
 
   return (
     <Layout title="My Expenses" showBack>
@@ -238,9 +257,30 @@ export function ExpensesPage() {
             <p className="text-gray-500">No expenses submitted yet.</p>
           </Card>
         ) : (
-          <div className="flex flex-col gap-3">
-            {expenses.map(e => <ExpenseRow key={e.id} expense={e} />)}
-          </div>
+          monthKeys.map(mk => {
+            const monthExpenses = byMonth[mk]
+            const isOpen = openMonths.has(mk)
+            const monthTotal = monthExpenses.reduce((s, e) => s + e.amount, 0)
+            return (
+              <div key={mk}>
+                <button
+                  onClick={() => toggleMonth(mk)}
+                  className="w-full flex items-center justify-between bg-[#1a3a6b] text-white px-4 py-3 rounded-2xl mb-2"
+                >
+                  <div className="text-left">
+                    <p className="font-extrabold text-sm">{new Date(`${mk}-01`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</p>
+                    <p className="text-white/60 text-xs mt-0.5">£{monthTotal.toFixed(2)} · {monthExpenses.length} item{monthExpenses.length !== 1 ? 's' : ''}</p>
+                  </div>
+                  <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isOpen && (
+                  <div className="flex flex-col gap-3 mb-2">
+                    {monthExpenses.map(e => <ExpenseRow key={e.id} expense={e} />)}
+                  </div>
+                )}
+              </div>
+            )
+          })
         )}
 
       </div>

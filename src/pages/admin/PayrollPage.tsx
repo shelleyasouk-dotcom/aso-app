@@ -27,10 +27,19 @@ interface ManualEntry {
   amount: number
 }
 
+interface ExpenseRow {
+  id: string
+  staff_id: string
+  date: string
+  description: string
+  amount: number
+}
+
 interface StaffEntry {
   profile: Pick<Profile, 'id' | 'full_name' | 'role'>
   sessions: SessionRow[]
   manualEntries: ManualEntry[]
+  expenses: ExpenseRow[]
   total: number
 }
 
@@ -99,9 +108,21 @@ function exportCSV(entries: StaffEntry[], monthKey: string) {
       ])
     })
 
+    entry.expenses.forEach(x => {
+      const d = new Date(x.date + 'T12:00:00')
+      const day = d.toLocaleDateString('en-GB', { weekday: 'long' })
+      const date = d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      rows.push([
+        entry.profile.full_name,
+        SESSION_ROLE_LABELS[entry.profile.role] ?? entry.profile.role,
+        date, day, 'Expense', x.description,
+        '', x.amount.toFixed(2),
+      ])
+    })
+
     rows.push([
       `SUBTOTAL: ${entry.profile.full_name}`, '', '', '', '',
-      `${entry.sessions.length} session${entry.sessions.length !== 1 ? 's' : ''} + ${entry.manualEntries.length} manual`,
+      `${entry.sessions.length} session${entry.sessions.length !== 1 ? 's' : ''} + ${entry.manualEntries.length} manual + ${entry.expenses.length} expense${entry.expenses.length !== 1 ? 's' : ''}`,
       '', entry.total.toFixed(2),
     ])
     grandTotal += entry.total
@@ -116,6 +137,53 @@ function exportCSV(entries: StaffEntry[], monthKey: string) {
   const a = document.createElement('a')
   a.href = url
   a.download = `ASO_Payroll_${year}_${month}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ─── Bank payment export (Starling bulk payment CSV) ───────────────────────────
+
+const MONTH_ABBR = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+
+function refMonthYear(monthKey: string): string {
+  const [year, month] = monthKey.split('-')
+  return `${MONTH_ABBR[parseInt(month, 10) - 1]}${year.slice(2)}`
+}
+
+function exportBankCSV(
+  entries: StaffEntry[],
+  monthKey: string,
+  bankDetails: Map<string, { bank_account_name: string | null; bank_sort_code: string | null; bank_account_number: string | null }>
+) {
+  const [year, month] = monthKey.split('-')
+  const refSuffix = refMonthYear(monthKey)
+  const rows: string[][] = []
+  rows.push(['Name', 'Sort Code', 'Account Number', 'Amount', 'Reference'])
+
+  entries.forEach(entry => {
+    const bank = bankDetails.get(entry.profile.id)
+    const name = bank?.bank_account_name?.trim() || entry.profile.full_name
+    const sortCode = bank?.bank_sort_code ?? ''
+    const accountNumber = bank?.bank_account_number ?? ''
+
+    const workAmount = entry.sessions.reduce((sum, s) => sum + rateForSessionRole(s.session_role), 0)
+      + entry.manualEntries.reduce((sum, m) => sum + m.amount, 0)
+    const expenseAmount = entry.expenses.reduce((sum, x) => sum + x.amount, 0)
+
+    if (workAmount > 0) {
+      rows.push([name, sortCode, accountNumber, workAmount.toFixed(2), `ASO ${refSuffix}`])
+    }
+    if (expenseAmount > 0) {
+      rows.push([name, sortCode, accountNumber, expenseAmount.toFixed(2), `TRAVEL ${refSuffix}`])
+    }
+  })
+
+  const csv = rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `ASO_BankPayments_${year}_${month}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }
@@ -156,12 +224,14 @@ export function PayrollPage() {
   const [showAddSession, setShowAddSession] = useState(false)
   const [sessionForm, setSessionForm] = useState(EMPTY_SESSION_FORM)
 
+  const [bankDetails, setBankDetails] = useState<Map<string, { bank_account_name: string | null; bank_sort_code: string | null; bank_account_number: string | null }>>(new Map())
+
   useEffect(() => { load() }, [])
 
   async function load() {
     setLoading(true)
 
-    const [{ data: sessionData }, { data: manualData }, { data: allStaff }, { data: confirmData }, { data: allSchools }] = await Promise.all([
+    const [{ data: sessionData }, { data: manualData }, { data: allStaff }, { data: confirmData }, { data: allSchools }, { data: expenseData }, { data: bankData }] = await Promise.all([
       supabase
         .from('clock_records')
         .select('id, session_date, session_role, clock_in, staff_id, school:schools(id, name), staff:profiles!staff_id(id, full_name, role)')
@@ -175,10 +245,17 @@ export function PayrollPage() {
       supabase.from('profiles').select('id, full_name, role').not('role', 'in', '(parent,school)').order('full_name'),
       supabase.from('timesheet_month_confirmations').select('*, authorizer:profiles!authorized_by(full_name)'),
       supabase.from('schools').select('id, name, area').order('name'),
+      supabase
+        .from('expenses')
+        .select('id, staff_id, date, description, amount, staff:profiles!staff_id(id, full_name, role)')
+        .eq('status', 'approved')
+        .order('date', { ascending: false }),
+      supabase.from('staff_personal').select('staff_id, bank_account_name, bank_sort_code, bank_account_number'),
     ])
 
     setStaffList((allStaff ?? []) as Pick<Profile, 'id' | 'full_name' | 'role'>[])
     setSchools((allSchools ?? []) as School[])
+    setBankDetails(new Map((bankData ?? []).map((b: any) => [b.staff_id, b])))
 
     const confirmMap: Record<string, TimesheetConfirmation> = {}
     for (const row of (confirmData ?? []) as TimesheetConfirmation[]) {
@@ -186,14 +263,14 @@ export function PayrollPage() {
     }
     setConfirmations(confirmMap)
 
-    const byMonth: Record<string, Record<string, { profile: Pick<Profile, 'id' | 'full_name' | 'role'>; sessions: SessionRow[]; manualEntries: ManualEntry[] }>> = {}
+    const byMonth: Record<string, Record<string, { profile: Pick<Profile, 'id' | 'full_name' | 'role'>; sessions: SessionRow[]; manualEntries: ManualEntry[]; expenses: ExpenseRow[] }>> = {}
 
     ;(sessionData ?? []).forEach((row: any) => {
       if (!row.staff || !row.session_date) return
       const mk = row.session_date.slice(0, 7)
       if (!byMonth[mk]) byMonth[mk] = {}
       const sid = row.staff_id
-      if (!byMonth[mk][sid]) byMonth[mk][sid] = { profile: row.staff, sessions: [], manualEntries: [] }
+      if (!byMonth[mk][sid]) byMonth[mk][sid] = { profile: row.staff, sessions: [], manualEntries: [], expenses: [] }
       byMonth[mk][sid].sessions.push(row as SessionRow)
     })
 
@@ -202,8 +279,17 @@ export function PayrollPage() {
       const mk = row.date.slice(0, 7)
       if (!byMonth[mk]) byMonth[mk] = {}
       const sid = row.staff_id
-      if (!byMonth[mk][sid]) byMonth[mk][sid] = { profile: row.staff, sessions: [], manualEntries: [] }
+      if (!byMonth[mk][sid]) byMonth[mk][sid] = { profile: row.staff, sessions: [], manualEntries: [], expenses: [] }
       byMonth[mk][sid].manualEntries.push(row as ManualEntry)
+    })
+
+    ;(expenseData ?? []).forEach((row: any) => {
+      if (!row.staff || !row.date) return
+      const mk = row.date.slice(0, 7)
+      if (!byMonth[mk]) byMonth[mk] = {}
+      const sid = row.staff_id
+      if (!byMonth[mk][sid]) byMonth[mk][sid] = { profile: row.staff, sessions: [], manualEntries: [], expenses: [] }
+      byMonth[mk][sid].expenses.push(row as ExpenseRow)
     })
 
     const result: MonthGroup[] = Object.keys(byMonth)
@@ -213,7 +299,8 @@ export function PayrollPage() {
           .map(e => ({
             ...e,
             total: e.sessions.reduce((sum, s) => sum + rateForSessionRole(s.session_role), 0)
-              + e.manualEntries.reduce((sum, m) => sum + m.amount, 0),
+              + e.manualEntries.reduce((sum, m) => sum + m.amount, 0)
+              + e.expenses.reduce((sum, x) => sum + x.amount, 0),
           }))
           .sort((a, b) => a.profile.full_name.localeCompare(b.profile.full_name))
         return {
@@ -447,12 +534,18 @@ export function PayrollPage() {
                       {mg.entries.length} staff · {mg.sessionCount} sessions · {fmt(mg.total)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       onClick={e => { e.stopPropagation(); exportCSV(mg.entries, mg.monthKey) }}
-                      className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors"
+                      className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors"
                     >
-                      <Download size={13} /> CSV
+                      <Download size={13} /> Full
+                    </button>
+                    <button
+                      onClick={e => { e.stopPropagation(); exportBankCSV(mg.entries, mg.monthKey, bankDetails) }}
+                      className="flex items-center gap-1.5 bg-[#f5c518] text-[#1a3a6b] px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors"
+                    >
+                      <Download size={13} /> Bank
                     </button>
                     <ChevronDown size={18} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </div>
@@ -475,6 +568,7 @@ export function PayrollPage() {
                               <p className="text-xs text-gray-400 mt-0.5">
                                 {entry.sessions.length} session{entry.sessions.length !== 1 ? 's' : ''}
                                 {entry.manualEntries.length > 0 && ` · ${entry.manualEntries.length} manual`}
+                                {entry.expenses.length > 0 && ` · ${entry.expenses.length} expense${entry.expenses.length !== 1 ? 's' : ''}`}
                               </p>
                             </div>
                             <p className="font-extrabold text-[#1a3a6b] text-base shrink-0">{fmt(entry.total)}</p>
@@ -632,6 +726,21 @@ export function PayrollPage() {
                                   >
                                     <Trash2 size={13} />
                                   </button>
+                                </div>
+                              ))}
+
+                              {entry.expenses.length > 0 && (
+                                <div className="px-4 py-2 bg-orange-50 border-b border-t border-orange-100">
+                                  <p className="text-[10px] font-extrabold text-orange-600 uppercase tracking-widest">Approved Expenses</p>
+                                </div>
+                              )}
+                              {entry.expenses.map((x, i) => (
+                                <div key={x.id} className={`px-4 py-3 flex items-center gap-3 ${i < entry.expenses.length - 1 ? 'border-b border-gray-50' : ''}`}>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-semibold text-gray-700">{x.description}</p>
+                                    <p className="text-xs text-gray-400 truncate mt-0.5">{formatDate(x.date)}</p>
+                                  </div>
+                                  <p className="text-sm font-bold text-orange-600 shrink-0">{fmt(x.amount)}</p>
                                 </div>
                               ))}
 
