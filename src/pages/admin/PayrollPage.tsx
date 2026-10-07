@@ -259,10 +259,10 @@ export function PayrollPage() {
 
   const [bankDetails, setBankDetails] = useState<Map<string, { bank_account_name: string | null; bank_sort_code: string | null; bank_account_number: string | null }>>(new Map())
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(true) }, [])
 
-  async function load() {
-    setLoading(true)
+  async function load(isInitial = false) {
+    if (isInitial) setLoading(true)
 
     const [{ data: sessionData }, { data: manualData }, { data: allStaff }, { data: confirmData }, { data: allSchools }, { data: expenseData }, { data: bankData }] = await Promise.all([
       supabase
@@ -346,7 +346,7 @@ export function PayrollPage() {
       })
 
     setMonths(result)
-    if (result.length > 0) setOpenMonths(new Set([result[0].monthKey]))
+    if (isInitial && result.length > 0) setOpenMonths(new Set([result[0].monthKey]))
     setLoading(false)
   }
 

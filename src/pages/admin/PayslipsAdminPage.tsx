@@ -76,17 +76,17 @@ export function PayslipsAdminPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [releasing, setReleasing] = useState<Set<string>>(new Set())
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load(true) }, [])
 
-  async function load() {
-    setLoading(true)
+  async function load(isInitial = false) {
+    if (isInitial) setLoading(true)
     const { data } = await supabase
       .from('payslips')
       .select('*, staff:profiles!staff_id(id, full_name, role)')
       .order('period_month', { ascending: false })
       .order('created_at', { ascending: true })
     setPayslips((data as Payslip[]) ?? [])
-    if (data && data.length > 0) {
+    if (isInitial && data && data.length > 0) {
       const first = (data as Payslip[])[0].period_month.slice(0, 7)
       setOpenMonths(new Set([first]))
     }
