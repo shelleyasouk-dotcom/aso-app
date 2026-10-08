@@ -156,6 +156,12 @@ function splitName(fullName: string): { first: string; last: string } {
   return { first: parts[0], last: parts.slice(1).join(' ') }
 }
 
+function digitsOnly(value: string | null, padTo: number): string {
+  const digits = (value ?? '').replace(/\D/g, '')
+  if (!digits) return ''
+  return digits.padStart(padTo, '0')
+}
+
 function buildBankRows(
   entries: StaffEntry[],
   refSuffix: string,
@@ -169,8 +175,11 @@ function buildBankRows(
   entries.forEach(entry => {
     const bank = bankDetails.get(entry.profile.id)
     const { first, last } = splitName(bank?.bank_account_name?.trim() || entry.profile.full_name)
-    const sortCode = bank?.bank_sort_code ?? ''
-    const accountNumber = bank?.bank_account_number ?? ''
+    // Plain digits, no dashes/spaces — a sort code like "12-34-56" gets read as
+    // a date the moment the CSV is opened in Excel/Numbers, which is what was
+    // breaking the bank import.
+    const sortCode = digitsOnly(bank?.bank_sort_code ?? null, 6)
+    const accountNumber = digitsOnly(bank?.bank_account_number ?? null, 8)
 
     if (kind === 'payroll') {
       const workAmount = entry.sessions.reduce((sum, s) => sum + rateForSessionRole(s.session_role), 0)
