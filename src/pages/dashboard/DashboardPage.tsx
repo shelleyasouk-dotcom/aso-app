@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { School, Pin, Megaphone, ChevronRight, ChevronRight as ArrowRight, UserCircle, ShieldAlert } from 'lucide-react'
+import { School, Pin, Megaphone, ChevronRight, ChevronRight as ArrowRight, UserCircle, ShieldAlert, FileSignature } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/layout/Layout'
@@ -8,7 +8,7 @@ import { Card } from '../../components/ui/Card'
 import { Badge } from '../../components/ui/Badge'
 import { ProfilePhoto } from '../../components/ui/ProfilePhoto'
 import { ROLE_LABELS } from '../../lib/roles'
-import type { Announcement } from '../../types'
+import type { Announcement, Profile } from '../../types'
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -49,6 +49,11 @@ export function DashboardPage() {
           </div>
           <ChevronRight size={18} className="text-gray-300 shrink-0" />
         </Card>
+
+        {/* Incomplete profile / unsigned contract */}
+        {profile.role !== 'parent' && profile.role !== 'school' && (
+          <ProfileSetupAlert profile={profile} />
+        )}
 
         {/* Session logging section */}
         <div>
@@ -182,6 +187,53 @@ function AnnouncementsSection({ area, isDirector }: { area?: string; isDirector:
         )}
       </div>
     </div>
+  )
+}
+
+const REQUIRED_PERSONAL_FIELDS = [
+  'date_of_birth', 'address_line1', 'address_city', 'address_postcode',
+  'ni_number', 'bank_sort_code', 'bank_account_number', 'ec1_name', 'ec1_phone',
+] as const
+
+function ProfileSetupAlert({ profile }: { profile: Profile }) {
+  const [missing, setMissing] = useState<{ profile: boolean; contract: boolean } | null>(null)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    supabase
+      .from('staff_personal')
+      .select(REQUIRED_PERSONAL_FIELDS.join(','))
+      .eq('staff_id', profile.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        const row = (data ?? {}) as Record<string, unknown>
+        const profileIncomplete = REQUIRED_PERSONAL_FIELDS.some(f => !row[f])
+        const contractUnsigned = !profile.contract_signed_at
+        setMissing({ profile: profileIncomplete, contract: contractUnsigned })
+      })
+  }, [profile.id, profile.contract_signed_at])
+
+  if (!missing || (!missing.profile && !missing.contract)) return null
+
+  const parts = [
+    missing.profile && 'complete your profile',
+    missing.contract && 'sign your contract',
+  ].filter(Boolean)
+
+  return (
+    <button
+      onClick={() => navigate('/profile')}
+      className="w-full flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5 text-left active:opacity-90 transition-opacity"
+    >
+      <div className="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0">
+        <FileSignature size={18} className="text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-bold text-amber-800 text-sm">Action needed: please {parts.join(' and ')}</p>
+        <p className="text-xs text-amber-600 mt-0.5">Tap to go to your profile</p>
+      </div>
+      <ChevronRight size={16} className="text-amber-400 shrink-0" />
+    </button>
   )
 }
 

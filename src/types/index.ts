@@ -37,6 +37,8 @@ export interface Profile {
   is_archived?: boolean
   archived_at?: string | null
   archived_by?: string | null
+  contract_signed_at?: string | null
+  contract_version?: string | null
   created_at: string
 }
 
