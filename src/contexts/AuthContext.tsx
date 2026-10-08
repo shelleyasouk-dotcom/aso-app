@@ -61,8 +61,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) return { error: error.message }
+
+    if (data.user) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('is_archived')
+        .eq('id', data.user.id)
+        .single()
+      if (profileData?.is_archived) {
+        await supabase.auth.signOut()
+        return { error: 'This account has been archived. Contact your administrator if you believe this is a mistake.' }
+      }
+    }
+
+    return { error: null }
   }
 
   async function signOut() {

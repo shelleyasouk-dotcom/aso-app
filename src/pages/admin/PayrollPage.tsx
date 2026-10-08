@@ -275,7 +275,7 @@ export function PayrollPage() {
         .from('manual_pay_entries')
         .select('*, staff:profiles!staff_id(id, full_name, role)')
         .order('date', { ascending: false }),
-      supabase.from('profiles').select('id, full_name, role').not('role', 'in', '(parent,school)').order('full_name'),
+      supabase.from('profiles').select('id, full_name, role').not('role', 'in', '(parent,school)').eq('is_archived', false).order('full_name'),
       supabase.from('timesheet_month_confirmations').select('*, authorizer:profiles!authorized_by(full_name)'),
       supabase.from('schools').select('id, name, area').order('name'),
       supabase

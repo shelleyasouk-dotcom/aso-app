@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Users, School, Check, Pencil, UserCircle } from 'lucide-react'
+import { Plus, Users, School, Check, Pencil, UserCircle, Archive, ArchiveRestore, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -42,14 +42,22 @@ interface StaffCardProps {
   setEditForm: (f: EditForm) => void
   setEditingId: (id: string | null) => void
   saving: boolean
+  isSelf: boolean
+  confirmArchiveId: string | null
   onEdit: (member: StaffWithAssignments) => void
   onAssign: (member: StaffWithAssignments) => void
   onSaveEdit: (id: string) => void
   onProfile: (id: string) => void
+  onRequestArchive: (id: string) => void
+  onCancelArchive: () => void
+  onConfirmArchive: (id: string) => void
 }
 
 // Defined at module level — never remounted between renders
-function StaffCard({ member, canManage, canAssignSchools, editingId, editForm, editError, setEditForm, setEditingId, saving, onEdit, onAssign, onSaveEdit, onProfile }: StaffCardProps) {
+function StaffCard({
+  member, canManage, canAssignSchools, editingId, editForm, editError, setEditForm, setEditingId, saving, isSelf, confirmArchiveId,
+  onEdit, onAssign, onSaveEdit, onProfile, onRequestArchive, onCancelArchive, onConfirmArchive,
+}: StaffCardProps) {
   if (editingId === member.id) {
     return (
       <Card>
@@ -166,33 +174,70 @@ function StaffCard({ member, canManage, canAssignSchools, editingId, editForm, e
             {(member.areas && member.areas.length > 0 ? member.areas : member.area ? [member.area] : []).map(a => (
               <Badge key={a} color="gray">{a}</Badge>
             ))}
+            {member.is_archived && <Badge color="gray">Archived</Badge>}
           </div>
         </div>
-        <div className="flex gap-1 shrink-0">
-          <button
-            onClick={() => onProfile(member.id)}
-            className="flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 px-2.5 py-1.5 rounded-lg"
-          >
-            <UserCircle size={13} /> Profile
-          </button>
-          {canManage && (
+        {confirmArchiveId !== member.id && (
+          <div className="flex gap-1 shrink-0">
             <button
-              onClick={() => onEdit(member)}
-              className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg"
+              onClick={() => onProfile(member.id)}
+              className="flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 px-2.5 py-1.5 rounded-lg"
             >
-              <Pencil size={13} /> Edit
+              <UserCircle size={13} /> Profile
             </button>
-          )}
-          {canAssignSchools && (
-            <button
-              onClick={() => onAssign(member)}
-              className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-2.5 py-1.5 rounded-lg"
-            >
-              <School size={13} /> Schools
-            </button>
-          )}
-        </div>
+            {canManage && !member.is_archived && (
+              <button
+                onClick={() => onEdit(member)}
+                className="flex items-center gap-1 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded-lg"
+              >
+                <Pencil size={13} /> Edit
+              </button>
+            )}
+            {canAssignSchools && !member.is_archived && (
+              <button
+                onClick={() => onAssign(member)}
+                className="flex items-center gap-1 text-xs font-medium text-[#1a3a6b] bg-blue-50 px-2.5 py-1.5 rounded-lg"
+              >
+                <School size={13} /> Schools
+              </button>
+            )}
+            {canManage && !isSelf && (
+              member.is_archived ? (
+                <button
+                  onClick={() => onConfirmArchive(member.id)}
+                  className="flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1.5 rounded-lg"
+                >
+                  <ArchiveRestore size={13} /> Unarchive
+                </button>
+              ) : (
+                <button
+                  onClick={() => onRequestArchive(member.id)}
+                  className="flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2.5 py-1.5 rounded-lg"
+                >
+                  <Archive size={13} /> Archive
+                </button>
+              )
+            )}
+          </div>
+        )}
       </div>
+
+      {confirmArchiveId === member.id && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-3 mb-2 flex flex-col gap-2">
+          <p className="text-sm text-red-800 font-medium">
+            Archive {member.full_name}? They won't be able to log in, and will be hidden from staff lists. Their timesheets, payslips and expenses stay intact — you can unarchive any time.
+          </p>
+          <div className="flex gap-2">
+            <button onClick={onCancelArchive} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-600">
+              <X size={14} /> Cancel
+            </button>
+            <button onClick={() => onConfirmArchive(member.id)} disabled={saving} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold disabled:opacity-50">
+              <Archive size={14} /> {saving ? 'Archiving…' : 'Archive'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {member.assignments && member.assignments.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-1">
           {member.assignments.map(a => (
@@ -220,6 +265,9 @@ export function StaffAdminPage() {
   const [form, setForm] = useState({ email: '', full_name: '', password: '', role: 'lead_coach' as Role, enrollOnboarding: true })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showArchived, setShowArchived] = useState(false)
+  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null)
+  const [archiveError, setArchiveError] = useState<string | null>(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -356,6 +404,27 @@ export function StaffAdminPage() {
     setSaving(false)
   }
 
+  async function toggleArchive(id: string) {
+    const member = staff.find(s => s.id === id)
+    if (!member) return
+    setSaving(true)
+    setArchiveError(null)
+    const archiving = !member.is_archived
+    const { error } = await supabase.from('profiles').update({
+      is_archived: archiving,
+      archived_at: archiving ? new Date().toISOString() : null,
+      archived_by: archiving ? (profile?.id ?? null) : null,
+    }).eq('id', id)
+    if (error) {
+      setArchiveError(error.message)
+      setSaving(false)
+      return
+    }
+    await loadData()
+    setConfirmArchiveId(null)
+    setSaving(false)
+  }
+
   const [assignError, setAssignError] = useState<string | null>(null)
   const [editError, setEditError] = useState<string | null>(null)
 
@@ -406,20 +475,48 @@ export function StaffAdminPage() {
     setSaving(false)
   }
 
+  const visibleStaff = staff.filter(m => showArchived ? m.is_archived : !m.is_archived)
+  const archivedCount = staff.filter(m => m.is_archived).length
+
   const roleGroups = ROLES
-    .map(role => ({ role, members: staff.filter(m => m.role === role) }))
+    .map(role => ({ role, members: visibleStaff.filter(m => m.role === role) }))
     .filter(g => g.members.length > 0)
 
   const canAssignSchools = profile?.role === 'director' || profile?.role === 'area_lead' || profile?.role === 'lead_coach'
-  const cardProps = { canManage: isDirector, canAssignSchools, editingId, editForm, editError, setEditForm, setEditingId, saving, onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit, onProfile: (id: string) => navigate(`/profile/${id}`) }
+  const cardProps = {
+    canManage: isDirector, canAssignSchools, editingId, editForm, editError, setEditForm, setEditingId, saving,
+    confirmArchiveId,
+    onEdit: startEdit, onAssign: openAssignPanel, onSaveEdit: saveEdit, onProfile: (id: string) => navigate(`/profile/${id}`),
+    onRequestArchive: (id: string) => setConfirmArchiveId(id),
+    onCancelArchive: () => setConfirmArchiveId(null),
+    onConfirmArchive: toggleArchive,
+  }
 
   return (
     <Layout title="Staff" showBack>
       <div className="px-4 pt-6 flex flex-col gap-4">
+        {archiveError && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl px-4 py-3">
+            <p className="text-sm font-semibold text-red-700 mb-0.5">Action failed</p>
+            <p className="text-xs text-red-600">{archiveError}</p>
+          </div>
+        )}
+
         {isDirector && (
           <Button variant="primary" size="lg" fullWidth onClick={() => setShowForm(!showForm)}>
             <Plus size={20} /> Add Staff Member
           </Button>
+        )}
+
+        {isDirector && archivedCount > 0 && (
+          <button
+            onClick={() => { setShowArchived(v => !v); setConfirmArchiveId(null) }}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-semibold border transition-colors ${
+              showArchived ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]' : 'bg-white text-gray-600 border-gray-200'
+            }`}
+          >
+            <Archive size={15} /> {showArchived ? `Showing archived (${archivedCount})` : `Show archived staff (${archivedCount})`}
+          </button>
         )}
 
         {showForm && (
@@ -552,10 +649,10 @@ export function StaffAdminPage() {
 
         {loading ? (
           <p className="text-center text-gray-400 py-8">Loading…</p>
-        ) : staff.length === 0 ? (
+        ) : visibleStaff.length === 0 ? (
           <Card className="text-center py-8">
             <Users size={36} className="text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No staff members yet.</p>
+            <p className="text-gray-500">{showArchived ? 'No archived staff.' : 'No staff members yet.'}</p>
           </Card>
         ) : (
           <>
@@ -565,7 +662,7 @@ export function StaffAdminPage() {
                   {ROLE_LABELS[role as Role]}s ({members.length})
                 </p>
                 <div className="flex flex-col gap-3">
-                  {members.map(m => <StaffCard key={m.id} member={m} {...cardProps} />)}
+                  {members.map(m => <StaffCard key={m.id} member={m} isSelf={m.id === profile?.id} {...cardProps} />)}
                 </div>
               </div>
             ))}
