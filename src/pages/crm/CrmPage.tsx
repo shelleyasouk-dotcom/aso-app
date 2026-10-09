@@ -216,7 +216,7 @@ export function CrmPage() {
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<{ success: number; skipped: number; duplicates: number; duplicateNames: string[]; errors: string[] } | null>(null)
-  const [importPreview, setImportPreview] = useState<Array<{ name: string; area: string; email: string; phone: string; status: string }> | null>(null)
+  const [importPreview, setImportPreview] = useState<Array<{ name: string; contact: string; area: string; email: string; phone: string; status: string }> | null>(null)
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -335,6 +335,7 @@ export function CrmPage() {
       else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'Email Sent'
       return {
         name: col(row, 'school name', 'school', 'name') || '(no name)',
+        contact: col(row, 'contact name', 'headteacher'),
         area: col(row, 'local authority', 'district', 'area', 'region', 'county'),
         email: col(row, 'email', 'e-mail'),
         phone: col(row, 'phone', 'tel', 'number'),
@@ -530,6 +531,7 @@ export function CrmPage() {
                 {importPreview.map((row, i) => (
                   <div key={i} className="bg-gray-50 rounded-xl px-3 py-2 flex flex-col gap-0.5">
                     <p className="text-sm font-semibold text-[#1a3a6b] truncate">{row.name}</p>
+                    {row.contact && <p className="text-xs text-gray-600">{row.contact}</p>}
                     <div className="flex gap-3 flex-wrap">
                       {row.area && <span className="text-xs text-gray-500">{row.area}</span>}
                       {row.email ? <span className="text-xs text-green-600">{row.email}</span> : <span className="text-xs text-gray-300">no email</span>}
