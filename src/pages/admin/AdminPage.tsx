@@ -4,7 +4,7 @@ import {
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
-  Newspaper, Mail, RectangleHorizontal, ScrollText, ClipboardCheck, Wallet,
+  Newspaper, Mail, RectangleHorizontal, ScrollText, ClipboardCheck, Wallet, Phone,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -249,6 +249,13 @@ export function AdminPage() {
         <TileGroup
           title="Communications"
           tiles={[
+            {
+              label: 'Phone Messages',
+              description: 'Voicemails left on the main enquiry line',
+              icon: Phone,
+              path: '/admin/phone-messages',
+              color: 'bg-green-50 text-green-700',
+            },
             {
               label: 'Announcements',
               description: 'Post messages and updates for staff',

@@ -19,6 +19,7 @@ import { LoginPage } from './pages/auth/LoginPage'
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
 import { DashboardPage } from './pages/dashboard/DashboardPage'
 import { ContactMessagesPage } from './pages/messages/ContactMessagesPage'
+import { PhoneMessagesPage } from './pages/admin/PhoneMessagesPage'
 import { ClockInPage } from './pages/clockin/ClockInPage'
 import { TimesheetsPage } from './pages/clockin/TimesheetsPage'
 import { AwardsPage } from './pages/awards/AwardsPage'
@@ -166,6 +167,9 @@ export default function App() {
           } />
           <Route path="/messages" element={
             <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead', 'operations_assistant']}><ContactMessagesPage /></ProtectedRoute>
+          } />
+          <Route path="/admin/phone-messages" element={
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'operations_assistant']}><PhoneMessagesPage /></ProtectedRoute>
           } />
           <Route path="/clock-in" element={
             <ProtectedRoute><ClockInPage /></ProtectedRoute>
