@@ -53,7 +53,10 @@ Deno.serve(async (req) => {
   const twilioRes = await fetch(`${message.recording_url}.mp3`, {
     headers: { Authorization: `Basic ${auth}` },
   })
-  if (!twilioRes.ok || !twilioRes.body) return new Response('failed to fetch recording', { status: 502, headers: CORS_HEADERS })
+  if (!twilioRes.ok) return new Response('failed to fetch recording', { status: 502, headers: CORS_HEADERS })
 
-  return new Response(twilioRes.body, { headers: { ...CORS_HEADERS, 'Content-Type': 'audio/mpeg' } })
+  const audioBuffer = await twilioRes.arrayBuffer()
+  return new Response(audioBuffer, {
+    headers: { ...CORS_HEADERS, 'Content-Type': 'audio/mpeg', 'Content-Length': String(audioBuffer.byteLength) },
+  })
 })
