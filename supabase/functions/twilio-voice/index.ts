@@ -12,6 +12,9 @@
 const RECORDING_CALLBACK_URL = Deno.env.get('TWILIO_RECORDING_CALLBACK_URL')!
 // e.g. https://<your-project-ref>.supabase.co/functions/v1/twilio-recording
 
+const TRANSCRIPTION_CALLBACK_URL = Deno.env.get('TWILIO_TRANSCRIPTION_CALLBACK_URL')!
+// e.g. https://<your-project-ref>.supabase.co/functions/v1/twilio-transcription
+
 const GREETING =
   "Hello, you've reached Active School, the UK's leading after school gymnastics provider. Sorry we've missed your call. " +
   "Please leave your name and the best number to reach you on. If you're calling about collecting your child, please also tell us your child's name, their school, and what's changed, and we'll pass your message straight to their coach. " +
@@ -28,7 +31,8 @@ Deno.serve(async () => {
   return twiml(
     `<Say voice="Polly.Amy-Neural">${GREETING}</Say>` +
     `<Record maxLength="120" playBeep="true" timeout="5" ` +
-    `recordingStatusCallback="${RECORDING_CALLBACK_URL}" recordingStatusCallbackEvent="completed" />` +
+    `recordingStatusCallback="${RECORDING_CALLBACK_URL}" recordingStatusCallbackEvent="completed" ` +
+    `transcribe="true" transcribeCallback="${TRANSCRIPTION_CALLBACK_URL}" />` +
     `<Say voice="Polly.Amy-Neural">Sorry, we didn't catch a message. Goodbye.</Say>`
   )
 })

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Phone, PhoneIncoming, Check, Clock, Inbox } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { supabase, supabaseUrl } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 
@@ -11,6 +11,7 @@ interface PhoneMessage {
   to_number: string | null
   recording_url: string | null
   recording_duration_seconds: number | null
+  transcription: string | null
   status: 'new' | 'handled'
   handled_by: string | null
   handled_at: string | null
@@ -31,6 +32,7 @@ export function PhoneMessagesPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'new' | 'all'>('new')
   const [handling, setHandling] = useState<string | null>(null)
+  const [audioUrls, setAudioUrls] = useState<Record<string, string>>({})
 
   useEffect(() => { load() }, [])
 
@@ -39,8 +41,26 @@ export function PhoneMessagesPage() {
       .from('phone_messages')
       .select('*, handler:profiles!handled_by(full_name)')
       .order('received_at', { ascending: false })
-    setMessages((data ?? []) as PhoneMessage[])
+    const msgs = (data ?? []) as PhoneMessage[]
+    setMessages(msgs)
     setLoading(false)
+    msgs.forEach(m => { if (m.recording_url) loadAudio(m.id) })
+  }
+
+  async function loadAudio(id: string) {
+    setAudioUrls(prev => (prev[id] ? prev : { ...prev, [id]: '' }))
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    try {
+      const res = await fetch(`${supabaseUrl}/functions/v1/twilio-audio?id=${id}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      if (!res.ok) return
+      const blob = await res.blob()
+      setAudioUrls(prev => ({ ...prev, [id]: URL.createObjectURL(blob) }))
+    } catch {
+      // leave unset — player stays hidden for this message
+    }
   }
 
   async function markHandled(id: string) {
@@ -128,8 +148,18 @@ export function PhoneMessagesPage() {
                   )}
                 </div>
 
+                {m.transcription && (
+                  <p className="text-sm text-gray-700 bg-[#f4f6f9] rounded-xl px-3 py-2 leading-snug">
+                    "{m.transcription}"
+                  </p>
+                )}
+
                 {m.recording_url && (
-                  <audio controls className="w-full h-10" src={`${m.recording_url}.mp3`} />
+                  audioUrls[m.id] ? (
+                    <audio controls className="w-full h-10" src={audioUrls[m.id]} />
+                  ) : (
+                    <p className="text-xs text-gray-400">Loading recording…</p>
+                  )
                 )}
 
                 {m.status === 'handled' ? (
