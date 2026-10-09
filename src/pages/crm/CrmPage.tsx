@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Search, Building2, ChevronRight, Upload, AlertCircle, Calendar, Mail, PhoneCall, Ban, Download } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import * as XLSX from 'xlsx'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -87,6 +88,29 @@ function parseCSV(text: string): Record<string, string>[] {
       return row
     })
     .filter(row => Object.values(row).some(v => v !== ''))
+}
+
+// Parses a .xlsx/.xls file (e.g. an allschools.co.uk export) into the same
+// shape as parseCSV, so the same column matching can be reused for both.
+async function parseXLSX(file: File): Promise<Record<string, string>[]> {
+  const buf = await file.arrayBuffer()
+  const wb = XLSX.read(buf, { type: 'array' })
+  const sheet = wb.Sheets[wb.SheetNames[0]]
+  const rows: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
+  if (rows.length < 2) return []
+  const headers = (rows[0] as unknown[]).map(h => String(h ?? '').toLowerCase())
+  return rows.slice(1)
+    .map(line => {
+      const row: Record<string, string> = {}
+      headers.forEach((h, i) => { row[h] = line[i] != null ? String(line[i]) : '' })
+      return row
+    })
+    .filter(row => Object.values(row).some(v => v !== ''))
+}
+
+async function parseImportFile(file: File): Promise<Record<string, string>[]> {
+  if (/\.xlsx?$/i.test(file.name)) return parseXLSX(file)
+  return parseCSV(await file.text())
 }
 
 // Flexible column matcher — handles varied header names from Excel exports
@@ -191,7 +215,7 @@ export function CrmPage() {
 
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
-  const [importResult, setImportResult] = useState<{ success: number; skipped: number; errors: string[] } | null>(null)
+  const [importResult, setImportResult] = useState<{ success: number; skipped: number; duplicates: number; duplicateNames: string[]; errors: string[] } | null>(null)
   const [importPreview, setImportPreview] = useState<Array<{ name: string; area: string; email: string; phone: string; status: string }> | null>(null)
 
   const today = new Date().toISOString().slice(0, 10)
@@ -300,8 +324,7 @@ export function CrmPage() {
   }
 
   async function previewCSV(file: File) {
-    const text = await file.text()
-    const rows = parseCSV(text)
+    const rows = await parseImportFile(file)
     const preview = rows.slice(0, 5).map(row => {
       const rawStatus = col(row, 'status', 'colour', 'color').toLowerCase()
       let status = 'Prospect'
@@ -312,7 +335,7 @@ export function CrmPage() {
       else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'Email Sent'
       return {
         name: col(row, 'school name', 'school', 'name') || '(no name)',
-        area: col(row, 'area', 'region', 'county', 'district'),
+        area: col(row, 'local authority', 'district', 'area', 'region', 'county'),
         email: col(row, 'email', 'e-mail'),
         phone: col(row, 'phone', 'tel', 'number'),
         status,
@@ -325,14 +348,35 @@ export function CrmPage() {
     if (!importFile || !profile) return
     setImporting(true)
     setImportResult(null)
-    const text = await importFile.text()
-    const rows = parseCSV(text)
-    let success = 0, skipped = 0
+    const rows = await parseImportFile(importFile)
+    let success = 0, skipped = 0, duplicates = 0
     const errors: string[] = []
+    const duplicateNames: string[] = []
+
+    // Load existing contacts once, so we can skip anything already in the
+    // CRM instead of creating duplicate rows for schools already contacted.
+    const { data: existing } = await supabase.from('crm_contacts').select('urn, email, status')
+    const byUrn = new Map<string, string>()
+    const byEmail = new Map<string, string>()
+    for (const c of existing ?? []) {
+      if (c.urn) byUrn.set(c.urn, c.status)
+      if (c.email) byEmail.set(c.email.toLowerCase(), c.status)
+    }
 
     for (const row of rows) {
       const name = col(row, 'school name', 'school', 'name')
       if (!name) { skipped++; continue }
+
+      const urn = col(row, 'urn') || null
+      const email = (col(row, 'email', 'e-mail') || '').toLowerCase() || null
+
+      const existingStatus = (urn && byUrn.get(urn)) || (email && byEmail.get(email))
+      if (existingStatus) {
+        duplicates++
+        duplicateNames.push(`${name} (already ${STATUS_LABELS[existingStatus as CrmStatus] ?? existingStatus})`)
+        continue
+      }
+
       // Map Excel colour/status if present
       const rawStatus = col(row, 'status', 'colour', 'color').toLowerCase()
       let status: CrmStatus = 'prospect'
@@ -344,24 +388,30 @@ export function CrmPage() {
 
       const { error } = await supabase.from('crm_contacts').insert({
         school_name: name,
-        contact_name: col(row, 'contact', 'person', 'head', 'name') || null,
-        email: col(row, 'email', 'e-mail') || null,
+        contact_name: col(row, 'contact name', 'headteacher') || null,
+        email,
         phone: col(row, 'phone', 'tel', 'number') || null,
         address: col(row, 'address', 'town', 'location', 'city') || null,
-        area: col(row, 'area', 'region', 'county', 'district') || null,
-        school_type: col(row, 'type', 'school type') || null,
+        area: col(row, 'local authority', 'district', 'area', 'region', 'county') || null,
+        school_type: col(row, 'phase', 'type', 'school type') || null,
+        urn,
         notes: col(row, 'notes', 'comments', 'note') || null,
         status,
         follow_up_number: parseInt(col(row, 'follow up', 'followup', 'fu')) || 0,
         created_by: profile.id,
       })
       if (error) errors.push(`${name}: ${error.message}`)
-      else success++
+      else {
+        success++
+        if (urn) byUrn.set(urn, status)
+        if (email) byEmail.set(email, status)
+      }
     }
-    setImportResult({ success, skipped, errors })
+    setImportResult({ success, skipped, duplicates, duplicateNames, errors })
     setImporting(false)
     if (success > 0) { loadContacts(true); loadCounts() }
   }
+
 
   function downloadTemplate() {
     const csv = `School Name,Contact Name,Email,Phone,Address,Area,School Type,Status,Notes\nWestfield Primary,Mrs Johnson,head@westfield.sch.uk,01234 567890,"Basingstoke, Hampshire",Hampshire,Primary,prospect,Called before summer`
@@ -453,9 +503,10 @@ export function CrmPage() {
         {/* Import tab */}
         {tab === 'import' && (
           <Card>
-            <h3 className="font-semibold text-[#1a3a6b] mb-2">Import from Excel / CSV</h3>
+            <h3 className="font-semibold text-[#1a3a6b] mb-2">Import Schools</h3>
             <p className="text-sm text-gray-500 mb-4">
-              Export your Excel spreadsheet as a CSV file and upload it here. The importer recognises flexible column names and maps your colour coding (Red=DNC, Amber=Interested, Green=Onboarded) automatically.
+              Upload a .xlsx export straight from allschools.co.uk, or a .csv from your own spreadsheet — no need to convert anything first.
+              Already-imported schools (matched by URN or email) are skipped automatically so you never end up emailing the same school twice.
             </p>
             <Button variant="secondary" fullWidth onClick={downloadTemplate}>
               <Download size={16} /> Download CSV template
@@ -463,8 +514,8 @@ export function CrmPage() {
             <div className="mt-3">
               <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#1a3a6b] transition-colors bg-gray-50 mt-2">
                 <Upload size={22} className="text-gray-400 mb-1.5" />
-                <span className="text-sm text-gray-500">{importFile ? importFile.name : 'Tap to select CSV'}</span>
-                <input type="file" accept=".csv" className="hidden" onChange={e => {
+                <span className="text-sm text-gray-500">{importFile ? importFile.name : 'Tap to select a .xlsx or .csv file'}</span>
+                <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={e => {
                   const f = e.target.files?.[0] ?? null
                   setImportFile(f)
                   setImportResult(null)
@@ -498,9 +549,24 @@ export function CrmPage() {
             {importResult && (
               <div className="mt-3 flex flex-col gap-2">
                 <div className="bg-green-50 border border-green-200 rounded-xl px-3 py-2">
-                  <p className="text-sm font-semibold text-green-700">{importResult.success} schools imported successfully</p>
+                  <p className="text-sm font-semibold text-green-700">{importResult.success} new schools imported</p>
                   {importResult.skipped > 0 && <p className="text-xs text-green-600">{importResult.skipped} rows skipped (no school name)</p>}
                 </div>
+                {importResult.duplicates > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                    <p className="text-sm font-semibold text-amber-700">
+                      {importResult.duplicates} already in your CRM — skipped to avoid duplicate emails
+                    </p>
+                    <div className="mt-1.5 flex flex-col gap-0.5 max-h-32 overflow-y-auto">
+                      {importResult.duplicateNames.slice(0, 20).map((n, i) => (
+                        <p key={i} className="text-xs text-amber-600">{n}</p>
+                      ))}
+                      {importResult.duplicateNames.length > 20 && (
+                        <p className="text-xs text-amber-500">+ {importResult.duplicateNames.length - 20} more</p>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {importResult.errors.map((e, i) => (
                   <p key={i} className="text-xs text-red-600 bg-red-50 rounded-lg px-3 py-1">{e}</p>
                 ))}

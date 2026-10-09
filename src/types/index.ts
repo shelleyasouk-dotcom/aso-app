@@ -328,6 +328,7 @@ export interface CrmContact {
   address: string | null
   area: string | null
   school_type: string | null
+  urn: string | null
   status: CrmStatus
   notes: string | null
   follow_up_number: number
