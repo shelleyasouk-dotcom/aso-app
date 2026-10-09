@@ -281,8 +281,8 @@ export function GuidePage() {
               </div>
             )}
 
-            <Section icon={Building2} title="School Outreach CRM">
-              <Step number={1} text="Tap School Outreach on the home screen." />
+            <Section icon={Building2} title="School Acquisition CRM">
+              <Step number={1} text="Tap School Acquisition on the home screen." />
               <Step number={2} text="Browse all prospect and active school contacts." />
               <Step number={3} text="Tap a school to view its history, add a call/visit log, and set the next follow-up date." />
               <Step number={4} text="Use the status chips (Prospect, Following Up, Interested, Onboarded) to track progress." />

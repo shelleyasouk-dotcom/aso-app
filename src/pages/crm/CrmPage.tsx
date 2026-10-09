@@ -425,7 +425,7 @@ export function CrmPage() {
   const totalContacts = Object.values(counts).reduce((a, b) => a + b, 0)
 
   return (
-    <Layout title="School Outreach" showBack>
+    <Layout title="School Acquisition" showBack>
       <div className="px-4 pt-6 flex flex-col gap-4 pb-8">
 
         {/* Pipeline overview */}

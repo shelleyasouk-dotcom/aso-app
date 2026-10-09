@@ -158,7 +158,7 @@ export function MyAreaPage() {
     { label: 'Approve Expenses', description: 'Review & authorise claims', icon: ReceiptText, path: '/expenses/admin', color: 'bg-amber-50 text-amber-700' },
     { label: 'Coach Pool', description: 'Available coaches', icon: UsersRound, path: '/coach-pool', color: 'bg-violet-50 text-violet-700' },
     ...(isOutreach || isAreaLead
-      ? [{ label: 'School Outreach', description: 'CRM & school contacts', icon: Building2, path: '/crm', color: 'bg-teal-50 text-teal-700' }]
+      ? [{ label: 'School Acquisition', description: 'CRM & school contacts', icon: Building2, path: '/crm', color: 'bg-teal-50 text-teal-700' }]
       : []),
   ]
 
@@ -195,7 +195,7 @@ export function MyAreaPage() {
               ? [
                   { label: 'Coach Pool', description: 'Available coaches', icon: UsersRound, path: '/coach-pool', color: 'bg-violet-50 text-violet-700' },
                   { label: 'Staff Availability', description: 'Who can cover & when', icon: CalendarDays, path: '/admin/staff-availability', color: 'bg-teal-50 text-teal-700' },
-                  { label: 'School Outreach', description: 'CRM & school contacts', icon: Building2, path: '/crm', color: 'bg-teal-50 text-teal-700' },
+                  { label: 'School Acquisition', description: 'CRM & school contacts', icon: Building2, path: '/crm', color: 'bg-teal-50 text-teal-700' },
                 ]
               : managementTiles
             }
@@ -208,7 +208,7 @@ export function MyAreaPage() {
           <TileSection
             title="Director"
             tiles={[
-              { label: 'School Outreach', description: 'CRM & school contacts', icon: Building2, path: '/crm', color: 'bg-teal-50 text-teal-700' },
+              { label: 'School Acquisition', description: 'CRM & school contacts', icon: Building2, path: '/crm', color: 'bg-teal-50 text-teal-700' },
             ]}
           />
         )}

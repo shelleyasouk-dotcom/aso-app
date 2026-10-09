@@ -334,8 +334,8 @@ export function AdminPage() {
           title="Outreach & Growth"
           tiles={[
             {
-              label: 'School Outreach',
-              description: 'School contact database and outreach CRM',
+              label: 'School Acquisition',
+              description: 'School contact database and acquisition CRM',
               icon: Building2,
               path: '/crm',
               color: 'bg-teal-50 text-teal-700',
