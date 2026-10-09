@@ -15,9 +15,19 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID')!
 const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN')!
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+}
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: CORS_HEADERS })
+  }
+
   const authHeader = req.headers.get('Authorization')
-  if (!authHeader) return new Response('unauthorized', { status: 401 })
+  if (!authHeader) return new Response('unauthorized', { status: 401, headers: CORS_HEADERS })
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -26,24 +36,24 @@ Deno.serve(async (req) => {
   )
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return new Response('unauthorized', { status: 401 })
+  if (!user) return new Response('unauthorized', { status: 401, headers: CORS_HEADERS })
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (!profile || !['director', 'operations_manager', 'operations_assistant'].includes(profile.role)) {
-    return new Response('forbidden', { status: 403 })
+    return new Response('forbidden', { status: 403, headers: CORS_HEADERS })
   }
 
   const id = new URL(req.url).searchParams.get('id')
-  if (!id) return new Response('missing id', { status: 400 })
+  if (!id) return new Response('missing id', { status: 400, headers: CORS_HEADERS })
 
   const { data: message } = await supabase.from('phone_messages').select('recording_url').eq('id', id).single()
-  if (!message?.recording_url) return new Response('not found', { status: 404 })
+  if (!message?.recording_url) return new Response('not found', { status: 404, headers: CORS_HEADERS })
 
   const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)
   const twilioRes = await fetch(`${message.recording_url}.mp3`, {
     headers: { Authorization: `Basic ${auth}` },
   })
-  if (!twilioRes.ok || !twilioRes.body) return new Response('failed to fetch recording', { status: 502 })
+  if (!twilioRes.ok || !twilioRes.body) return new Response('failed to fetch recording', { status: 502, headers: CORS_HEADERS })
 
-  return new Response(twilioRes.body, { headers: { 'Content-Type': 'audio/mpeg' } })
+  return new Response(twilioRes.body, { headers: { ...CORS_HEADERS, 'Content-Type': 'audio/mpeg' } })
 })
