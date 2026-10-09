@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Phone, PhoneIncoming, Check, Clock, Inbox } from 'lucide-react'
-import { supabase, supabaseUrl } from '../../lib/supabase'
+import { supabase, supabaseUrl, supabaseAnonKey } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
 
@@ -53,13 +53,16 @@ export function PhoneMessagesPage() {
     if (!session) return
     try {
       const res = await fetch(`${supabaseUrl}/functions/v1/twilio-audio?id=${id}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
+        headers: { Authorization: `Bearer ${session.access_token}`, apikey: supabaseAnonKey },
       })
-      if (!res.ok) return
+      if (!res.ok) {
+        console.error('twilio-audio fetch failed', res.status, await res.text().catch(() => ''))
+        return
+      }
       const blob = await res.blob()
       setAudioUrls(prev => ({ ...prev, [id]: URL.createObjectURL(blob) }))
-    } catch {
-      // leave unset — player stays hidden for this message
+    } catch (err) {
+      console.error('twilio-audio fetch error', err)
     }
   }
 
