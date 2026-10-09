@@ -13,8 +13,9 @@ const RECORDING_CALLBACK_URL = Deno.env.get('TWILIO_RECORDING_CALLBACK_URL')!
 // e.g. https://<your-project-ref>.supabase.co/functions/v1/twilio-recording
 
 const GREETING =
-  "Thanks for calling Active School Organisation. If you're unable to collect your child, or you'd like to speak to someone, " +
-  "please leave a message after the tone, including your name and a number to reach you on, and we'll get back to you as soon as possible."
+  "Thanks for calling Active School Organisation. Please leave a message after the tone. " +
+  "Include your name, the best number to reach you on, and if this is about collecting a child, please also tell us the name of the school. " +
+  "We'll get back to you as soon as possible."
 
 function twiml(body: string) {
   return new Response(
