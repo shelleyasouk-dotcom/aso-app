@@ -122,6 +122,15 @@ function col(row: Record<string, string>, ...keys: string[]): string {
   return ''
 }
 
+// UK school addresses are typically "Street, Town, County Postcode" —
+// the town is the second-to-last comma-separated part, right before the
+// county/postcode. Falls back to the full address if it can't be split.
+export function deriveTown(address: string): string {
+  const parts = address.split(',').map(p => p.trim()).filter(Boolean)
+  if (parts.length < 2) return parts[0] ?? ''
+  return parts[parts.length - 2]
+}
+
 // ─── Contact row ────────────────────────────────────────────────────────────
 
 interface ContactRowProps {
@@ -147,7 +156,7 @@ function ContactRow({ contact, onQuickLog, onDnc, onClick }: ContactRowProps) {
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_CHIP[contact.status]}`}>
                 {STATUS_LABELS[contact.status]}
               </span>
-              {contact.area && <span className="text-xs text-gray-400">{contact.area}</span>}
+              {contact.town && <span className="text-xs text-gray-400">{contact.town}</span>}
               {contact.contact_name && <span className="text-xs text-gray-400">{contact.contact_name}</span>}
             </div>
             {contact.follow_up_number > 0 && !isDnc && (
@@ -205,21 +214,21 @@ export function CrmPage() {
   const [tab, setTab] = useState<'list' | 'add' | 'import' | 'bulk'>('list')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<CrmStatus | ''>('')
-  const [filterArea, setFilterArea] = useState('')
+  const [filterTown, setFilterTown] = useState('')
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const PAGE_SIZE = 40
 
-  const [form, setForm] = useState({ school_name: '', contact_name: '', email: '', phone: '', address: '', area: '', school_type: '', notes: '' })
+  const [form, setForm] = useState({ school_name: '', contact_name: '', email: '', phone: '', address: '', town: '', area: '', school_type: '', notes: '' })
   const [saving, setSaving] = useState(false)
 
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<{ success: number; skipped: number; duplicates: number; duplicateNames: string[]; errors: string[] } | null>(null)
-  const [importPreview, setImportPreview] = useState<Array<{ name: string; contact: string; area: string; email: string; phone: string; status: string }> | null>(null)
+  const [importPreview, setImportPreview] = useState<Array<{ name: string; contact: string; town: string; email: string; phone: string; status: string }> | null>(null)
 
-  const [bulkAreas, setBulkAreas] = useState<string[]>([])
-  const [bulkArea, setBulkArea] = useState('')
+  const [bulkTowns, setBulkTowns] = useState<string[]>([])
+  const [bulkTown, setBulkTown] = useState('')
   const [bulkContacts, setBulkContacts] = useState<CrmContact[]>([])
   const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
@@ -241,7 +250,7 @@ export function CrmPage() {
 
     if (search) query = query.ilike('school_name', `%${search}%`)
     if (filterStatus) query = query.eq('status', filterStatus)
-    if (filterArea) query = query.ilike('area', `%${filterArea}%`)
+    if (filterTown) query = query.ilike('town', `%${filterTown}%`)
 
     const { data, count } = await query
     if (data) {
@@ -250,7 +259,7 @@ export function CrmPage() {
       if (reset) setPage(0)
     }
     setLoading(false)
-  }, [search, filterStatus, filterArea, page])
+  }, [search, filterStatus, filterTown, page])
 
   async function loadCounts() {
     const { data } = await supabase.from('crm_contacts').select('status')
@@ -269,8 +278,8 @@ export function CrmPage() {
   }
 
   useEffect(() => { loadCounts() }, [])
-  useEffect(() => { loadContacts(true) }, [search, filterStatus, filterArea])
-  useEffect(() => { if (tab === 'bulk') loadBulkAreas() }, [tab])
+  useEffect(() => { loadContacts(true) }, [search, filterStatus, filterTown])
+  useEffect(() => { if (tab === 'bulk') loadBulkTowns() }, [tab])
 
   async function addContact() {
     if (!form.school_name.trim() || !profile) return
@@ -281,6 +290,7 @@ export function CrmPage() {
       email: form.email.trim() || null,
       phone: form.phone.trim() || null,
       address: form.address.trim() || null,
+      town: form.town.trim() || (form.address.trim() ? deriveTown(form.address.trim()) : null),
       area: form.area.trim() || null,
       school_type: form.school_type || null,
       notes: form.notes.trim() || null,
@@ -322,23 +332,23 @@ export function CrmPage() {
     loadCounts()
   }
 
-  async function loadBulkAreas() {
-    const { data } = await supabase.from('crm_contacts').select('area').not('area', 'is', null)
-    const areas = [...new Set((data ?? []).map((r: { area: string }) => r.area).filter(Boolean))].sort()
-    setBulkAreas(areas)
+  async function loadBulkTowns() {
+    const { data } = await supabase.from('crm_contacts').select('town').not('town', 'is', null)
+    const towns = [...new Set((data ?? []).map((r: { town: string }) => r.town).filter(Boolean))].sort()
+    setBulkTowns(towns)
   }
 
-  async function loadBulkContacts(area: string) {
-    setBulkArea(area)
+  async function loadBulkContacts(town: string) {
+    setBulkTown(town)
     setBulkContacts([])
     setBulkSelected(new Set())
     setBulkResult(null)
-    if (!area) return
+    if (!town) return
     setBulkLoading(true)
     const { data } = await supabase
       .from('crm_contacts')
       .select('*')
-      .eq('area', area)
+      .eq('town', town)
       .not('status', 'in', '(do_not_contact,onboarded)')
       .order('school_name')
     const list = (data ?? []) as CrmContact[]
@@ -368,7 +378,7 @@ export function CrmPage() {
           staff_id: profile.id,
           type: 'email',
           date: today,
-          notes: bulkNote.trim() || `Bulk email sent to ${bulkArea} schools`,
+          notes: bulkNote.trim() || `Bulk email sent to ${bulkTown} schools`,
           outcome: null,
         }),
         supabase.from('crm_contacts').update({
@@ -381,9 +391,9 @@ export function CrmPage() {
       ])
     }
 
-    setBulkResult(`Email sent logged for ${targets.length} school${targets.length !== 1 ? 's' : ''} in ${bulkArea}.`)
+    setBulkResult(`Email sent logged for ${targets.length} school${targets.length !== 1 ? 's' : ''} in ${bulkTown}.`)
     setBulkNote('')
-    await loadBulkContacts(bulkArea)
+    await loadBulkContacts(bulkTown)
     loadCounts()
     setBulkSending(false)
   }
@@ -409,10 +419,11 @@ export function CrmPage() {
       else if (rawStatus.includes('green') || rawStatus.includes('onboard')) status = 'Onboarded'
       else if (rawStatus.includes('follow')) status = 'Following Up'
       else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'Email Sent'
+      const address = col(row, 'address', 'location', 'city')
       return {
         name: col(row, 'school name', 'school', 'name') || '(no name)',
         contact: col(row, 'contact name', 'headteacher'),
-        area: col(row, 'local authority', 'district', 'area', 'region', 'county'),
+        town: col(row, 'town') || (address ? deriveTown(address) : ''),
         email: col(row, 'email', 'e-mail'),
         phone: col(row, 'phone', 'tel', 'number'),
         status,
@@ -463,12 +474,16 @@ export function CrmPage() {
       else if (rawStatus.includes('follow')) status = 'following_up'
       else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'initial_sent'
 
+      const address = col(row, 'address', 'location', 'city') || ''
+      const town = col(row, 'town') || (address ? deriveTown(address) : '')
+
       const { error } = await supabase.from('crm_contacts').insert({
         school_name: name,
         contact_name: col(row, 'contact name', 'headteacher') || null,
         email,
         phone: col(row, 'phone', 'tel', 'number') || null,
-        address: col(row, 'address', 'town', 'location', 'city') || null,
+        address: address || null,
+        town: town || null,
         area: col(row, 'local authority', 'district', 'area', 'region', 'county') || null,
         school_type: col(row, 'phase', 'type', 'school type') || null,
         urn,
@@ -491,7 +506,7 @@ export function CrmPage() {
 
 
   function downloadTemplate() {
-    const csv = `School Name,Contact Name,Email,Phone,Address,Area,School Type,Status,Notes\nWestfield Primary,Mrs Johnson,head@westfield.sch.uk,01234 567890,"Basingstoke, Hampshire",Hampshire,Primary,prospect,Called before summer`
+    const csv = `School Name,Contact Name,Email,Phone,Address,Town,Area,School Type,Status,Notes\nWestfield Primary,Mrs Johnson,head@westfield.sch.uk,01234 567890,"12 High Street, Basingstoke, Hampshire",Basingstoke,Hampshire,Primary,prospect,Called before summer`
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -550,22 +565,22 @@ export function CrmPage() {
         {/* Bulk email-sent by area */}
         {tab === 'bulk' && (
           <Card>
-            <h3 className="font-semibold text-[#1a3a6b] mb-1">Mark Email Sent — by Area</h3>
+            <h3 className="font-semibold text-[#1a3a6b] mb-1">Mark Email Sent — by Town</h3>
             <p className="text-sm text-gray-500 mb-4">
-              Sent your mass email to a whole area? Pick the area, uncheck anyone this didn't apply to, and log it for everyone else in one go.
+              Sent your mass email to a whole town? Pick the town, uncheck anyone this didn't apply to, and log it for everyone else in one go.
             </p>
             <div className="flex flex-col gap-1 mb-3">
-              <label className="text-sm font-semibold text-gray-700">Area</label>
-              <select className={SELECT} value={bulkArea} onChange={e => loadBulkContacts(e.target.value)}>
-                <option value="">Select an area…</option>
-                {bulkAreas.map(a => <option key={a} value={a}>{a}</option>)}
+              <label className="text-sm font-semibold text-gray-700">Town</label>
+              <select className={SELECT} value={bulkTown} onChange={e => loadBulkContacts(e.target.value)}>
+                <option value="">Select a town…</option>
+                {bulkTowns.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
             </div>
 
             {bulkLoading ? (
               <p className="text-center text-gray-400 py-6 text-sm">Loading…</p>
-            ) : bulkArea && bulkContacts.length === 0 ? (
-              <p className="text-center text-gray-400 py-6 text-sm">No contactable schools in {bulkArea} right now.</p>
+            ) : bulkTown && bulkContacts.length === 0 ? (
+              <p className="text-center text-gray-400 py-6 text-sm">No contactable schools in {bulkTown} right now.</p>
             ) : bulkContacts.length > 0 && (
               <>
                 <div className="flex items-center justify-between mb-2">
@@ -618,7 +633,8 @@ export function CrmPage() {
               <Input label="Contact Name" placeholder="e.g. Mrs Johnson (Head Teacher)" value={form.contact_name} onChange={e => setForm({ ...form, contact_name: e.target.value })} />
               <Input label="Email" type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
               <Input label="Phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-              <Input label="Town / Address" placeholder="e.g. Basingstoke, Hampshire" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
+              <Input label="Address" placeholder="e.g. 12 High Street, Basingstoke, Hampshire" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
+              <Input label="Town" placeholder="e.g. Basingstoke" value={form.town} onChange={e => setForm({ ...form, town: e.target.value })} />
               <Input label="Area / Region" placeholder="e.g. Hampshire, South East" value={form.area} onChange={e => setForm({ ...form, area: e.target.value })} />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">School Type</label>
@@ -671,7 +687,7 @@ export function CrmPage() {
                     <p className="text-sm font-semibold text-[#1a3a6b] truncate">{row.name}</p>
                     {row.contact && <p className="text-xs text-gray-600">{row.contact}</p>}
                     <div className="flex gap-3 flex-wrap">
-                      {row.area && <span className="text-xs text-gray-500">{row.area}</span>}
+                      {row.town && <span className="text-xs text-gray-500">{row.town}</span>}
                       {row.email ? <span className="text-xs text-green-600">{row.email}</span> : <span className="text-xs text-gray-300">no email</span>}
                       {row.phone ? <span className="text-xs text-green-600">{row.phone}</span> : <span className="text-xs text-gray-300">no phone</span>}
                       <span className="text-xs text-blue-500 font-medium">{row.status}</span>
@@ -724,7 +740,7 @@ export function CrmPage() {
                 <input type="text" placeholder="Search schools…" value={search} onChange={e => setSearch(e.target.value)}
                   className="flex-1 text-sm bg-transparent focus:outline-none placeholder:text-gray-400" />
               </div>
-              <input type="text" placeholder="Filter by area / region…" value={filterArea} onChange={e => setFilterArea(e.target.value)}
+              <input type="text" placeholder="Filter by town…" value={filterTown} onChange={e => setFilterTown(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none" />
             </div>
 

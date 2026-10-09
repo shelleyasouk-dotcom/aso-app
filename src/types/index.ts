@@ -326,6 +326,7 @@ export interface CrmContact {
   email: string | null
   phone: string | null
   address: string | null
+  town: string | null
   area: string | null
   school_type: string | null
   urn: string | null

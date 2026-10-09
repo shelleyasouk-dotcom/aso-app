@@ -7,7 +7,7 @@ import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
-import { STATUS_LABELS, STATUS_CHIP, STATUS_BORDER } from './CrmPage'
+import { STATUS_LABELS, STATUS_CHIP, STATUS_BORDER, deriveTown } from './CrmPage'
 import type { CrmContact, CrmInteraction, CrmStatus, CrmInteractionType, CrmOutcome } from '../../types'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -137,7 +137,9 @@ export function CrmContactPage() {
     await supabase.from('crm_contacts').update({
       school_name: editForm.school_name, contact_name: editForm.contact_name || null,
       email: editForm.email || null, phone: editForm.phone || null,
-      address: editForm.address || null, area: editForm.area || null,
+      address: editForm.address || null,
+      town: editForm.town || (editForm.address ? deriveTown(editForm.address) : null),
+      area: editForm.area || null,
       school_type: editForm.school_type || null, notes: editForm.notes || null,
       status: editForm.status, updated_at: new Date().toISOString(),
     }).eq('id', id)
@@ -326,7 +328,8 @@ export function CrmContactPage() {
               <Input label="Contact Name" value={editForm.contact_name ?? ''} onChange={e => setEditForm({ ...editForm, contact_name: e.target.value })} />
               <Input label="Email" type="email" value={editForm.email ?? ''} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
               <Input label="Phone" value={editForm.phone ?? ''} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
-              <Input label="Town / Address" value={editForm.address ?? ''} onChange={e => setEditForm({ ...editForm, address: e.target.value })} />
+              <Input label="Address" value={editForm.address ?? ''} onChange={e => setEditForm({ ...editForm, address: e.target.value })} />
+              <Input label="Town" value={editForm.town ?? ''} onChange={e => setEditForm({ ...editForm, town: e.target.value })} />
               <Input label="Area / Region" value={editForm.area ?? ''} onChange={e => setEditForm({ ...editForm, area: e.target.value })} />
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-semibold text-gray-700">School Type</label>
@@ -359,7 +362,8 @@ export function CrmContactPage() {
                 <p className="font-bold text-[#1a3a6b] text-lg leading-tight">{contact.school_name}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {contact.school_type && <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{contact.school_type}</span>}
-                  {contact.area && <span className="text-xs text-gray-400">{contact.area}</span>}
+                  {contact.town && <span className="text-xs text-gray-400">{contact.town}</span>}
+                  {contact.area && <span className="text-xs text-gray-300">· {contact.area}</span>}
                 </div>
               </div>
               {canEdit && (
