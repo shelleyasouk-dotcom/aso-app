@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Building2, ChevronRight, Upload, AlertCircle, Calendar, Mail, PhoneCall, Ban, Download } from 'lucide-react'
+import { Search, Building2, ChevronRight, Upload, AlertCircle, Calendar, Mail, PhoneCall, Ban, Download, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import * as XLSX from 'xlsx'
 import { supabase } from '../../lib/supabase'
@@ -202,7 +202,7 @@ export function CrmPage() {
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [overdueCount, setOverdueCount] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'list' | 'add' | 'import'>('list')
+  const [tab, setTab] = useState<'list' | 'add' | 'import' | 'bulk'>('list')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<CrmStatus | ''>('')
   const [filterArea, setFilterArea] = useState('')
@@ -217,6 +217,15 @@ export function CrmPage() {
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<{ success: number; skipped: number; duplicates: number; duplicateNames: string[]; errors: string[] } | null>(null)
   const [importPreview, setImportPreview] = useState<Array<{ name: string; contact: string; area: string; email: string; phone: string; status: string }> | null>(null)
+
+  const [bulkAreas, setBulkAreas] = useState<string[]>([])
+  const [bulkArea, setBulkArea] = useState('')
+  const [bulkContacts, setBulkContacts] = useState<CrmContact[]>([])
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set())
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkSending, setBulkSending] = useState(false)
+  const [bulkResult, setBulkResult] = useState<string | null>(null)
+  const [bulkNote, setBulkNote] = useState('')
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -261,6 +270,7 @@ export function CrmPage() {
 
   useEffect(() => { loadCounts() }, [])
   useEffect(() => { loadContacts(true) }, [search, filterStatus, filterArea])
+  useEffect(() => { if (tab === 'bulk') loadBulkAreas() }, [tab])
 
   async function addContact() {
     if (!form.school_name.trim() || !profile) return
@@ -310,6 +320,72 @@ export function CrmPage() {
     ])
     loadContacts(true)
     loadCounts()
+  }
+
+  async function loadBulkAreas() {
+    const { data } = await supabase.from('crm_contacts').select('area').not('area', 'is', null)
+    const areas = [...new Set((data ?? []).map((r: { area: string }) => r.area).filter(Boolean))].sort()
+    setBulkAreas(areas)
+  }
+
+  async function loadBulkContacts(area: string) {
+    setBulkArea(area)
+    setBulkContacts([])
+    setBulkSelected(new Set())
+    setBulkResult(null)
+    if (!area) return
+    setBulkLoading(true)
+    const { data } = await supabase
+      .from('crm_contacts')
+      .select('*')
+      .eq('area', area)
+      .not('status', 'in', '(do_not_contact,onboarded)')
+      .order('school_name')
+    const list = (data ?? []) as CrmContact[]
+    setBulkContacts(list)
+    setBulkSelected(new Set(list.map(c => c.id)))
+    setBulkLoading(false)
+  }
+
+  function toggleBulkSelected(id: string) {
+    setBulkSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  async function bulkMarkEmailSent() {
+    if (!profile || bulkSelected.size === 0) return
+    setBulkSending(true)
+    const nextFollowUp = new Date()
+    nextFollowUp.setDate(nextFollowUp.getDate() + 7)
+    const nextFollowUpStr = nextFollowUp.toISOString().slice(0, 10)
+
+    const targets = bulkContacts.filter(c => bulkSelected.has(c.id))
+    for (const contact of targets) {
+      const newFollowUpNum = contact.follow_up_number + 1
+      const newStatus: CrmStatus = contact.status === 'prospect' ? 'initial_sent' : 'following_up'
+      await Promise.all([
+        supabase.from('crm_interactions').insert({
+          contact_id: contact.id,
+          staff_id: profile.id,
+          type: 'email',
+          date: today,
+          notes: bulkNote.trim() || `Bulk email sent to ${bulkArea} schools`,
+          outcome: null,
+        }),
+        supabase.from('crm_contacts').update({
+          status: newStatus,
+          follow_up_number: newFollowUpNum,
+          last_contacted_date: today,
+          next_follow_up_date: nextFollowUpStr,
+          updated_at: new Date().toISOString(),
+        }).eq('id', contact.id),
+      ])
+    }
+
+    setBulkResult(`Email sent logged for ${targets.length} school${targets.length !== 1 ? 's' : ''} in ${bulkArea}.`)
+    setBulkNote('')
+    await loadBulkContacts(bulkArea)
+    loadCounts()
+    setBulkSending(false)
   }
 
   async function markDnc(contact: CrmContact) {
@@ -461,15 +537,77 @@ export function CrmPage() {
 
         {/* Tabs */}
         <div className="flex bg-white rounded-2xl p-1 border border-gray-100 shadow-sm">
-          {(['list', 'add', 'import'] as const).map(t => (
+          {(['list', 'add', 'bulk', 'import'] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors capitalize ${
+              className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition-colors capitalize ${
                 tab === t ? 'bg-[#1a3a6b] text-white' : 'text-gray-500'
               }`}>
-              {t === 'add' ? '+ Add' : t === 'import' ? '↑ Import' : 'Schools'}
+              {t === 'add' ? '+ Add' : t === 'import' ? '↑ Import' : t === 'bulk' ? 'Bulk Email' : 'Schools'}
             </button>
           ))}
         </div>
+
+        {/* Bulk email-sent by area */}
+        {tab === 'bulk' && (
+          <Card>
+            <h3 className="font-semibold text-[#1a3a6b] mb-1">Mark Email Sent — by Area</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              Sent your mass email to a whole area? Pick the area, uncheck anyone this didn't apply to, and log it for everyone else in one go.
+            </p>
+            <div className="flex flex-col gap-1 mb-3">
+              <label className="text-sm font-semibold text-gray-700">Area</label>
+              <select className={SELECT} value={bulkArea} onChange={e => loadBulkContacts(e.target.value)}>
+                <option value="">Select an area…</option>
+                {bulkAreas.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+
+            {bulkLoading ? (
+              <p className="text-center text-gray-400 py-6 text-sm">Loading…</p>
+            ) : bulkArea && bulkContacts.length === 0 ? (
+              <p className="text-center text-gray-400 py-6 text-sm">No contactable schools in {bulkArea} right now.</p>
+            ) : bulkContacts.length > 0 && (
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{bulkSelected.size} of {bulkContacts.length} selected</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => setBulkSelected(new Set(bulkContacts.map(c => c.id)))} className="text-xs font-semibold text-[#1a3a6b]">All</button>
+                    <button onClick={() => setBulkSelected(new Set())} className="text-xs font-semibold text-gray-400">None</button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 max-h-80 overflow-y-auto mb-3">
+                  {bulkContacts.map(c => (
+                    <label key={c.id} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-gray-50 cursor-pointer">
+                      <button type="button" onClick={() => toggleBulkSelected(c.id)}
+                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          bulkSelected.has(c.id) ? 'bg-[#1a3a6b] border-[#1a3a6b]' : 'border-gray-300 bg-white'
+                        }`}>
+                        {bulkSelected.has(c.id) && <Check size={12} className="text-white" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#1a3a6b] truncate">{c.school_name}</p>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${STATUS_CHIP[c.status]}`}>{STATUS_LABELS[c.status]}</span>
+                          {!c.email && <span className="text-[10px] text-gray-300">no email on file</span>}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                <Input label="Note (optional)" placeholder={`e.g. Autumn term outreach email`} value={bulkNote} onChange={e => setBulkNote(e.target.value)} />
+                <Button className="mt-3 w-full" onClick={bulkMarkEmailSent} disabled={bulkSending || bulkSelected.size === 0}>
+                  <Mail size={16} /> {bulkSending ? 'Logging…' : `Mark email sent for ${bulkSelected.size}`}
+                </Button>
+              </>
+            )}
+
+            {bulkResult && (
+              <div className="mt-3 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+                <p className="text-sm font-semibold text-green-700">{bulkResult}</p>
+              </div>
+            )}
+          </Card>
+        )}
 
         {/* Add school form */}
         {tab === 'add' && (

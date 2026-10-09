@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Mail, Phone, MapPin, Trash2, Calendar, MessageSquare, PhoneCall, Users, MoreHorizontal, Check, Ban, Star } from 'lucide-react'
+import { Mail, Phone, MapPin, Trash2, Calendar, MessageSquare, PhoneCall, Users, MoreHorizontal, Check, Ban, Star, School as SchoolIcon, X } from 'lucide-react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../contexts/AuthContext'
@@ -9,6 +9,9 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import { STATUS_LABELS, STATUS_CHIP, STATUS_BORDER } from './CrmPage'
 import type { CrmContact, CrmInteraction, CrmStatus, CrmInteractionType, CrmOutcome } from '../../types'
+
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
 
 const INTERACTION_LABELS: Record<CrmInteractionType, string> = {
   email: 'Email', call: 'Phone Call', visit: 'Visit', meeting: 'Meeting', other: 'Other',
@@ -99,6 +102,10 @@ export function CrmContactPage() {
 
   const canEdit = profile?.role === 'director' || profile?.role === 'area_lead' || profile?.role === 'outreach_worker'
 
+  const [showOnboardModal, setShowOnboardModal] = useState(false)
+  const [onboardForm, setOnboardForm] = useState({ area: '', session_day: 'Monday', session_time: '' })
+  const [onboardError, setOnboardError] = useState<string | null>(null)
+
   useEffect(() => { if (id) { loadContact(); loadInteractions() } }, [id])
 
   async function loadContact() {
@@ -115,6 +122,17 @@ export function CrmContactPage() {
 
   async function saveContact() {
     if (!id || !editForm.school_name?.trim()) return
+    if (editForm.status === 'onboarded' && !contact?.school_id) {
+      setEditing(false)
+      setOnboardForm({
+        area: AREAS.includes(editForm.area ?? '') ? (editForm.area as string) : AREAS[0],
+        session_day: 'Monday',
+        session_time: '',
+      })
+      setOnboardError(null)
+      setShowOnboardModal(true)
+      return
+    }
     setSaving(true)
     await supabase.from('crm_contacts').update({
       school_name: editForm.school_name, contact_name: editForm.contact_name || null,
@@ -129,11 +147,59 @@ export function CrmContactPage() {
   }
 
   async function updateStatus(status: CrmStatus) {
-    if (!id || !canEdit) return
+    if (!id || !canEdit || !contact) return
+    if (status === 'onboarded' && !contact.school_id) {
+      setOnboardForm({
+        area: AREAS.includes(contact.area ?? '') ? (contact.area as string) : AREAS[0],
+        session_day: 'Monday',
+        session_time: '',
+      })
+      setOnboardError(null)
+      setShowOnboardModal(true)
+      return
+    }
     const updates: Partial<CrmContact> = { status, updated_at: new Date().toISOString() as unknown as undefined }
     if (status === 'do_not_contact') updates.next_follow_up_date = null
     await supabase.from('crm_contacts').update(updates as any).eq('id', id)
     setContact(prev => prev ? { ...prev, status } : prev)
+  }
+
+  async function confirmOnboard() {
+    if (!id || !contact || !profile) return
+    if (!onboardForm.session_time.trim()) { setOnboardError('Enter a session time.'); return }
+    setSaving(true)
+    setOnboardError(null)
+
+    const { data: school, error: schoolError } = await supabase.from('schools').insert({
+      name: contact.school_name,
+      address: contact.address || '',
+      area: onboardForm.area,
+      session_day: onboardForm.session_day,
+      session_time: onboardForm.session_time.trim(),
+    }).select().single()
+
+    if (schoolError) {
+      setOnboardError(schoolError.message)
+      setSaving(false)
+      return
+    }
+
+    const { error: updateError } = await supabase.from('crm_contacts').update({
+      status: 'onboarded',
+      school_id: school.id,
+      area: onboardForm.area,
+      updated_at: new Date().toISOString(),
+    }).eq('id', id)
+
+    if (updateError) {
+      setOnboardError(updateError.message)
+      setSaving(false)
+      return
+    }
+
+    setContact(prev => prev ? { ...prev, status: 'onboarded', school_id: school.id, area: onboardForm.area } : prev)
+    setShowOnboardModal(false)
+    setSaving(false)
   }
 
   async function logInteraction() {
@@ -199,6 +265,49 @@ export function CrmContactPage() {
             </button>
           ))}
         </div>
+
+        {/* Onboard modal — creates the school record */}
+        {showOnboardModal && (
+          <Card className="border-2 border-[#1a3a6b]/20">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-bold text-[#1a3a6b] flex items-center gap-2"><SchoolIcon size={16} /> Add to Schools List</h3>
+              <button onClick={() => setShowOnboardModal(false)} className="p-1 text-gray-300 hover:text-gray-500"><X size={16} /></button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Marking {contact.school_name} as Onboarded will create them on your live Schools list. Confirm their session day and time.
+            </p>
+            <div className="flex flex-col gap-3">
+              {onboardError && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{onboardError}</p>}
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700">Area</label>
+                <select className={SELECT} value={onboardForm.area} onChange={e => setOnboardForm({ ...onboardForm, area: e.target.value })}>
+                  {AREAS.map(a => <option key={a}>{a}</option>)}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700">Session Day</label>
+                <select className={SELECT} value={onboardForm.session_day} onChange={e => setOnboardForm({ ...onboardForm, session_day: e.target.value })}>
+                  {DAYS.map(d => <option key={d}>{d}</option>)}
+                </select>
+              </div>
+              <Input label="Session Time" placeholder="e.g. 15:30 – 16:30" value={onboardForm.session_time}
+                onChange={e => setOnboardForm({ ...onboardForm, session_time: e.target.value })} />
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => setShowOnboardModal(false)} className="flex-1">Cancel</Button>
+                <Button onClick={confirmOnboard} disabled={saving} className="flex-1">
+                  {saving ? 'Adding…' : 'Confirm & Add School'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {contact.school_id && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl px-4 py-2.5 flex items-center gap-2">
+            <SchoolIcon size={15} className="text-green-600 shrink-0" />
+            <p className="text-sm font-semibold text-green-700">Added to your live Schools list</p>
+          </div>
+        )}
 
         {/* Overdue banner */}
         {isOverdue && (

@@ -335,6 +335,7 @@ export interface CrmContact {
   last_contacted_date: string | null
   next_follow_up_date: string | null
   assigned_to: string | null
+  school_id: string | null
   created_by: string
   created_at: string
   updated_at: string
