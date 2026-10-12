@@ -15,6 +15,7 @@ interface PhoneMessage {
   status: 'new' | 'handled'
   handled_by: string | null
   handled_at: string | null
+  notes: string | null
   received_at: string
   handler?: { full_name: string } | null
 }
@@ -34,6 +35,8 @@ export function PhoneMessagesPage() {
   const [handling, setHandling] = useState<string | null>(null)
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({})
   const [audioErrors, setAudioErrors] = useState<Record<string, string>>({})
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({})
+  const [addingNoteFor, setAddingNoteFor] = useState<string | null>(null)
 
   useEffect(() => { load() }, [])
 
@@ -89,8 +92,13 @@ export function PhoneMessagesPage() {
       status: 'handled',
       handled_by: profile.id,
       handled_at: new Date().toISOString(),
+      notes: noteDrafts[id]?.trim() || null,
     }).eq('id', id)
-    if (!error) await load()
+    if (!error) {
+      setAddingNoteFor(null)
+      setNoteDrafts(prev => { const next = { ...prev }; delete next[id]; return next })
+      await load()
+    }
     setHandling(null)
   }
 
@@ -192,17 +200,47 @@ export function PhoneMessagesPage() {
                 )}
 
                 {m.status === 'handled' ? (
-                  <p className="text-xs text-gray-400">
-                    Dealt with by {m.handler?.full_name ?? 'someone'}
-                    {m.handled_at && ` · ${new Date(m.handled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
-                  </p>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-xs text-gray-400">
+                      Dealt with by {m.handler?.full_name ?? 'someone'}
+                      {m.handled_at && ` · ${new Date(m.handled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                    </p>
+                    {m.notes && (
+                      <p className="text-sm text-gray-700 bg-[#f4f6f9] rounded-xl px-3 py-2 leading-snug">{m.notes}</p>
+                    )}
+                  </div>
+                ) : addingNoteFor === m.id ? (
+                  <div className="flex flex-col gap-2">
+                    <textarea
+                      autoFocus
+                      value={noteDrafts[m.id] ?? ''}
+                      onChange={e => setNoteDrafts(prev => ({ ...prev, [m.id]: e.target.value }))}
+                      placeholder="Add a note (optional) — e.g. who it's for, what was agreed…"
+                      rows={2}
+                      className="text-sm border border-gray-200 rounded-xl px-3 py-2 resize-none"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => markHandled(m.id)}
+                        disabled={handling === m.id}
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-[#1a3a6b] text-white text-sm font-semibold py-2.5 rounded-xl disabled:opacity-60"
+                      >
+                        <Check size={14} /> {handling === m.id ? 'Saving…' : 'Confirm dealt with'}
+                      </button>
+                      <button
+                        onClick={() => setAddingNoteFor(null)}
+                        className="px-4 text-sm font-semibold text-gray-500"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <button
-                    onClick={() => markHandled(m.id)}
-                    disabled={handling === m.id}
-                    className="flex items-center justify-center gap-1.5 bg-[#1a3a6b] text-white text-sm font-semibold py-2.5 rounded-xl disabled:opacity-60"
+                    onClick={() => setAddingNoteFor(m.id)}
+                    className="flex items-center justify-center gap-1.5 bg-[#1a3a6b] text-white text-sm font-semibold py-2.5 rounded-xl"
                   >
-                    <Check size={14} /> {handling === m.id ? 'Saving…' : "I've dealt with this"}
+                    <Check size={14} /> I've dealt with this
                   </button>
                 )}
               </div>
