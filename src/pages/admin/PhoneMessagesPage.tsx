@@ -69,6 +69,11 @@ export function PhoneMessagesPage() {
         setAudioErrors(prev => ({ ...prev, [id]: 'Recording file is empty' }))
         return
       }
+      if (!blob.type.startsWith('audio/')) {
+        const text = await blob.slice(0, 300).text().catch(() => '')
+        setAudioErrors(prev => ({ ...prev, [id]: `Got ${blob.size} bytes of type "${blob.type}", not audio: ${text}` }))
+        return
+      }
       setAudioUrls(prev => ({ ...prev, [id]: URL.createObjectURL(blob) }))
     } catch (err) {
       setAudioErrors(prev => ({ ...prev, [id]: `Network error: ${String(err)}` }))
