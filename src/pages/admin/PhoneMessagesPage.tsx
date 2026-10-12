@@ -33,6 +33,7 @@ export function PhoneMessagesPage() {
   const [filter, setFilter] = useState<'new' | 'all'>('new')
   const [handling, setHandling] = useState<string | null>(null)
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({})
+  const [audioErrors, setAudioErrors] = useState<Record<string, string>>({})
 
   useEffect(() => { load() }, [])
 
@@ -50,19 +51,27 @@ export function PhoneMessagesPage() {
   async function loadAudio(id: string) {
     setAudioUrls(prev => (prev[id] ? prev : { ...prev, [id]: '' }))
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
+    if (!session) {
+      setAudioErrors(prev => ({ ...prev, [id]: 'Not logged in' }))
+      return
+    }
     try {
       const res = await fetch(`${supabaseUrl}/functions/v1/twilio-audio?id=${id}`, {
         headers: { Authorization: `Bearer ${session.access_token}`, apikey: supabaseAnonKey },
       })
       if (!res.ok) {
-        console.error('twilio-audio fetch failed', res.status, await res.text().catch(() => ''))
+        const body = await res.text().catch(() => '')
+        setAudioErrors(prev => ({ ...prev, [id]: `Error ${res.status}: ${body.slice(0, 200)}` }))
         return
       }
       const blob = await res.blob()
+      if (blob.size === 0) {
+        setAudioErrors(prev => ({ ...prev, [id]: 'Recording file is empty' }))
+        return
+      }
       setAudioUrls(prev => ({ ...prev, [id]: URL.createObjectURL(blob) }))
     } catch (err) {
-      console.error('twilio-audio fetch error', err)
+      setAudioErrors(prev => ({ ...prev, [id]: `Network error: ${String(err)}` }))
     }
   }
 
@@ -158,7 +167,9 @@ export function PhoneMessagesPage() {
                 )}
 
                 {m.recording_url && (
-                  audioUrls[m.id] ? (
+                  audioErrors[m.id] ? (
+                    <p className="text-xs text-red-500 bg-red-50 rounded-lg px-2 py-1.5 break-all">{audioErrors[m.id]}</p>
+                  ) : audioUrls[m.id] ? (
                     <audio controls className="w-full h-10" src={audioUrls[m.id]} />
                   ) : (
                     <p className="text-xs text-gray-400">Loading recording…</p>
