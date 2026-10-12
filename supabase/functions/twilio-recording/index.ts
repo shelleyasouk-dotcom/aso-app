@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
   // Text the ops team — a plain "check the app" alert, no caller details in
   // the SMS itself.
-  const alertBody = "You've got a voicemail — check the app."
+  const alertBody = "Active School: you've got a voicemail — check the app."
   await Promise.all(OPS_ALERT_NUMBERS.map(num => sendSms(num, alertBody)))
 
   // Also drop an in-app notification for ops/director roles, so it shows up

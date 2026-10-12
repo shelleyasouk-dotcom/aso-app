@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
   await supabase.from('phone_messages').update({ transcription: transcriptionText }).eq('call_sid', callSid)
 
   const fromLine = from ? `From ${from}: ` : ''
-  const alertBody = `Voicemail: ${fromLine}"${transcriptionText}"`.slice(0, 1500)
+  const alertBody = `Active School voicemail: ${fromLine}"${transcriptionText}"`.slice(0, 1500)
   await Promise.all(OPS_ALERT_NUMBERS.map(num => sendSms(num, alertBody)))
 
   return new Response('ok', { status: 200 })
