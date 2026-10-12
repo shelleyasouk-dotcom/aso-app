@@ -69,9 +69,11 @@ export function PhoneMessagesPage() {
         setAudioErrors(prev => ({ ...prev, [id]: 'Recording file is empty' }))
         return
       }
-      if (!blob.type.startsWith('audio/')) {
+      const head = new Uint8Array(await blob.slice(0, 4).arrayBuffer())
+      const isMp3 = (head[0] === 0x49 && head[1] === 0x44 && head[2] === 0x33) || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0)
+      if (!isMp3) {
         const text = await blob.slice(0, 300).text().catch(() => '')
-        setAudioErrors(prev => ({ ...prev, [id]: `Got ${blob.size} bytes of type "${blob.type}", not audio: ${text}` }))
+        setAudioErrors(prev => ({ ...prev, [id]: `Got ${blob.size} bytes, not a valid mp3 file. Content: ${text}` }))
         return
       }
       setAudioUrls(prev => ({ ...prev, [id]: URL.createObjectURL(blob) }))
@@ -175,7 +177,15 @@ export function PhoneMessagesPage() {
                   audioErrors[m.id] ? (
                     <p className="text-xs text-red-500 bg-red-50 rounded-lg px-2 py-1.5 break-all">{audioErrors[m.id]}</p>
                   ) : audioUrls[m.id] ? (
-                    <audio controls className="w-full h-10" src={audioUrls[m.id]} />
+                    <audio
+                      controls
+                      className="w-full h-10"
+                      src={audioUrls[m.id]}
+                      onError={e => {
+                        const el = e.currentTarget
+                        setAudioErrors(prev => ({ ...prev, [m.id]: `Browser couldn't play file (code ${el.error?.code ?? '?'}: ${el.error?.message ?? 'unknown'})` }))
+                      }}
+                    />
                   ) : (
                     <p className="text-xs text-gray-400">Loading recording…</p>
                   )
