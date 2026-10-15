@@ -281,6 +281,8 @@ export function CrmPage() {
   const [saving, setSaving] = useState(false)
 
   const [importFile, setImportFile] = useState<File | null>(null)
+  const [importTown, setImportTown] = useState('')
+  const [knownTowns, setKnownTowns] = useState<string[]>([])
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<{ success: number; skipped: number; duplicates: number; duplicateNames: string[]; errors: string[] } | null>(null)
   const [importPreview, setImportPreview] = useState<Array<{ name: string; contact: string; town: string; email: string; phone: string; status: string }> | null>(null)
@@ -337,6 +339,13 @@ export function CrmPage() {
   useEffect(() => { loadCounts() }, [])
   useEffect(() => { loadContacts(true) }, [search, filterStatus, filterTown])
   useEffect(() => { if (tab === 'bulk') loadBulkTowns() }, [tab])
+  useEffect(() => {
+    if (tab !== 'import') return
+    supabase.from('crm_contacts').select('town').not('town', 'is', null).then(({ data }) => {
+      setKnownTowns([...new Set((data ?? []).map((r: { town: string }) => r.town).filter(Boolean))].sort())
+    })
+  }, [tab])
+  useEffect(() => { if (importFile) previewCSV(importFile) }, [importTown])
 
   async function addContact() {
     if (!form.school_name.trim() || !profile) return
@@ -479,7 +488,7 @@ export function CrmPage() {
       return {
         name: col(row, 'school name', 'school', 'name') || '(no name)',
         contact: col(row, 'contact name', 'headteacher'),
-        town: col(row, 'town') || (address ? deriveTown(address) : ''),
+        town: importTown.trim() || col(row, 'town') || (address ? deriveTown(address) : ''),
         email: col(row, 'email', 'e-mail'),
         phone: col(row, 'phone', 'tel', 'number'),
         status,
@@ -531,7 +540,7 @@ export function CrmPage() {
       else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'in_contact'
 
       const address = col(row, 'address', 'location', 'city') || ''
-      const town = col(row, 'town') || (address ? deriveTown(address) : '')
+      const town = importTown.trim() || col(row, 'town') || (address ? deriveTown(address) : '')
 
       const { error } = await supabase.from('crm_contacts').insert({
         school_name: name,
@@ -744,6 +753,25 @@ export function CrmPage() {
             <Button variant="secondary" fullWidth onClick={downloadTemplate}>
               <Download size={16} /> Download CSV template
             </Button>
+
+            <div className="mt-3 flex flex-col gap-1">
+              <label className="text-sm font-semibold text-gray-700">Group these schools under town</label>
+              <input
+                type="text"
+                list="known-towns"
+                placeholder="e.g. Salisbury — leave blank to detect per row"
+                value={importTown}
+                onChange={e => setImportTown(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20"
+              />
+              <datalist id="known-towns">
+                {knownTowns.map(t => <option key={t} value={t} />)}
+              </datalist>
+              {importTown.trim() && (
+                <p className="text-xs text-gray-400">Every school in this file will be filed under "{importTown.trim()}".</p>
+              )}
+            </div>
+
             <div className="mt-3">
               <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#1a3a6b] transition-colors bg-gray-50 mt-2">
                 <Upload size={22} className="text-gray-400 mb-1.5" />
