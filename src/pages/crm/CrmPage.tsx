@@ -295,6 +295,8 @@ export function CrmPage() {
   const [bulkSending, setBulkSending] = useState(false)
   const [bulkResult, setBulkResult] = useState<string | null>(null)
   const [bulkNote, setBulkNote] = useState('')
+  const [emailCopiedMsg, setEmailCopiedMsg] = useState<string | null>(null)
+  const EMAIL_BATCH_SIZE = 50
 
   const today = new Date().toISOString().slice(0, 10)
 
@@ -409,6 +411,7 @@ export function CrmPage() {
     setBulkContacts([])
     setBulkSelected(new Set())
     setBulkResult(null)
+    setEmailCopiedMsg(null)
     if (!town) return
     setBulkLoading(true)
     const { data } = await supabase
@@ -425,6 +428,18 @@ export function CrmPage() {
 
   function toggleBulkSelected(id: string) {
     setBulkSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n })
+  }
+
+  function selectedEmails() {
+    return bulkContacts.filter(c => bulkSelected.has(c.id) && c.email).map(c => c.email as string)
+  }
+
+  async function copyEmailBatch(batchIndex: number) {
+    const emails = selectedEmails()
+    const batch = emails.slice(batchIndex * EMAIL_BATCH_SIZE, (batchIndex + 1) * EMAIL_BATCH_SIZE)
+    if (batch.length === 0) return
+    await navigator.clipboard.writeText(batch.join('; '))
+    setEmailCopiedMsg(`Copied ${batch.length} email${batch.length !== 1 ? 's' : ''} (batch ${batchIndex + 1} of ${Math.ceil(emails.length / EMAIL_BATCH_SIZE)})`)
   }
 
   async function bulkMarkEmailSent() {
@@ -696,6 +711,28 @@ export function CrmPage() {
                     </label>
                   ))}
                 </div>
+                {/* Copy emails for pasting into BCC, up to 50 at a time */}
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-3">
+                  <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-1">Copy emails</p>
+                  <p className="text-xs text-blue-600 mb-2">
+                    {selectedEmails().length} of {bulkSelected.size} selected have an email on file.
+                    {selectedEmails().length > EMAIL_BATCH_SIZE && ` Copy in batches of ${EMAIL_BATCH_SIZE} to stay under most email clients' BCC limits.`}
+                  </p>
+                  {selectedEmails().length === 0 ? (
+                    <p className="text-xs text-blue-400">No emails to copy — select some schools with an email address.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5">
+                      {Array.from({ length: Math.ceil(selectedEmails().length / EMAIL_BATCH_SIZE) }).map((_, i) => (
+                        <button key={i} onClick={() => copyEmailBatch(i)}
+                          className="text-xs font-semibold text-white bg-[#1a3a6b] px-3 py-1.5 rounded-lg">
+                          Copy {Math.ceil(selectedEmails().length / EMAIL_BATCH_SIZE) > 1 ? `batch ${i + 1}` : 'all'} ({Math.min(EMAIL_BATCH_SIZE, selectedEmails().length - i * EMAIL_BATCH_SIZE)})
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {emailCopiedMsg && <p className="text-xs text-green-600 font-medium mt-2">{emailCopiedMsg}</p>}
+                </div>
+
                 <Input label="Note (optional)" placeholder={`e.g. Autumn term outreach email`} value={bulkNote} onChange={e => setBulkNote(e.target.value)} />
                 <Button className="mt-3 w-full" onClick={bulkMarkEmailSent} disabled={bulkSending || bulkSelected.size === 0}>
                   <Mail size={16} /> {bulkSending ? 'Logging…' : `Mark email sent for ${bulkSelected.size}`}
