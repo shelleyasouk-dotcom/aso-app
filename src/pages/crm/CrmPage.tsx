@@ -10,46 +10,103 @@ import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
 import type { CrmContact, CrmStatus } from '../../types'
 
-// ─── Status config ─────────────────────────────────────────────────────────
+// ─── Status config ──────────────────────────────────────────────────────────
+// Matches the Schools Acquisition SOP v2.2: 10 main statuses (stage order)
+// plus 8 side statuses that can apply at any point.
 
 export const STATUS_LABELS: Record<CrmStatus, string> = {
   prospect: 'Prospect',
-  initial_sent: 'Email Sent',
-  following_up: 'Following Up',
-  interested: 'Interested',
-  onboarded: 'Onboarded',
-  do_not_contact: 'Do Not Contact',
+  in_contact: 'In Contact',
+  school_interested: 'School Interested',
+  demand_check_underway: 'Demand Check Underway',
+  demand_validated: 'Demand Validated',
+  agreement_secured: 'Agreement Secured',
+  launch_prep_underway: 'Launch Prep Underway',
+  bookings_open: 'Bookings Open',
+  launch_confirmed: 'Launch Confirmed',
+  live: 'Live',
+  not_now: 'Not Now',
+  has_provider: 'Has Provider',
+  opted_out: 'Opted Out',
+  undeliverable: 'Undeliverable',
+  trust_route: 'Trust Route',
+  under_review: 'Under Review',
+  postponed: 'Postponed',
+  withdrawn: 'Withdrawn',
 }
 
-// Excel colour coding: Amber = interested, Green = onboarded, Red = DNC
+export const MAIN_STATUSES: CrmStatus[] = [
+  'prospect', 'in_contact', 'school_interested', 'demand_check_underway', 'demand_validated',
+  'agreement_secured', 'launch_prep_underway', 'bookings_open', 'launch_confirmed', 'live',
+]
+export const SIDE_STATUSES: CrmStatus[] = [
+  'not_now', 'has_provider', 'opted_out', 'undeliverable', 'trust_route', 'under_review', 'postponed', 'withdrawn',
+]
+
 export const STATUS_BORDER: Record<CrmStatus, string> = {
   prospect: 'border-l-gray-200',
-  initial_sent: 'border-l-blue-300',
-  following_up: 'border-l-purple-400',
-  interested: 'border-l-amber-400',
-  onboarded: 'border-l-green-500',
-  do_not_contact: 'border-l-red-500',
+  in_contact: 'border-l-blue-300',
+  school_interested: 'border-l-amber-400',
+  demand_check_underway: 'border-l-amber-500',
+  demand_validated: 'border-l-teal-400',
+  agreement_secured: 'border-l-teal-600',
+  launch_prep_underway: 'border-l-indigo-400',
+  bookings_open: 'border-l-indigo-500',
+  launch_confirmed: 'border-l-indigo-600',
+  live: 'border-l-green-500',
+  not_now: 'border-l-gray-300',
+  has_provider: 'border-l-gray-400',
+  opted_out: 'border-l-red-500',
+  undeliverable: 'border-l-red-400',
+  trust_route: 'border-l-purple-400',
+  under_review: 'border-l-purple-500',
+  postponed: 'border-l-orange-400',
+  withdrawn: 'border-l-red-600',
 }
 
 export const STATUS_DOT: Record<CrmStatus, string> = {
   prospect: 'bg-gray-300',
-  initial_sent: 'bg-blue-400',
-  following_up: 'bg-purple-500',
-  interested: 'bg-amber-400',
-  onboarded: 'bg-green-500',
-  do_not_contact: 'bg-red-500',
+  in_contact: 'bg-blue-400',
+  school_interested: 'bg-amber-400',
+  demand_check_underway: 'bg-amber-500',
+  demand_validated: 'bg-teal-400',
+  agreement_secured: 'bg-teal-600',
+  launch_prep_underway: 'bg-indigo-400',
+  bookings_open: 'bg-indigo-500',
+  launch_confirmed: 'bg-indigo-600',
+  live: 'bg-green-500',
+  not_now: 'bg-gray-300',
+  has_provider: 'bg-gray-400',
+  opted_out: 'bg-red-500',
+  undeliverable: 'bg-red-400',
+  trust_route: 'bg-purple-400',
+  under_review: 'bg-purple-500',
+  postponed: 'bg-orange-400',
+  withdrawn: 'bg-red-600',
 }
 
 export const STATUS_CHIP: Record<CrmStatus, string> = {
   prospect: 'bg-gray-100 text-gray-600',
-  initial_sent: 'bg-blue-100 text-blue-700',
-  following_up: 'bg-purple-100 text-purple-700',
-  interested: 'bg-amber-100 text-amber-700',
-  onboarded: 'bg-green-100 text-green-700',
-  do_not_contact: 'bg-red-100 text-red-700',
+  in_contact: 'bg-blue-100 text-blue-700',
+  school_interested: 'bg-amber-100 text-amber-700',
+  demand_check_underway: 'bg-amber-100 text-amber-800',
+  demand_validated: 'bg-teal-100 text-teal-700',
+  agreement_secured: 'bg-teal-100 text-teal-800',
+  launch_prep_underway: 'bg-indigo-100 text-indigo-700',
+  bookings_open: 'bg-indigo-100 text-indigo-800',
+  launch_confirmed: 'bg-indigo-100 text-indigo-900',
+  live: 'bg-green-100 text-green-700',
+  not_now: 'bg-gray-100 text-gray-500',
+  has_provider: 'bg-gray-100 text-gray-600',
+  opted_out: 'bg-red-100 text-red-700',
+  undeliverable: 'bg-red-100 text-red-600',
+  trust_route: 'bg-purple-100 text-purple-700',
+  under_review: 'bg-purple-100 text-purple-700',
+  postponed: 'bg-orange-100 text-orange-700',
+  withdrawn: 'bg-red-100 text-red-800',
 }
 
-const STATUSES = Object.keys(STATUS_LABELS) as CrmStatus[]
+const STATUSES = MAIN_STATUSES
 
 // RFC 4180-compliant CSV parser — handles quoted fields containing commas
 function parseCsvLine(line: string): string[] {
@@ -142,7 +199,7 @@ interface ContactRowProps {
 
 function ContactRow({ contact, onQuickLog, onDnc, onClick }: ContactRowProps) {
   const isOverdue = contact.next_follow_up_date && contact.next_follow_up_date < new Date().toISOString().slice(0, 10)
-  const isDnc = contact.status === 'do_not_contact'
+  const isDnc = contact.status === 'opted_out'
 
   return (
     <div className={`bg-white rounded-2xl border-l-4 border border-gray-100 shadow-sm overflow-hidden ${STATUS_BORDER[contact.status]}`}>
@@ -214,6 +271,7 @@ export function CrmPage() {
   const [tab, setTab] = useState<'list' | 'add' | 'import' | 'bulk'>('list')
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState<CrmStatus | ''>('')
+  const [showSideStatuses, setShowSideStatuses] = useState(false)
   const [filterTown, setFilterTown] = useState('')
   const [page, setPage] = useState(0)
   const [hasMore, setHasMore] = useState(false)
@@ -272,8 +330,7 @@ export function CrmPage() {
       .select('*', { count: 'exact', head: true })
       .not('next_follow_up_date', 'is', null)
       .lte('next_follow_up_date', today)
-      .neq('status', 'do_not_contact')
-      .neq('status', 'onboarded')
+      .not('status', 'in', '(opted_out,live,withdrawn,has_provider,under_review,undeliverable)')
     setOverdueCount(count ?? 0)
   }
 
@@ -307,7 +364,7 @@ export function CrmPage() {
     const nextFollowUp = new Date()
     nextFollowUp.setDate(nextFollowUp.getDate() + 7)
     const newFollowUpNum = contact.follow_up_number + 1
-    const newStatus: CrmStatus = contact.status === 'prospect' ? 'initial_sent' : 'following_up'
+    const newStatus: CrmStatus = contact.status === 'prospect' ? 'in_contact' : contact.status
 
     await Promise.all([
       supabase.from('crm_interactions').insert({
@@ -349,7 +406,7 @@ export function CrmPage() {
       .from('crm_contacts')
       .select('*')
       .eq('town', town)
-      .not('status', 'in', '(do_not_contact,onboarded)')
+      .not('status', 'in', '(opted_out,live,withdrawn,has_provider,under_review)')
       .order('school_name')
     const list = (data ?? []) as CrmContact[]
     setBulkContacts(list)
@@ -371,7 +428,7 @@ export function CrmPage() {
     const targets = bulkContacts.filter(c => bulkSelected.has(c.id))
     for (const contact of targets) {
       const newFollowUpNum = contact.follow_up_number + 1
-      const newStatus: CrmStatus = contact.status === 'prospect' ? 'initial_sent' : 'following_up'
+      const newStatus: CrmStatus = contact.status === 'prospect' ? 'in_contact' : contact.status
       await Promise.all([
         supabase.from('crm_interactions').insert({
           contact_id: contact.id,
@@ -399,9 +456,9 @@ export function CrmPage() {
   }
 
   async function markDnc(contact: CrmContact) {
-    if (!confirm(`Mark "${contact.school_name}" as Do Not Contact?`)) return
+    if (!confirm(`Mark "${contact.school_name}" as Opted Out? They will not be contacted again.`)) return
     await supabase.from('crm_contacts').update({
-      status: 'do_not_contact',
+      status: 'opted_out',
       next_follow_up_date: null,
       updated_at: new Date().toISOString(),
     }).eq('id', contact.id)
@@ -414,11 +471,10 @@ export function CrmPage() {
     const preview = rows.slice(0, 5).map(row => {
       const rawStatus = col(row, 'status', 'colour', 'color').toLowerCase()
       let status = 'Prospect'
-      if (rawStatus.includes('red') || rawStatus.includes('dnc') || rawStatus.includes('do not')) status = 'Do Not Contact'
-      else if (rawStatus.includes('amber') || rawStatus.includes('interest')) status = 'Interested'
-      else if (rawStatus.includes('green') || rawStatus.includes('onboard')) status = 'Onboarded'
-      else if (rawStatus.includes('follow')) status = 'Following Up'
-      else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'Email Sent'
+      if (rawStatus.includes('red') || rawStatus.includes('dnc') || rawStatus.includes('do not')) status = 'Opted Out'
+      else if (rawStatus.includes('amber') || rawStatus.includes('interest')) status = 'School Interested'
+      else if (rawStatus.includes('green') || rawStatus.includes('onboard') || rawStatus.includes('live')) status = 'Live'
+      else if (rawStatus.includes('follow') || rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'In Contact'
       const address = col(row, 'address', 'location', 'city')
       return {
         name: col(row, 'school name', 'school', 'name') || '(no name)',
@@ -468,11 +524,11 @@ export function CrmPage() {
       // Map Excel colour/status if present
       const rawStatus = col(row, 'status', 'colour', 'color').toLowerCase()
       let status: CrmStatus = 'prospect'
-      if (rawStatus.includes('red') || rawStatus.includes('dnc') || rawStatus.includes('do not')) status = 'do_not_contact'
-      else if (rawStatus.includes('amber') || rawStatus.includes('interest')) status = 'interested'
-      else if (rawStatus.includes('green') || rawStatus.includes('onboard')) status = 'onboarded'
-      else if (rawStatus.includes('follow')) status = 'following_up'
-      else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'initial_sent'
+      if (rawStatus.includes('red') || rawStatus.includes('dnc') || rawStatus.includes('do not')) status = 'opted_out'
+      else if (rawStatus.includes('amber') || rawStatus.includes('interest')) status = 'school_interested'
+      else if (rawStatus.includes('green') || rawStatus.includes('onboard') || rawStatus.includes('live')) status = 'live'
+      else if (rawStatus.includes('follow')) status = 'in_contact'
+      else if (rawStatus.includes('sent') || rawStatus.includes('contact')) status = 'in_contact'
 
       const address = col(row, 'address', 'location', 'city') || ''
       const town = col(row, 'town') || (address ? deriveTown(address) : '')
@@ -526,7 +582,7 @@ export function CrmPage() {
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pipeline</p>
             <p className="text-xs text-gray-400">{totalContacts} total schools</p>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {STATUSES.map(s => (
               <button key={s} onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
                 className={`flex items-center gap-2 px-2.5 py-2 rounded-xl border text-left transition-colors ${
@@ -540,6 +596,28 @@ export function CrmPage() {
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setShowSideStatuses(v => !v)}
+            className="mt-2 w-full text-center text-xs font-medium text-gray-400"
+          >
+            {showSideStatuses ? 'Hide' : 'Show'} side statuses (not now, opted out, etc.)
+          </button>
+          {showSideStatuses && (
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {SIDE_STATUSES.map(s => (
+                <button key={s} onClick={() => setFilterStatus(filterStatus === s ? '' : s)}
+                  className={`flex items-center gap-2 px-2.5 py-2 rounded-xl border text-left transition-colors ${
+                    filterStatus === s ? 'border-[#1a3a6b] bg-[#1a3a6b]/5' : 'border-gray-100 hover:border-gray-200'
+                  }`}>
+                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_DOT[s]}`} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-[#1a3a6b] leading-none">{counts[s] ?? 0}</p>
+                    <p className="text-[10px] text-gray-400 truncate mt-0.5">{STATUS_LABELS[s]}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
           {overdueCount > 0 && (
             <button
               onClick={() => { setFilterStatus(''); setSearch('') }}

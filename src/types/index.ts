@@ -315,9 +315,30 @@ export interface StaffEmployment {
   updated_by: string | null
 }
 
-export type CrmStatus = 'prospect' | 'initial_sent' | 'following_up' | 'interested' | 'onboarded' | 'do_not_contact'
+// Matches the Schools Acquisition SOP v2.2 — main statuses track stage 1-7
+// progress, side statuses can apply at any point instead.
+export type CrmStatus =
+  | 'prospect'
+  | 'in_contact'
+  | 'school_interested'
+  | 'demand_check_underway'
+  | 'demand_validated'
+  | 'agreement_secured'
+  | 'launch_prep_underway'
+  | 'bookings_open'
+  | 'launch_confirmed'
+  | 'live'
+  | 'not_now'
+  | 'has_provider'
+  | 'opted_out'
+  | 'undeliverable'
+  | 'trust_route'
+  | 'under_review'
+  | 'postponed'
+  | 'withdrawn'
 export type CrmInteractionType = 'email' | 'call' | 'visit' | 'meeting' | 'other'
 export type CrmOutcome = 'positive' | 'neutral' | 'negative'
+export type CrmRoute = 'cold' | 'warm_enquiry' | 'previous_contact' | 'referral' | 'trust' | 'former_school'
 
 export interface CrmContact {
   id: string
@@ -341,6 +362,30 @@ export interface CrmContact {
   created_at: string
   updated_at: string
   assignee?: Profile
+  // Stage 1 — Target
+  route: CrmRoute | null
+  decision_maker_role: string | null
+  trust_name: string | null
+  // Stage 4 — Demand check
+  day_offered: string | null
+  hall_free_time: string | null
+  hall_other_uses: string | null
+  year_groups: string | null
+  term_block_dates: string | null
+  loi_permission: boolean | null
+  loi_sent_date: string | null
+  loi_closing_date: string | null
+  interest_count: number | null
+  viability_figure: number | null
+  hire_charge: number | null
+  // Stage 5 — Agreement and audit
+  risk_assessment_date: string | null
+  risk_assessment_by: string | null
+  risk_assessment_done: boolean
+  pack_sent: boolean
+  agreement_confirmed_date: string | null
+  // Side status "Not now"
+  return_date: string | null
 }
 
 export interface CrmInteraction {

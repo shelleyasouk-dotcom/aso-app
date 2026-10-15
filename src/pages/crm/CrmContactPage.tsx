@@ -7,11 +7,16 @@ import { Layout } from '../../components/layout/Layout'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { Input } from '../../components/ui/Input'
-import { STATUS_LABELS, STATUS_CHIP, STATUS_BORDER, deriveTown } from './CrmPage'
-import type { CrmContact, CrmInteraction, CrmStatus, CrmInteractionType, CrmOutcome } from '../../types'
+import { STATUS_LABELS, STATUS_CHIP, STATUS_BORDER, MAIN_STATUSES, SIDE_STATUSES, deriveTown } from './CrmPage'
+import { REPLY_OPTIONS, templateText } from './replyTemplates'
+import type { CrmContact, CrmInteraction, CrmStatus, CrmInteractionType, CrmOutcome, CrmRoute } from '../../types'
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const AREAS = ['Hampshire', 'Wiltshire', 'Dorset', 'Bath and North East Somerset', 'Oxfordshire']
+const ROUTE_LABELS: Record<CrmRoute, string> = {
+  cold: 'Cold', warm_enquiry: 'Warm enquiry', previous_contact: 'Previous contact',
+  referral: 'Referral', trust: 'Trust', former_school: 'Former school',
+}
 
 const INTERACTION_LABELS: Record<CrmInteractionType, string> = {
   email: 'Email', call: 'Phone Call', visit: 'Visit', meeting: 'Meeting', other: 'Other',
@@ -26,7 +31,7 @@ const OUTCOME_STYLES: Record<CrmOutcome, string> = {
 }
 
 const SCHOOL_TYPES = ['Primary', 'Secondary', 'Special', 'Independent', 'Academy', 'Other']
-const STATUSES = Object.keys(STATUS_LABELS) as CrmStatus[]
+const STATUSES = [...MAIN_STATUSES, ...SIDE_STATUSES]
 const SELECT = "w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 bg-white"
 const today = new Date().toISOString().slice(0, 10)
 
@@ -102,6 +107,11 @@ export function CrmContactPage() {
 
   const canEdit = profile?.role === 'director' || profile?.role === 'area_lead' || profile?.role === 'outreach_worker'
 
+  const [showReply, setShowReply] = useState(false)
+  const [replyChoice, setReplyChoice] = useState(0)
+  const [replyReturnDate, setReplyReturnDate] = useState(defaultFollowUp())
+  const [copied, setCopied] = useState(false)
+
   const [showOnboardModal, setShowOnboardModal] = useState(false)
   const [onboardForm, setOnboardForm] = useState({ area: '', session_day: 'Monday', session_time: '' })
   const [onboardError, setOnboardError] = useState<string | null>(null)
@@ -122,7 +132,7 @@ export function CrmContactPage() {
 
   async function saveContact() {
     if (!id || !editForm.school_name?.trim()) return
-    if (editForm.status === 'onboarded' && !contact?.school_id) {
+    if (editForm.status === 'live' && !contact?.school_id) {
       setEditing(false)
       setOnboardForm({
         area: AREAS.includes(editForm.area ?? '') ? (editForm.area as string) : AREAS[0],
@@ -142,6 +152,25 @@ export function CrmContactPage() {
       area: editForm.area || null,
       school_type: editForm.school_type || null, notes: editForm.notes || null,
       status: editForm.status, updated_at: new Date().toISOString(),
+      route: editForm.route || null,
+      decision_maker_role: editForm.decision_maker_role || null,
+      trust_name: editForm.trust_name || null,
+      day_offered: editForm.day_offered || null,
+      hall_free_time: editForm.hall_free_time || null,
+      hall_other_uses: editForm.hall_other_uses || null,
+      year_groups: editForm.year_groups || null,
+      term_block_dates: editForm.term_block_dates || null,
+      loi_permission: editForm.loi_permission ?? null,
+      loi_sent_date: editForm.loi_sent_date || null,
+      loi_closing_date: editForm.loi_closing_date || null,
+      interest_count: editForm.interest_count ?? null,
+      viability_figure: editForm.viability_figure ?? null,
+      hire_charge: editForm.hire_charge ?? null,
+      risk_assessment_date: editForm.risk_assessment_date || null,
+      risk_assessment_by: editForm.risk_assessment_by || null,
+      risk_assessment_done: editForm.risk_assessment_done ?? false,
+      pack_sent: editForm.pack_sent ?? false,
+      agreement_confirmed_date: editForm.agreement_confirmed_date || null,
     }).eq('id', id)
     await loadContact()
     setEditing(false)
@@ -150,7 +179,7 @@ export function CrmContactPage() {
 
   async function updateStatus(status: CrmStatus) {
     if (!id || !canEdit || !contact) return
-    if (status === 'onboarded' && !contact.school_id) {
+    if (status === 'live' && !contact.school_id) {
       setOnboardForm({
         area: AREAS.includes(contact.area ?? '') ? (contact.area as string) : AREAS[0],
         session_day: 'Monday',
@@ -161,7 +190,7 @@ export function CrmContactPage() {
       return
     }
     const updates: Partial<CrmContact> = { status, updated_at: new Date().toISOString() as unknown as undefined }
-    if (status === 'do_not_contact') updates.next_follow_up_date = null
+    if (status === 'opted_out') updates.next_follow_up_date = null
     await supabase.from('crm_contacts').update(updates as any).eq('id', id)
     setContact(prev => prev ? { ...prev, status } : prev)
   }
@@ -187,7 +216,7 @@ export function CrmContactPage() {
     }
 
     const { error: updateError } = await supabase.from('crm_contacts').update({
-      status: 'onboarded',
+      status: 'live',
       school_id: school.id,
       area: onboardForm.area,
       updated_at: new Date().toISOString(),
@@ -199,8 +228,41 @@ export function CrmContactPage() {
       return
     }
 
-    setContact(prev => prev ? { ...prev, status: 'onboarded', school_id: school.id, area: onboardForm.area } : prev)
+    setContact(prev => prev ? { ...prev, status: 'live', school_id: school.id, area: onboardForm.area } : prev)
     setShowOnboardModal(false)
+    setSaving(false)
+  }
+
+  async function logReply() {
+    if (!id || !profile || !contact) return
+    const option = REPLY_OPTIONS[replyChoice]
+    setSaving(true)
+    await supabase.from('crm_interactions').insert({
+      contact_id: id, staff_id: profile.id,
+      type: 'email', date: today,
+      notes: `Reply logged: "${option.theySay}". Template ${option.letter} sent${option.attachPack ? ' (pack attached)' : ''}.`,
+      outcome: option.status === 'opted_out' || option.status === 'has_provider' ? 'negative' : 'positive',
+      follow_up_date: null,
+    })
+    const updates: Record<string, unknown> = {
+      status: option.status,
+      last_contacted_date: today,
+      updated_at: new Date().toISOString(),
+    }
+    if (option.status === 'not_now') {
+      updates.return_date = replyReturnDate
+      updates.next_follow_up_date = replyReturnDate
+    } else if (option.status === 'opted_out' || option.status === 'has_provider') {
+      updates.next_follow_up_date = null
+    } else {
+      updates.next_follow_up_date = null
+    }
+    await supabase.from('crm_contacts').update(updates).eq('id', id)
+    await loadContact()
+    await loadInteractions()
+    setShowReply(false)
+    setReplyChoice(0)
+    setCopied(false)
     setSaving(false)
   }
 
@@ -217,9 +279,9 @@ export function CrmContactPage() {
 
     // Update contact: advance status, record dates
     const newFollowUpNum = (contact?.follow_up_number ?? 0) + 1
-    const newStatus: CrmStatus = contact?.status === 'prospect' ? 'initial_sent' : 'following_up'
+    const newStatus: CrmStatus = contact?.status === 'prospect' ? 'in_contact' : (contact?.status ?? 'in_contact')
     await supabase.from('crm_contacts').update({
-      status: ['interested', 'onboarded', 'do_not_contact'].includes(contact?.status ?? '') ? contact!.status : newStatus,
+      status: ['school_interested', 'live', 'opted_out'].includes(contact?.status ?? '') ? contact!.status : newStatus,
       follow_up_number: newFollowUpNum,
       last_contacted_date: logForm.date,
       next_follow_up_date: logForm.schedule_follow_up ? logForm.follow_up_date : contact?.next_follow_up_date,
@@ -248,7 +310,7 @@ export function CrmContactPage() {
   if (loading) return <Layout title="Loading…" showBack><p className="text-center text-gray-400 py-12">Loading…</p></Layout>
   if (!contact) return <Layout title="Not Found" showBack><p className="text-center text-gray-400 py-12">Contact not found.</p></Layout>
 
-  const isOverdue = contact.next_follow_up_date && contact.next_follow_up_date < today && contact.status !== 'do_not_contact' && contact.status !== 'onboarded'
+  const isOverdue = contact.next_follow_up_date && contact.next_follow_up_date < today && !['opted_out', 'live', 'withdrawn'].includes(contact.status)
 
   return (
     <Layout title={contact.school_name} showBack>
@@ -263,7 +325,7 @@ export function CrmContactPage() {
                 contact.status === s ? `${STATUS_CHIP[s]} border-current` : 'bg-white text-gray-400 border-gray-200'
               }`}>
               {contact.status === s && <Check size={10} />}
-              {s === 'do_not_contact' ? <><Ban size={10} /> DNC</> : STATUS_LABELS[s]}
+              {s === 'opted_out' ? <><Ban size={10} /> Opted Out</> : STATUS_LABELS[s]}
             </button>
           ))}
         </div>
@@ -349,7 +411,64 @@ export function CrmContactPage() {
                 <textarea rows={3} value={editForm.notes ?? ''} onChange={e => setEditForm({ ...editForm, notes: e.target.value })}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-base focus:outline-none focus:ring-2 focus:ring-[#1a3a6b]/20 resize-none" />
               </div>
-              <div className="flex gap-2">
+
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-2">Stage 1 — Target</p>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-gray-700">Route</label>
+                <select className={SELECT} value={editForm.route ?? ''} onChange={e => setEditForm({ ...editForm, route: (e.target.value || null) as CrmRoute | null })}>
+                  <option value="">Select…</option>
+                  {(Object.keys(ROUTE_LABELS) as CrmRoute[]).map(r => <option key={r} value={r}>{ROUTE_LABELS[r]}</option>)}
+                </select>
+              </div>
+              <Input label="Decision maker role" placeholder="e.g. Headteacher, School Business Manager" value={editForm.decision_maker_role ?? ''} onChange={e => setEditForm({ ...editForm, decision_maker_role: e.target.value })} />
+              {editForm.route === 'trust' && (
+                <Input label="Trust / MAT name" value={editForm.trust_name ?? ''} onChange={e => setEditForm({ ...editForm, trust_name: e.target.value })} />
+              )}
+
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-2">Stage 4 — Demand check</p>
+              <Input label="Day(s) offered" placeholder="e.g. Tuesday" value={editForm.day_offered ?? ''} onChange={e => setEditForm({ ...editForm, day_offered: e.target.value })} />
+              <Input label="Time the hall is free" placeholder="e.g. from 3:15pm" value={editForm.hall_free_time ?? ''} onChange={e => setEditForm({ ...editForm, hall_free_time: e.target.value })} />
+              <Input label="What else uses the hall" placeholder="e.g. wraparound care" value={editForm.hall_other_uses ?? ''} onChange={e => setEditForm({ ...editForm, hall_other_uses: e.target.value })} />
+              <Input label="Year groups" value={editForm.year_groups ?? ''} onChange={e => setEditForm({ ...editForm, year_groups: e.target.value })} />
+              <Input label="Term block dates" value={editForm.term_block_dates ?? ''} onChange={e => setEditForm({ ...editForm, term_block_dates: e.target.value })} />
+              <label className="flex items-center gap-3 cursor-pointer">
+                <button type="button" onClick={() => setEditForm({ ...editForm, loi_permission: !editForm.loi_permission })}
+                  className={`w-10 h-5 rounded-full transition-colors shrink-0 relative ${editForm.loi_permission ? 'bg-[#1a3a6b]' : 'bg-gray-300'}`}>
+                  <span className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style={{ transform: editForm.loi_permission ? 'translateX(20px)' : 'translateX(2px)' }} />
+                </button>
+                <span className="text-sm font-semibold text-gray-700">Permission given to send Letter of Interest</span>
+              </label>
+              <Input label="Letter of interest sent" type="date" value={editForm.loi_sent_date ?? ''} onChange={e => setEditForm({ ...editForm, loi_sent_date: e.target.value })} />
+              <Input label="Letter of interest closing date" type="date" value={editForm.loi_closing_date ?? ''} onChange={e => setEditForm({ ...editForm, loi_closing_date: e.target.value })} />
+              <Input label="Interest count" type="number" value={editForm.interest_count ?? ''} onChange={e => setEditForm({ ...editForm, interest_count: e.target.value ? Number(e.target.value) : null })} />
+              <Input label="Viability figure" type="number" value={editForm.viability_figure ?? ''} onChange={e => setEditForm({ ...editForm, viability_figure: e.target.value ? Number(e.target.value) : null })} />
+              <Input label="Hall hire charge (£, if applicable)" type="number" value={editForm.hire_charge ?? ''} onChange={e => setEditForm({ ...editForm, hire_charge: e.target.value ? Number(e.target.value) : null })} />
+              {!!editForm.interest_count && !!editForm.viability_figure && (
+                <p className={`text-xs font-semibold ${editForm.interest_count >= editForm.viability_figure ? 'text-green-600' : 'text-amber-600'}`}>
+                  {editForm.interest_count} of {editForm.viability_figure} needed — {editForm.interest_count >= editForm.viability_figure ? 'viability met' : 'not yet met'}
+                </p>
+              )}
+
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mt-2">Stage 5 — Agreement and audit</p>
+              <Input label="Risk assessment date" type="date" value={editForm.risk_assessment_date ?? ''} onChange={e => setEditForm({ ...editForm, risk_assessment_date: e.target.value })} />
+              <Input label="Risk assessment done by" value={editForm.risk_assessment_by ?? ''} onChange={e => setEditForm({ ...editForm, risk_assessment_by: e.target.value })} />
+              <label className="flex items-center gap-3 cursor-pointer">
+                <button type="button" onClick={() => setEditForm({ ...editForm, risk_assessment_done: !editForm.risk_assessment_done })}
+                  className={`w-10 h-5 rounded-full transition-colors shrink-0 relative ${editForm.risk_assessment_done ? 'bg-[#1a3a6b]' : 'bg-gray-300'}`}>
+                  <span className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style={{ transform: editForm.risk_assessment_done ? 'translateX(20px)' : 'translateX(2px)' }} />
+                </button>
+                <span className="text-sm font-semibold text-gray-700">Risk assessment done</span>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <button type="button" onClick={() => setEditForm({ ...editForm, pack_sent: !editForm.pack_sent })}
+                  className={`w-10 h-5 rounded-full transition-colors shrink-0 relative ${editForm.pack_sent ? 'bg-[#1a3a6b]' : 'bg-gray-300'}`}>
+                  <span className="absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform" style={{ transform: editForm.pack_sent ? 'translateX(20px)' : 'translateX(2px)' }} />
+                </button>
+                <span className="text-sm font-semibold text-gray-700">School Information Pack sent</span>
+              </label>
+              <Input label="Written agreement confirmed" type="date" value={editForm.agreement_confirmed_date ?? ''} onChange={e => setEditForm({ ...editForm, agreement_confirmed_date: e.target.value })} />
+
+              <div className="flex gap-2 mt-2">
                 <Button variant="secondary" onClick={() => setEditing(false)} className="flex-1">Cancel</Button>
                 <Button onClick={saveContact} disabled={saving} className="flex-1">{saving ? 'Saving…' : 'Save'}</Button>
               </div>
@@ -408,11 +527,26 @@ export function CrmContactPage() {
                 <p className="text-sm text-gray-600 whitespace-pre-wrap">{contact.notes}</p>
               </div>
             )}
+            {(contact.route || contact.day_offered || contact.interest_count != null || contact.agreement_confirmed_date) && (
+              <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-1.5 text-sm text-gray-600">
+                {contact.route && <p>Route: <span className="font-medium text-gray-800">{ROUTE_LABELS[contact.route]}</span>{contact.decision_maker_role && ` · ${contact.decision_maker_role}`}</p>}
+                {contact.day_offered && <p>Day offered: <span className="font-medium text-gray-800">{contact.day_offered}</span>{contact.hall_free_time && ` from ${contact.hall_free_time}`}</p>}
+                {contact.interest_count != null && contact.viability_figure != null && (
+                  <p className={contact.interest_count >= contact.viability_figure ? 'text-green-600 font-medium' : 'text-amber-600 font-medium'}>
+                    Interest: {contact.interest_count} of {contact.viability_figure} needed {contact.interest_count >= contact.viability_figure ? '(viability met)' : ''}
+                  </p>
+                )}
+                {contact.risk_assessment_done && <p className="text-green-600 font-medium">Risk assessment done{contact.risk_assessment_date && ` · ${fmt(contact.risk_assessment_date)}`}</p>}
+                {contact.pack_sent && <p className="text-green-600 font-medium">School Information Pack sent</p>}
+                {contact.agreement_confirmed_date && <p>Agreement confirmed: <span className="font-medium text-gray-800">{fmt(contact.agreement_confirmed_date)}</span></p>}
+                {contact.return_date && contact.status === 'not_now' && <p>Return date: <span className="font-medium text-gray-800">{fmt(contact.return_date)}</span></p>}
+              </div>
+            )}
           </Card>
         )}
 
         {/* Quick action buttons */}
-        {canEdit && contact.status !== 'do_not_contact' && (
+        {canEdit && contact.status !== 'opted_out' && (
           <div className="grid grid-cols-3 gap-2">
             <button onClick={() => { setLogForm(f => ({ ...f, type: 'email' })); setShowLog(true) }}
               className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-blue-50 border border-blue-100 text-blue-700">
@@ -422,11 +556,54 @@ export function CrmContactPage() {
               className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-purple-50 border border-purple-100 text-purple-700">
               <PhoneCall size={20} /><span className="text-xs font-semibold">Called</span>
             </button>
-            <button onClick={() => updateStatus('interested')}
-              className={`flex flex-col items-center gap-1.5 py-3 rounded-2xl border ${contact.status === 'interested' ? 'bg-amber-100 border-amber-300 text-amber-800' : 'bg-amber-50 border-amber-100 text-amber-700'}`}>
-              <Star size={20} /><span className="text-xs font-semibold">Interested</span>
+            <button onClick={() => { setShowReply(true); setReplyChoice(0); setCopied(false) }}
+              className="flex flex-col items-center gap-1.5 py-3 rounded-2xl bg-amber-50 border border-amber-100 text-amber-700">
+              <Star size={20} /><span className="text-xs font-semibold">Log a reply</span>
             </button>
           </div>
+        )}
+
+        {/* Reply template picker */}
+        {showReply && contact && (
+          <Card className="border-2 border-amber-200">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-bold text-[#1a3a6b]">They said…</h3>
+              <button onClick={() => setShowReply(false)} className="p-1 text-gray-300 hover:text-gray-500"><X size={16} /></button>
+            </div>
+            <p className="text-sm text-gray-500 mb-3">Pick what they said, and we'll suggest the right reply to send.</p>
+            <div className="flex flex-col gap-1 mb-3">
+              <select className={SELECT} value={replyChoice} onChange={e => setReplyChoice(Number(e.target.value))}>
+                {REPLY_OPTIONS.map((o, i) => <option key={i} value={i}>{o.theySay}</option>)}
+              </select>
+            </div>
+            {REPLY_OPTIONS[replyChoice].status === 'not_now' && (
+              <Input label="Return date" type="date" value={replyReturnDate} onChange={e => setReplyReturnDate(e.target.value)} />
+            )}
+            <div className="mt-3 bg-gray-50 rounded-xl p-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  Template {REPLY_OPTIONS[replyChoice].letter}{REPLY_OPTIONS[replyChoice].attachPack ? ' · attach the School Information Pack' : ''}
+                </p>
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(templateText(REPLY_OPTIONS[replyChoice].letter, contact, profile?.full_name?.split(/\s+/)[0] ?? ''))
+                    setCopied(true)
+                  }}
+                  className="text-xs font-semibold text-[#1a3a6b] bg-white border border-gray-200 px-2.5 py-1 rounded-lg"
+                >
+                  {copied ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-snug">
+                {templateText(REPLY_OPTIONS[replyChoice].letter, contact, profile?.full_name?.split(/\s+/)[0] ?? '')}
+              </p>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">This moves the status to <span className="font-semibold">{STATUS_LABELS[REPLY_OPTIONS[replyChoice].status]}</span>. Check the email over before sending it.</p>
+            <div className="flex gap-2 mt-3">
+              <Button variant="secondary" onClick={() => setShowReply(false)} className="flex-1">Cancel</Button>
+              <Button onClick={logReply} disabled={saving} className="flex-1">{saving ? 'Saving…' : 'Confirm sent & log'}</Button>
+            </div>
+          </Card>
         )}
 
         {/* Log form */}
@@ -493,10 +670,23 @@ export function CrmContactPage() {
           </Card>
         )}
 
-        {/* Mark as onboarded */}
-        {canEdit && contact.status === 'interested' && (
-          <Button variant="primary" fullWidth onClick={() => updateStatus('onboarded')}>
-            <Check size={18} /> Mark as Onboarded
+        {/* Guided stage-advance buttons */}
+        {canEdit && contact.status === 'demand_check_underway' && contact.interest_count != null && contact.viability_figure != null && contact.interest_count >= contact.viability_figure && (
+          <Button variant="primary" fullWidth onClick={() => updateStatus('demand_validated')}>
+            <Check size={18} /> Demand validated — {contact.interest_count} of {contact.viability_figure}
+          </Button>
+        )}
+        {canEdit && contact.status === 'demand_validated' && (
+          <Button variant="primary" fullWidth onClick={async () => {
+            await supabase.from('crm_contacts').update({ status: 'agreement_secured', agreement_confirmed_date: today, updated_at: new Date().toISOString() }).eq('id', id)
+            await loadContact()
+          }}>
+            <Check size={18} /> Written agreement secured today
+          </Button>
+        )}
+        {canEdit && contact.status === 'agreement_secured' && (
+          <Button variant="primary" fullWidth onClick={() => updateStatus('live')}>
+            <Check size={18} /> Mark Live — add to Schools list
           </Button>
         )}
 
