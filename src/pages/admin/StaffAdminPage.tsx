@@ -266,6 +266,7 @@ export function StaffAdminPage() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showArchived, setShowArchived] = useState(false)
+  const [search, setSearch] = useState('')
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null)
   const [archiveError, setArchiveError] = useState<string | null>(null)
 
@@ -475,7 +476,9 @@ export function StaffAdminPage() {
     setSaving(false)
   }
 
-  const visibleStaff = staff.filter(m => showArchived ? m.is_archived : !m.is_archived)
+  const visibleStaff = staff
+    .filter(m => showArchived ? m.is_archived : !m.is_archived)
+    .filter(m => !search.trim() || m.full_name.toLowerCase().includes(search.trim().toLowerCase()))
   const archivedCount = staff.filter(m => m.is_archived).length
 
   const roleGroups = ROLES
@@ -501,6 +504,12 @@ export function StaffAdminPage() {
             <p className="text-xs text-red-600">{archiveError}</p>
           </div>
         )}
+
+        <Input
+          placeholder="Search staff by name…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
 
         {isDirector && (
           <Button variant="primary" size="lg" fullWidth onClick={() => setShowForm(!showForm)}>
@@ -652,7 +661,9 @@ export function StaffAdminPage() {
         ) : visibleStaff.length === 0 ? (
           <Card className="text-center py-8">
             <Users size={36} className="text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">{showArchived ? 'No archived staff.' : 'No staff members yet.'}</p>
+            <p className="text-gray-500">
+              {search.trim() ? `No staff matching "${search.trim()}".` : showArchived ? 'No archived staff.' : 'No staff members yet.'}
+            </p>
           </Card>
         ) : (
           <>
