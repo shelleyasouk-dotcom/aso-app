@@ -3,6 +3,9 @@ import type { ReactNode } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { Menu, X, LogOut, User, ChevronDown, AlertTriangle } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { NewsletterSignupPopup } from '../NewsletterSignupPopup'
+
+const NO_POPUP_PATHS = ['/login', '/portal/login', '/school-portal', '/reset-password']
 
 // ─── Toggle to false once email is restored ───────────────────────────────────
 const EMAIL_DOWN = false
@@ -151,8 +154,11 @@ export function PortalLayout({ children }: PortalLayoutProps) {
     return exact ? location.pathname === path : location.pathname.startsWith(path)
   }
 
+  const showPopup = !profile && !NO_POPUP_PATHS.some(p => location.pathname.startsWith(p))
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {showPopup && <NewsletterSignupPopup />}
       <EmailOutageBanner />
       {/* Header */}
       <header className="bg-[#1a3a6b] text-white sticky top-0 z-30 shadow-lg">
