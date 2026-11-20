@@ -44,6 +44,7 @@ import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 import { PayrollPage } from './pages/admin/PayrollPage'
 import { SchoolInvoicesPage } from './pages/admin/SchoolInvoicesPage'
+import { PupilPremiumInvoicesPage } from './pages/admin/PupilPremiumInvoicesPage'
 import { PayslipsAdminPage } from './pages/admin/PayslipsAdminPage'
 import { MyPayslipsPage } from './pages/clockin/MyPayslipsPage'
 import { MyAvailabilityPage } from './pages/myarea/MyAvailabilityPage'
@@ -377,6 +378,11 @@ export default function App() {
           <Route path="/admin/school-invoices" element={
             <ProtectedRoute allowedRoles={['director', 'operations_manager', 'operations_assistant']}>
               <SchoolInvoicesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/pupil-premium-invoices" element={
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'operations_assistant']}>
+              <PupilPremiumInvoicesPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/payslips" element={

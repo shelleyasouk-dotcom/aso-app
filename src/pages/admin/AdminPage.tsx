@@ -200,6 +200,13 @@ export function AdminPage() {
               path: '/admin/school-invoices',
               color: 'bg-cyan-50 text-cyan-700',
             },
+            {
+              label: 'Pupil Premium Invoices',
+              description: 'Generate and send invoices to schools for funded places',
+              icon: FileText,
+              path: '/admin/pupil-premium-invoices',
+              color: 'bg-rose-50 text-rose-700',
+            },
           ]}
         />
 

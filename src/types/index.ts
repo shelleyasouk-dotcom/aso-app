@@ -105,6 +105,48 @@ export interface School {
   bank_account_number?: string | null
 }
 
+export interface InvoiceSettings {
+  id: number
+  company_name: string
+  company_number: string | null
+  registered_address: string | null
+  bank_account_name: string | null
+  bank_sort_code: string | null
+  bank_account_number: string | null
+  default_rate: number
+  footer_note: string | null
+  updated_at: string
+}
+
+export type PpInvoiceStatus = 'draft' | 'sent' | 'paid'
+
+export interface PpInvoiceLine {
+  id: string
+  invoice_id: string
+  child_id: string | null
+  child_name: string
+  sessions_count: number
+  rate: number
+  amount: number
+}
+
+export interface PpInvoice {
+  id: string
+  school_id: string
+  invoice_number: string
+  period_start: string
+  period_end: string
+  rate_per_session: number
+  total_amount: number
+  status: PpInvoiceStatus
+  sent_at: string | null
+  paid_at: string | null
+  created_by: string | null
+  created_at: string
+  school?: Pick<School, 'id' | 'name' | 'address'>
+  lines?: PpInvoiceLine[]
+}
+
 export type SchoolInvoiceStatus = 'pending' | 'approved' | 'paid'
 
 export interface SchoolInvoice {
@@ -159,6 +201,9 @@ export interface Child {
   created_at: string
   school?: School
   assigned_coach?: Profile
+  is_funded_place?: boolean
+  funded_reason?: string | null
+  funded_rate?: number | null
 }
 
 export interface Announcement {
