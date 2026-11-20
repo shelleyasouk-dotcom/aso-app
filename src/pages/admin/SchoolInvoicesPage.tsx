@@ -20,6 +20,13 @@ function monthLabel(key: string): string {
   return new Date(`${y}-${m}-01`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 }
 
+function monthBounds(key: string): { start: string; end: string } {
+  const [y, m] = key.split('-').map(Number)
+  const start = new Date(y, m - 1, 1)
+  const end = new Date(y, m, 0)
+  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) }
+}
+
 function refMonthYear(key: string): string {
   const [year, month] = key.split('-')
   return `${MONTH_ABBR[parseInt(month, 10) - 1]}${year.slice(2)}`
@@ -59,11 +66,12 @@ export function SchoolInvoicesPage() {
   const [uploadAmount, setUploadAmount] = useState('')
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadNotes, setUploadNotes] = useState('')
+  const [uploadPeriod, setUploadPeriod] = useState({ start: '', end: '' })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Setup tab inline edit
-  const [setupEdit, setSetupEdit] = useState<Record<string, { hire_charge: string; bank_account_name: string; bank_sort_code: string; bank_account_number: string }>>({})
+  const [setupEdit, setSetupEdit] = useState<Record<string, { hire_charge: string; hire_days: string; hire_weeks_confirmed: string; bank_account_name: string; bank_sort_code: string; bank_account_number: string }>>({})
   const [setupSaving, setSetupSaving] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -82,11 +90,12 @@ export function SchoolInvoicesPage() {
   const hireSchools = schools.filter(s => s.hire_charge != null)
   const invoiceBySchool = new Map(invoices.map(i => [i.school_id, i]))
 
-  function startUpload(schoolId: string, expected: number | null) {
+  function startUpload(schoolId: string) {
     setUploadFor(schoolId)
-    setUploadAmount(expected != null ? expected.toFixed(2) : '')
+    setUploadAmount('')
     setUploadFile(null)
     setUploadNotes('')
+    setUploadPeriod(monthBounds(month))
     setError(null)
   }
 
@@ -94,6 +103,20 @@ export function SchoolInvoicesPage() {
     if (!profile || !uploadAmount.trim()) return
     setSaving(true)
     setError(null)
+
+    // Cross-reference against what actually happened: count sessions
+    // registered at this school within the invoice period.
+    const { count: sessionsHeld, error: countErr } = await supabase
+      .from('session_registers')
+      .select('*', { count: 'exact', head: true })
+      .eq('school_id', school.id)
+      .gte('session_date', uploadPeriod.start)
+      .lte('session_date', uploadPeriod.end)
+
+    if (countErr) { setError(countErr.message); setSaving(false); return }
+
+    const rate = school.hire_charge ?? 0
+    const expectedAmount = rate * (sessionsHeld ?? 0)
 
     let filePath: string | null = null
     if (uploadFile) {
@@ -107,9 +130,13 @@ export function SchoolInvoicesPage() {
     const { error: insErr } = await supabase.from('school_invoices').insert({
       school_id: school.id,
       month,
-      expected_amount: school.hire_charge ?? null,
+      period_start: uploadPeriod.start,
+      period_end: uploadPeriod.end,
+      sessions_held: sessionsHeld ?? 0,
+      sessions_agreed: school.hire_weeks_confirmed ?? null,
+      expected_amount: expectedAmount,
       invoiced_amount: invoiced,
-      approved_amount: school.hire_charge ?? invoiced,
+      approved_amount: expectedAmount || invoiced,
       status: 'pending',
       file_path: filePath,
       notes: uploadNotes.trim() || null,
@@ -200,6 +227,8 @@ export function SchoolInvoicesPage() {
       ...prev,
       [school.id]: {
         hire_charge: school.hire_charge != null ? String(school.hire_charge) : '',
+        hire_days: school.hire_days ?? '',
+        hire_weeks_confirmed: school.hire_weeks_confirmed != null ? String(school.hire_weeks_confirmed) : '',
         bank_account_name: school.bank_account_name ?? '',
         bank_sort_code: school.bank_sort_code ?? '',
         bank_account_number: school.bank_account_number ?? '',
@@ -213,6 +242,8 @@ export function SchoolInvoicesPage() {
     setSetupSaving(school.id)
     await supabase.from('schools').update({
       hire_charge: form.hire_charge.trim() ? parseFloat(form.hire_charge) : null,
+      hire_days: form.hire_days.trim() || null,
+      hire_weeks_confirmed: form.hire_weeks_confirmed.trim() ? parseInt(form.hire_weeks_confirmed, 10) : null,
       bank_account_name: form.bank_account_name.trim() || null,
       bank_sort_code: form.bank_sort_code.trim() || null,
       bank_account_number: form.bank_account_number.trim() || null,
@@ -271,14 +302,19 @@ export function SchoolInvoicesPage() {
               <div className="flex flex-col gap-3">
                 {hireSchools.map(school => {
                   const invoice = invoiceBySchool.get(school.id)
-                  const expected = school.hire_charge ?? 0
-                  const mismatch = invoice && invoice.invoiced_amount !== expected
+                  const rate = school.hire_charge ?? 0
+                  const amountMismatch = invoice && invoice.expected_amount != null && invoice.invoiced_amount !== invoice.expected_amount
+                  const sessionsMismatch = invoice && invoice.sessions_agreed != null && invoice.sessions_held != null && invoice.sessions_held !== invoice.sessions_agreed
                   return (
                     <Card key={school.id}>
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div>
                           <p className="font-semibold text-[#1a3a6b]">{school.name}</p>
-                          <p className="text-xs text-gray-400">Expected hire charge: {fmt(expected)}/month</p>
+                          <p className="text-xs text-gray-400">
+                            {fmt(rate)}/session
+                            {school.hire_days && ` · ${school.hire_days}`}
+                            {school.hire_weeks_confirmed != null && ` · ${school.hire_weeks_confirmed} weeks confirmed this block`}
+                          </p>
                         </div>
                         {invoice && (
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
@@ -294,6 +330,10 @@ export function SchoolInvoicesPage() {
                       {!invoice ? (
                         uploadFor === school.id ? (
                           <div className="flex flex-col gap-2 mt-2 bg-gray-50 rounded-xl p-3">
+                            <div className="grid grid-cols-2 gap-2">
+                              <Input label="Period start" type="date" value={uploadPeriod.start} onChange={e => setUploadPeriod(p => ({ ...p, start: e.target.value }))} />
+                              <Input label="Period end" type="date" value={uploadPeriod.end} onChange={e => setUploadPeriod(p => ({ ...p, end: e.target.value }))} />
+                            </div>
                             <Input label="Amount invoiced (£)" type="number" step="0.01" value={uploadAmount} onChange={e => setUploadAmount(e.target.value)} />
                             <div className="flex flex-col gap-1">
                               <label className="text-sm font-semibold text-gray-700">Invoice file (optional)</label>
@@ -305,12 +345,12 @@ export function SchoolInvoicesPage() {
                             <div className="flex gap-2">
                               <Button variant="secondary" className="flex-1" onClick={() => setUploadFor(null)}>Cancel</Button>
                               <Button className="flex-1" disabled={saving || !uploadAmount.trim()} onClick={() => saveUpload(school)}>
-                                {saving ? 'Saving…' : 'Save'}
+                                {saving ? 'Checking registers…' : 'Save'}
                               </Button>
                             </div>
                           </div>
                         ) : (
-                          <button onClick={() => startUpload(school.id, school.hire_charge ?? null)}
+                          <button onClick={() => startUpload(school.id)}
                             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-gray-300 text-sm font-medium text-gray-500 mt-2">
                             <Upload size={14} /> Upload invoice
                           </button>
@@ -323,11 +363,26 @@ export function SchoolInvoicesPage() {
                               <button onClick={() => viewFile(invoice.file_path!)} className="text-xs font-semibold text-[#1a3a6b] underline">View file</button>
                             )}
                           </div>
-                          {mismatch && (
+                          {invoice.sessions_held != null && (
+                            <p className="text-xs text-gray-500">
+                              Used the hall {invoice.sessions_held} session{invoice.sessions_held !== 1 ? 's' : ''}
+                              {invoice.sessions_agreed != null && ` (agreed ${invoice.sessions_agreed})`}
+                              {invoice.expected_amount != null && ` → expected ${fmt(invoice.expected_amount)}`}
+                            </p>
+                          )}
+                          {sessionsMismatch && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center gap-2">
+                              <AlertTriangle size={14} className="text-amber-500 shrink-0" />
+                              <p className="text-xs text-amber-700">
+                                {invoice.sessions_held} session{invoice.sessions_held !== 1 ? 's' : ''} held this period, but {invoice.sessions_agreed} were agreed — check before approving.
+                              </p>
+                            </div>
+                          )}
+                          {amountMismatch && (
                             <div className="bg-red-50 border border-red-200 rounded-xl px-3 py-2 flex items-center gap-2">
                               <AlertTriangle size={14} className="text-red-500 shrink-0" />
                               <p className="text-xs text-red-700">
-                                Invoiced {fmt(invoice.invoiced_amount)} ≠ expected {fmt(expected)} — check before approving.
+                                Invoiced {fmt(invoice.invoiced_amount)} ≠ expected {fmt(invoice.expected_amount!)} based on sessions used — check before approving.
                               </p>
                             </div>
                           )}
@@ -372,7 +427,8 @@ export function SchoolInvoicesPage() {
         {tab === 'setup' && (
           <>
             <p className="text-sm text-gray-500 -mt-1">
-              Set a monthly hire charge and bank details only for schools that charge ASO for hall hire. Leave the charge blank for schools that don't.
+              Set the agreed per-session hire charge, day(s), confirmed weeks for this block, and bank details — only for schools that charge ASO for hall hire. Leave the charge blank for schools that don't.
+              When you upload an invoice, we check how many sessions were actually registered against the agreed weeks and rate, so you can spot a school over-charging before you approve it.
             </p>
             {schools.map(school => {
               const editing = setupEdit[school.id]
@@ -382,7 +438,12 @@ export function SchoolInvoicesPage() {
                     <div>
                       <p className="font-semibold text-[#1a3a6b]">{school.name}</p>
                       {school.hire_charge != null && !editing && (
-                        <p className="text-xs text-gray-400">{fmt(school.hire_charge)}/month · {school.bank_account_name || 'no bank details yet'}</p>
+                        <p className="text-xs text-gray-400">
+                          {fmt(school.hire_charge)}/session
+                          {school.hire_days && ` · ${school.hire_days}`}
+                          {school.hire_weeks_confirmed != null && ` · ${school.hire_weeks_confirmed} weeks confirmed`}
+                          {' · '}{school.bank_account_name || 'no bank details yet'}
+                        </p>
                       )}
                     </div>
                     {!editing && (
@@ -393,8 +454,12 @@ export function SchoolInvoicesPage() {
                   </div>
                   {editing && (
                     <div className="flex flex-col gap-2 mt-3">
-                      <Input label="Hire charge (£/month, leave blank if N/A)" type="number" step="0.01" value={editing.hire_charge}
+                      <Input label="Hire charge (£/session, leave blank if N/A)" type="number" step="0.01" value={editing.hire_charge}
                         onChange={e => setSetupEdit(prev => ({ ...prev, [school.id]: { ...prev[school.id], hire_charge: e.target.value } }))} />
+                      <Input label="Day(s) hired" placeholder="e.g. Tuesday" value={editing.hire_days}
+                        onChange={e => setSetupEdit(prev => ({ ...prev, [school.id]: { ...prev[school.id], hire_days: e.target.value } }))} />
+                      <Input label="Weeks confirmed this block" type="number" value={editing.hire_weeks_confirmed}
+                        onChange={e => setSetupEdit(prev => ({ ...prev, [school.id]: { ...prev[school.id], hire_weeks_confirmed: e.target.value } }))} />
                       <Input label="Bank account name" value={editing.bank_account_name}
                         onChange={e => setSetupEdit(prev => ({ ...prev, [school.id]: { ...prev[school.id], bank_account_name: e.target.value } }))} />
                       <Input label="Sort code" value={editing.bank_sort_code}
