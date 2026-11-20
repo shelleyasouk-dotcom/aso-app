@@ -99,12 +99,23 @@ export interface School {
   updated_at?: string
   wix_booking_url?: string | null
   // Hall hire invoicing — only set for schools that charge ASO for hall hire
-  hire_charge?: number | null // agreed rate per session
-  hire_days?: string | null
-  hire_weeks_confirmed?: number | null // agreed weeks for the current block
+  hire_charge?: number | null // default rate per session, used when a term has no rate override
   bank_account_name?: string | null
   bank_sort_code?: string | null
   bank_account_number?: string | null
+}
+
+export interface SchoolHireTerm {
+  id: string
+  school_id: string
+  label: string
+  start_date: string
+  end_date: string
+  hire_days: string | null
+  weeks_confirmed: number | null
+  rate: number | null
+  notes: string | null
+  created_at: string
 }
 
 export interface InvoiceSettings {
@@ -154,7 +165,8 @@ export type SchoolInvoiceStatus = 'pending' | 'approved' | 'paid'
 export interface SchoolInvoice {
   id: string
   school_id: string
-  month: string // 'YYYY-MM'
+  hire_term_id: string | null
+  month: string // 'YYYY-MM' — derived from period_start, kept for the bank export filename
   period_start: string | null
   period_end: string | null
   expected_amount: number | null
