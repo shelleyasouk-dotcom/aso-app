@@ -4,7 +4,7 @@ import {
   Building2, UsersRound, ShieldAlert, Download,
   Briefcase, ClipboardList, Tent, GraduationCap, ChevronRight,
   HeartPulse, BookMarked, Star, ListChecks, ContactRound, ShieldCheck,
-  Newspaper, Mail, RectangleHorizontal, ScrollText, ClipboardCheck, Wallet, Phone,
+  Newspaper, Mail, RectangleHorizontal, ScrollText, ClipboardCheck, Wallet, Phone, FileCheck2,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Layout } from '../../components/layout/Layout'
@@ -192,6 +192,13 @@ export function AdminPage() {
               icon: ReceiptText,
               path: '/expenses/admin',
               color: 'bg-orange-50 text-orange-700',
+            },
+            {
+              label: 'School Invoices',
+              description: 'Check hall hire invoices against expected charges, then export to Starling',
+              icon: FileCheck2,
+              path: '/admin/school-invoices',
+              color: 'bg-cyan-50 text-cyan-700',
             },
           ]}
         />

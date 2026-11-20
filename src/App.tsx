@@ -43,6 +43,7 @@ import { CrmContactPage } from './pages/crm/CrmContactPage'
 import { ExpensesPage } from './pages/expenses/ExpensesPage'
 import { ExpensesAdminPage } from './pages/expenses/ExpensesAdminPage'
 import { PayrollPage } from './pages/admin/PayrollPage'
+import { SchoolInvoicesPage } from './pages/admin/SchoolInvoicesPage'
 import { PayslipsAdminPage } from './pages/admin/PayslipsAdminPage'
 import { MyPayslipsPage } from './pages/clockin/MyPayslipsPage'
 import { MyAvailabilityPage } from './pages/myarea/MyAvailabilityPage'
@@ -371,6 +372,11 @@ export default function App() {
           <Route path="/admin/payroll" element={
             <ProtectedRoute allowedRoles={['director', 'operations_manager', 'area_lead']}>
               <PayrollPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/school-invoices" element={
+            <ProtectedRoute allowedRoles={['director', 'operations_manager', 'operations_assistant']}>
+              <SchoolInvoicesPage />
             </ProtectedRoute>
           } />
           <Route path="/admin/payslips" element={

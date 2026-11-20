@@ -98,6 +98,32 @@ export interface School {
   facility_form_completed?: boolean
   updated_at?: string
   wix_booking_url?: string | null
+  // Hall hire invoicing — only set for schools that charge ASO for hall hire
+  hire_charge?: number | null
+  bank_account_name?: string | null
+  bank_sort_code?: string | null
+  bank_account_number?: string | null
+}
+
+export type SchoolInvoiceStatus = 'pending' | 'approved' | 'paid'
+
+export interface SchoolInvoice {
+  id: string
+  school_id: string
+  month: string // 'YYYY-MM'
+  expected_amount: number | null
+  invoiced_amount: number
+  approved_amount: number
+  status: SchoolInvoiceStatus
+  file_path: string | null
+  notes: string | null
+  uploaded_by: string | null
+  reviewed_by: string | null
+  reviewed_at: string | null
+  paid_at: string | null
+  created_at: string
+  school?: Pick<School, 'id' | 'name' | 'bank_account_name' | 'bank_sort_code' | 'bank_account_number'>
+  reviewer?: { full_name: string }
 }
 
 export interface StaffSchoolAssignment {
