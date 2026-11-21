@@ -63,6 +63,7 @@ export function SchoolInvoicesPage() {
   const [uploadAmount, setUploadAmount] = useState('')
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadNotes, setUploadNotes] = useState('')
+  const [notesDraft, setNotesDraft] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -166,6 +167,11 @@ export function SchoolInvoicesPage() {
     setInvoices(prev => prev.map(i => i.id === invoice.id ? { ...i, approved_amount: amount } : i))
   }
 
+  async function saveNotes(invoice: SchoolInvoice, value: string) {
+    await supabase.from('school_invoices').update({ notes: value.trim() || null }).eq('id', invoice.id)
+    setInvoices(prev => prev.map(i => i.id === invoice.id ? { ...i, notes: value.trim() || null } : i))
+  }
+
   async function approveInvoice(invoice: SchoolInvoice) {
     if (!profile) return
     await supabase.from('school_invoices').update({
@@ -174,8 +180,22 @@ export function SchoolInvoicesPage() {
     await load()
   }
 
+  async function queryInvoice(invoice: SchoolInvoice) {
+    if (!profile) return
+    if (!invoice.notes?.trim() && !confirm('No notes added yet explaining what\'s wrong — mark as queried anyway?')) return
+    await supabase.from('school_invoices').update({
+      status: 'queried', queried_by: profile.id, queried_at: new Date().toISOString(),
+    }).eq('id', invoice.id)
+    await load()
+  }
+
   async function unapproveInvoice(invoice: SchoolInvoice) {
     await supabase.from('school_invoices').update({ status: 'pending', reviewed_by: null, reviewed_at: null }).eq('id', invoice.id)
+    await load()
+  }
+
+  async function resolveQuery(invoice: SchoolInvoice) {
+    await supabase.from('school_invoices').update({ status: 'pending', queried_by: null, queried_at: null }).eq('id', invoice.id)
     await load()
   }
 
@@ -373,7 +393,25 @@ export function SchoolInvoicesPage() {
             </p>
           </div>
         )}
-        {invoice.notes && <p className="text-xs text-gray-500">{invoice.notes}</p>}
+        {(invoice.status === 'pending' || invoice.status === 'queried') && (
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-semibold text-gray-700">Notes — what's wrong, what you've asked the school for</label>
+            <textarea
+              rows={2}
+              value={notesDraft[invoice.id] ?? invoice.notes ?? ''}
+              onChange={e => setNotesDraft(prev => ({ ...prev, [invoice.id]: e.target.value }))}
+              className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm resize-none"
+            />
+            {(notesDraft[invoice.id] ?? invoice.notes ?? '') !== (invoice.notes ?? '') && (
+              <button onClick={() => saveNotes(invoice, notesDraft[invoice.id] ?? '')} className="self-start text-xs font-semibold text-[#1a3a6b]">
+                Save note
+              </button>
+            )}
+          </div>
+        )}
+        {invoice.status === 'approved' || invoice.status === 'paid' ? (
+          invoice.notes && <p className="text-xs text-gray-500">{invoice.notes}</p>
+        ) : null}
 
         {invoice.status !== 'paid' && (
           <Input label="Amount to pay (£)" type="number" step="0.01"
@@ -386,9 +424,30 @@ export function SchoolInvoicesPage() {
             <button onClick={() => deleteInvoice(invoice)} className="px-3 py-2 rounded-xl border border-gray-200 text-gray-400">
               <Trash2 size={14} />
             </button>
+            <Button variant="secondary" className="flex-1" onClick={() => queryInvoice(invoice)}>
+              <AlertTriangle size={14} /> Request changes
+            </Button>
             <Button className="flex-1" onClick={() => approveInvoice(invoice)}>
               <Check size={14} /> Approve — ready to pay
             </Button>
+          </div>
+        )}
+        {invoice.status === 'queried' && (
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+              Changes requested from the school{invoice.queried_at ? ` on ${fmtDate(invoice.queried_at.slice(0, 10))}` : ''} — waiting on a corrected invoice.
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => deleteInvoice(invoice)} className="px-3 py-2 rounded-xl border border-gray-200 text-gray-400">
+                <Trash2 size={14} />
+              </button>
+              <Button variant="secondary" className="flex-1" onClick={() => resolveQuery(invoice)}>
+                Back to pending
+              </Button>
+              <Button className="flex-1" onClick={() => approveInvoice(invoice)}>
+                <Check size={14} /> Approve — ready to pay
+              </Button>
+            </div>
           </div>
         )}
         {invoice.status === 'approved' && (
@@ -486,9 +545,10 @@ export function SchoolInvoicesPage() {
                                     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                                       invoice.status === 'paid' ? 'bg-green-100 text-green-700'
                                         : invoice.status === 'approved' ? 'bg-teal-100 text-teal-700'
+                                        : invoice.status === 'queried' ? 'bg-orange-100 text-orange-700'
                                         : 'bg-amber-100 text-amber-700'
                                     }`}>
-                                      {invoice.status === 'paid' ? 'Paid' : invoice.status === 'approved' ? 'Approved' : 'Pending review'}
+                                      {invoice.status === 'paid' ? 'Paid' : invoice.status === 'approved' ? 'Approved' : invoice.status === 'queried' ? 'Changes requested' : 'Pending review'}
                                     </span>
                                   )}
                                 </div>

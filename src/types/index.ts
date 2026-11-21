@@ -160,7 +160,7 @@ export interface PpInvoice {
   lines?: PpInvoiceLine[]
 }
 
-export type SchoolInvoiceStatus = 'pending' | 'approved' | 'paid'
+export type SchoolInvoiceStatus = 'pending' | 'queried' | 'approved' | 'paid'
 
 export interface SchoolInvoice {
   id: string
@@ -180,6 +180,8 @@ export interface SchoolInvoice {
   uploaded_by: string | null
   reviewed_by: string | null
   reviewed_at: string | null
+  queried_at: string | null
+  queried_by: string | null
   paid_at: string | null
   created_at: string
   school?: Pick<School, 'id' | 'name' | 'bank_account_name' | 'bank_sort_code' | 'bank_account_number'>
